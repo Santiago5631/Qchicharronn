@@ -1,0 +1,47 @@
+# ========================================
+# 🐍 PYTHON
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+.env
+
+# ========================================
+# ⚙️ DJANGO
+# ========================================
+# Base de datos local
+db.sqlite3
+
+# Archivos generados
+media/
+staticfiles/
+
+# Migraciones (se ignoran todas menos __init__.py)
+**/migrations/
+!**/migrations/__init__.py
+
+# ========================================
+# 🧠 IDEs Y EDITORES
+# ========================================
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# ========================================
+# 🧾 LOGS Y OTROS ARCHIVOS TEMPORALES
+# ========================================
+*.log
+
+# ========================================
+# 💻 SISTEMA OPERATIVO
+# ========================================
+.DS_Store
+Thumbs.db
+desktop.ini
