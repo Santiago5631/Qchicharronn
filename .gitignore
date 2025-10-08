@@ -1,5 +1,5 @@
 # ========================================
-# 🐍 PYTHON
+# PYTHON
 # ========================================
 __pycache__/
 *.py[cod]
@@ -12,7 +12,7 @@ env/
 .env
 
 # ========================================
-# ⚙️ DJANGO
+# DJANGO
 # ========================================
 # Base de datos local
 db.sqlite3
@@ -26,7 +26,7 @@ staticfiles/
 !**/migrations/__init__.py
 
 # ========================================
-# 🧠 IDEs Y EDITORES
+#  IDEs Y EDITORES
 # ========================================
 # PyCharm
 .idea/
@@ -35,12 +35,12 @@ staticfiles/
 .vscode/
 
 # ========================================
-# 🧾 LOGS Y OTROS ARCHIVOS TEMPORALES
+#  LOGS Y OTROS ARCHIVOS TEMPORALES
 # ========================================
 *.log
 
 # ========================================
-# 💻 SISTEMA OPERATIVO
+#  SISTEMA OPERATIVO
 # ========================================
 .DS_Store
 Thumbs.db
