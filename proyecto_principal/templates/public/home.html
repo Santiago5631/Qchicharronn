@@ -1,0 +1,94 @@
+{% extends 'public/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- ====================== -->
+<!-- HERO / INICIO -->
+<!-- ====================== -->
+<section id="inicio"
+         class="relative h-screen flex flex-col justify-center items-center text-center bg-cover bg-center"
+         style="background-image: url('{% static "imagenes/hero-cerdo.jpg" %}');">
+  <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+
+  <div class="relative z-10 px-6">
+    <h1 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">
+        El auténtico sabor del cerdo colombiano
+    </h1>
+
+    <p class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
+      Carnes al vapor y a la caja china con el toque artesanal que solo Q'chicharrón sabe dar.
+    </p>
+  </div>
+</section>
+
+<!-- ====================== -->
+<!-- NOSOTROS -->
+<!-- ====================== -->
+<section id="nosotros" class="py-20 bg-black text-center scroll-mt-20">
+  <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Nuestra Pasión</h2>
+  <div class="max-w-4xl mx-auto px-6">
+    <p class="text-lg text-gray-300 mb-6">
+      En <span class="text-red-400 font-semibold">Q'chicharrón</span> nos mueve el fuego, la tradición y el sabor auténtico.
+      Combinamos técnicas ancestrales con un toque moderno para ofrecerte el mejor chicharrón al estilo colombiano.
+    </p>
+    <p class="text-lg text-gray-300">
+      Cada preparación es un homenaje al sabor local, utilizando ingredientes frescos y procesos artesanales.
+      ¡Porque el sabor verdadero empieza con pasión por lo que hacemos!
+    </p>
+  </div>
+</section>
+
+<!-- ====================== -->
+<!-- MENÚ -->
+<!-- ====================== -->
+<section id="menu" class="py-20 bg-gray-900 text-white scroll-mt-20">
+  <div class="max-w-6xl mx-auto px-6 text-center">
+    <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Nuestro Menú</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
+        <img src="{% static 'imagenes/chicharron.jpg' %}" alt="Chicharrón" class="w-full h-56 object-cover">
+        <div class="p-5">
+          <h3 class="text-2xl font-semibold mb-2">Chicharrón Tradicional</h3>
+          <p class="text-gray-400">Crujiente, jugoso y lleno de sabor. Preparado con amor al estilo Q'chicharrón.</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
+        <img src="{% static 'imagenes/caja-china.jpg' %}" alt="Caja China" class="w-full h-56 object-cover">
+        <div class="p-5">
+          <h3 class="text-2xl font-semibold mb-2">Caja China Artesanal</h3>
+          <p class="text-gray-400">Cocción lenta al fuego para un sabor ahumado y textura perfecta.</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
+        <img src="{% static 'imagenes/carne-barril.jpg' %}" alt="Carne al Vapor" class="w-full h-56 object-cover">
+        <div class="p-5">
+          <h3 class="text-2xl font-semibold mb-2">Carne al barril</h3>
+          <p class="text-gray-400">Delicadamente cocida al vapor para conservar su jugosidad y sabor natural.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== -->
+<!-- RESERVAS -->
+<!-- ====================== -->
+<section id="reservas" class="py-20 bg-black text-center scroll-mt-20">
+  <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Reserva tu Mesa</h2>
+  <div class="max-w-md mx-auto px-6">
+    <form class="space-y-4">
+      <input type="text" placeholder="Nombre" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+      <input type="email" placeholder="Correo Electrónico" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+      <input type="number" placeholder="Número de personas" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+      <input type="date" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+      <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-md transition">
+        Reservar
+      </button>
+    </form>
+  </div>
+</section>
+
+{% endblock %}
