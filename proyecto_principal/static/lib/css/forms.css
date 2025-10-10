@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+body {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    font-family: Arial, sans-serif;
+}
+
+.form-container {
+    max-width: 550px;
+    margin: 50px auto;
+    padding: 25px;
+    background: #fff8f0;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+
+
+.form-container h1 {
+    font-family: 'Pacifico', cursive;
+    font-size: 2.5rem;
+    text-align: center;
+    color: #d35400;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-container input, 
+.form-container textarea, 
+.form-container select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #f39c12;
+    border-radius: 10px;
+    font-size: 15px;
+    background-color: #fffaf0;
+    transition: all 0.3s ease;
+}
+
+.form-container input:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+    border-color: #e67e22;
+    outline: none;
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.5);
+}
+
+.form-container button {
+    background-color: #e67e22;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.form-container button:hover {
+    background-color: #d35400;
+    transform: scale(1.03);
+}
+
+.form-container .back-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.form-container .back-link a {
+    color: #c0392b;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.form-container .back-link a:hover {
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+@media (max-width: 600px) {
+    .form-container {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .form-container h1 {
+        font-size: 2rem;
+    }
+}
+
+
+
+
+

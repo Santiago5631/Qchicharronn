@@ -1,0 +1,104 @@
+<!-- Sidebar -->
+{% load static %}
+
+
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
+
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <div class="sidebar-brand-icon rotate-n-15"></div>
+        <img src="{% static 'lib/img/Logo3.png' %}" alt="Logo" width="100" height="100">
+        <div class="sidebar-brand-text mx-3"></div>
+    </a>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item active">
+
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+        Usuarios
+    </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+            aria-expanded="true" aria-controls="collapseTwo" data-tooltip="Usuarios">
+           <i class="bi bi-person-fill nav-icon"></i>
+            <span>Usuarios</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Roles:</h6>
+
+            </div>
+        </div>
+    </li>
+
+    <!-- Nav Item - Utilities Collapse Menu -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
+            aria-expanded="true" aria-controls="collapseUtilities" data-tooltip="Producto">
+            <i class="bi bi-box-seam-fill nav-icon"></i>
+            <span>Producto</span>
+        </a>
+        <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
+            data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Módulos:</h6>
+
+            </div>
+        </div>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+        Facturación
+    </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
+            aria-expanded="true" aria-controls="collapsePages" data-tooltip="Venta">
+            <i class="bi bi-cart-plus nav-icon"></i>
+            <span>Venta</span>
+        </a>
+        <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Módulos:</h6>
+
+            </div>
+        </div>
+    </li>
+
+    <!-- Nav Item - Tables -->
+    <li class="nav-item">
+
+            <i class="bi bi-bag-plus-fill nav-icon"></i>
+            <span>Compra</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+
+            <i class="bi bi-person-badge-fill fs-3"></i>
+            <span>Nómina</span>
+        </a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider d-none d-md-block">
+
+</ul>
