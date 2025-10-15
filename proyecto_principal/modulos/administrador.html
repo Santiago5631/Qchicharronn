@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <a href="{% url 'apl:administrador_crear' %}">
+            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Nuevo</button>
+        </a>
+    </div>
+</div>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Nivel de Prioridad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in administradores %}
+                <tr>
+                    <td>{{ a.usuario.nombre }}</td>
+                    <td>{{ a.nivel_prioridad }}</td>
+                    <td>
+                        <a href="{% url 'apl:administrador_editar' a.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pen-fill"></i>
+                        </a>
+                        <button type="button" onclick="eliminarAdministrador({{ a.pk }})" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No hay administradores registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function eliminarAdministrador(pk) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const url = "{% url 'apl:administrador_eliminar' 0 %}".replace("0", pk);
+
+            fetch(url, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    Swal.fire('Eliminado!', 'El administrador fue eliminado correctamente.', 'success')
+                        .then(() => { location.reload(); });
+                }
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

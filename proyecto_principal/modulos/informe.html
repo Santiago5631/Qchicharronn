@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <a href="{% url 'apl:informe_crear' %}">
+            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Crear</button>
+        </a>
+    </div>
+</div>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Rango de Fechas</th>
+                    <th>Creado Por</th>
+                    <th>Fecha de Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in informe %}
+                <tr>
+                    <td>{{ i.titulo }}</td>
+                    <td>{{ i.get_tipo_display }}</td>
+                    <td>{{ i.fecha_inicio }} a {{ i.fecha_fin }}</td>
+                    <td>{{ i.creado_por }}</td>
+                    <td>{{ i.fecha_creacion }}</td>
+                    <td>
+                        <a href="{% url 'apl:informe_editar' i.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pen-fill"></i>
+                        </a>
+                        <button type="button" onclick="eliminarInforme({{ i.pk }})" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">No hay informes registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function eliminarInforme(pk) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const url = "{% url 'apl:informe_eliminar' 0 %}".replace("0", pk);
+
+            fetch(url, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    Swal.fire('Eliminado!', 'El informe fue eliminado correctamente.', 'success')
+                        .then(() => { location.reload(); });
+                }
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

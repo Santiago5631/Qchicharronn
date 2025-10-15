@@ -15,7 +15,7 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
-
+        <a class="nav-link" href="index.html" data-tooltip="Dashboard">
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span>
         </a>
@@ -39,7 +39,9 @@
         <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Roles:</h6>
-
+                <a class="collapse-item" href="{% url 'apl:administrador_listar' %}">Administrador</a>
+                <a class="collapse-item" href="{% url 'apl:usuario_list' %}">Empleados</a>
+                <a class="collapse-item" href="{% url 'apl:proveedor_list' %}">Proveedor</a>
             </div>
         </div>
     </li>
@@ -55,7 +57,11 @@
             data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Módulos:</h6>
-
+                <a class="collapse-item" href="{% url 'apl:producto_list' %}">Producto</a>
+                <a class="collapse-item" href="{% url 'apl:marca_list' %}">Marca</a>
+                <a class="collapse-item" href="{% url 'apl:listar_categoria' %}">Categoría</a>
+                <a class="collapse-item" href="{% url 'apl:informe_listar' %}">Informe</a>
+                <a class="collapse-item" href="{% url 'apl:unidad_list' %}">Unidad</a>
             </div>
         </div>
     </li>
@@ -78,21 +84,25 @@
         <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Módulos:</h6>
-
+                <a class="collapse-item" href="{% url 'apl:menu_list' %}">Menu</a>
+                <a class="collapse-item" href="{% url 'apl:mesa_list' %}">Mesa</a>
+                <a class="collapse-item" href="{% url 'apl:listar_plato' %}">Plato</a>
+                <a class="collapse-item" href="{% url 'apl:listar_pedido' %}">Pedido</a>
+                <a class="collapse-item" href="{% url 'apl:venta_listar' %}">Venta</a>
             </div>
         </div>
     </li>
 
     <!-- Nav Item - Tables -->
     <li class="nav-item">
-
+        <a class="nav-link" href="{% url 'apl:compra_listar' %}" data-tooltip="Compra">
             <i class="bi bi-bag-plus-fill nav-icon"></i>
             <span>Compra</span>
         </a>
     </li>
 
     <li class="nav-item">
-
+        <a class="nav-link" href="{% url 'apl:nomina_list' %}" data-tooltip="Nómina">
             <i class="bi bi-person-badge-fill fs-3"></i>
             <span>Nómina</span>
         </a>
