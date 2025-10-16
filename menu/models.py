@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.contrib.contenttypes.models import ContentType
@@ -12,13 +9,13 @@ from decimal import Decimal
 class MenuProducto(models.Model):
     """Tabla intermedia entre Menu y Producto"""
     menu = models.ForeignKey(
-        'Menu',
+        'menu.Menu',
         on_delete=models.CASCADE,
         related_name='menu_productos',
         verbose_name='Menú'
     )
     producto = models.ForeignKey(
-        'Producto',
+        'producto.Producto',  # ✅ referencia cruzada corregida
         on_delete=models.CASCADE,
         related_name='productos_menu',
         verbose_name='Producto'
@@ -76,7 +73,7 @@ class Menu(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     productos = models.ManyToManyField(
-        'Producto',
+        'producto.Producto',  # ✅ corregido
         through='MenuProducto',
         related_name='menus_disponibles',
         blank=True

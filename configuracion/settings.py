@@ -40,7 +40,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'proyecto_principal.apps.ProyectoPrincipalConfig',
-    "usuario",
+    # Tus apps personalizadas
+    'administrador',
+    'categoria',
+    'compra',
+    'empleado',
+    'informe',
+    'marca',
+    'menu',
+    'mesa',
+    'nomina',
+    "pedido",
+    'plato',
+    'producto',
+    'proveedor',
+    'unidad',
+    'usuario',
+    'venta',
 
 ]
 

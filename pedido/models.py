@@ -13,8 +13,8 @@ class Pedido(models.Model):
         ('CANCELADO', 'Cancelado'),
     ]
 
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='pedidos')
-    empleado = models.ForeignKey(Empleado, on_delete=models.SET_NULL, null=True, blank=True,
+    usuario = models.ForeignKey('usuario.Usuario', on_delete=models.CASCADE, related_name='pedidos')
+    empleado = models.ForeignKey('empleado.Empleado', on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='pedidos_asignados')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
@@ -41,7 +41,7 @@ class PedidoPlato(models.Model):
 
 class PedidoMenu(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='menus')
-    menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    menu = models.ForeignKey('menu.Menu', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -51,7 +51,7 @@ class PedidoMenu(models.Model):
 
 class PedidoProductoPrimario(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='productos_primarios')
-    producto = models.ForeignKey(ProductoPrimario, on_delete=models.CASCADE)
+    producto = models.ForeignKey('producto.Producto', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -61,13 +61,13 @@ class PedidoProductoPrimario(models.Model):
 
 class PedidoProductoProcesado(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='productos_procesados')
-    producto = models.ForeignKey(ProductoProcesado, on_delete=models.CASCADE)
+    producto = models.ForeignKey('producto.Producto', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
-
+#ajsjad
 
 from django.db import models
 
