@@ -16,7 +16,7 @@ def listar_marca(request):
 
 class MarcaListView(ListView):
     model = Marca
-    template_name = 'modulos/marca.html'
+    template_name = 'templates/modulos/marca.html'
     context_object_name = 'marcas'
 
     def get_context_data(self, **kwargs):

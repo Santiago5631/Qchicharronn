@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="form-container">
+   <h1 class="form-title">{{ titulo }}</h1>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        {% if formset %}
+        {{ formset.management_form }}
+        {% endif %}
+
+        <div class="formset-container">
+            {% for form in formset %}
+                <div class="formset-form">
+                    {{ form.as_p }}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit">Enviar</button>
+
+        {% block extra %}{% endblock %}
+    </form>
+    <div class="back-link">
+        <button type="button" onclick="window.history.back();">Volver</button>
+    </div>
+</div>
+
+{% endblock %}

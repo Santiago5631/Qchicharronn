@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="form-container">
+    <h1 class="form-title">{{ titulo }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        {% if formset %}
+            {{ formset.management_form }}
+            
+            <!-- Mostrar solo los productos que ya existen -->
+            <div class="formset-container">
+                {% for f in formset %}
+                    {% if f.instance.pk %}  {# solo los que ya están guardados #}
+                        <div class="producto-form">
+                            {{ f.as_p }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+
+        {% block actu %}{% endblock %}
+        
+        
+    </form>
+    
+    <div class="back-link">
+        <button type="button" onclick="window.history.back();">Volver</button>
+    </div>
+</div>
+
+{% endblock %}

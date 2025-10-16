@@ -1,0 +1,276 @@
+{% extends 'forms/formulario_crear.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .productos-section, .plato-section {
+        display: none;
+    }
+    .formset-row {
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>{{ title }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="menuForm">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        
+                        <!-- Tipo de Item -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">{{ form.tipo_item.label }} <span class="text-danger">*</span></label>
+                                {{ form.tipo_item }}
+                                {% if form.tipo_item.errors %}
+                                <div class="text-danger">{{ form.tipo_item.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Plato -->
+                        <div class="row mb-3 plato-section" id="plato-section">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">{{ form.plato_id.label }}</label>
+                                <select name="plato_id" id="plato_id" class="form-control">
+                                    <option value="">-- Seleccionar Plato --</option>
+                                    {% for plato in form.plato_id.field.queryset %}
+                                    <option value="{{ plato.id }}" {% if form.plato_id.value == plato.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ plato.nombre }} - ${{ plato.precio }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.plato_id.errors %}
+                                <div class="text-danger">{{ form.plato_id.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Productos -->
+                        <div id="productos-section" class="productos-section">
+                            <div class="card mb-3">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5>Productos del Menú</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{ formset.management_form }}
+                                    
+                                    {% if formset.non_form_errors %}
+                                    <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+                                    {% endif %}
+                                    
+                                    <div id="formset-container">
+                                        {% for form in formset %}
+                                        <div class="formset-row">
+                                            <div class="row">
+                                                {{ form.id }}
+                                                
+                                                <div class="col-md-5">
+                                                    <label class="form-label">Producto</label>
+                                                    <select name="{{ form.producto.html_name }}" id="{{ form.producto.id_for_label }}" class="form-control">
+                                                        <option value="">-- Seleccionar --</option>
+                                                        {% for producto in form.producto.field.queryset %}
+                                                        <option value="{{ producto.id }}" {% if form.producto.value == producto.id %}selected{% endif %}>
+                                                            {{ producto.nombre }} - {{ producto.marca }} (Stock: {{ producto.stock }})
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    {% if form.producto.errors %}
+                                                    <div class="text-danger small">{{ form.producto.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Cantidad</label>
+                                                    {{ form.cantidad }}
+                                                    {% if form.cantidad.errors %}
+                                                    <div class="text-danger small">{{ form.cantidad.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Orden</label>
+                                                    {{ form.orden }}
+                                                    {% if form.orden.errors %}
+                                                    <div class="text-danger small">{{ form.orden.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-2 d-flex align-items-end">
+                                                    {% if form.instance.pk %}
+                                                        {{ form.DELETE }}
+                                                        <label for="{{ form.DELETE.id_for_label }}" class="btn btn-danger btn-sm w-100">
+                                                            Eliminar
+                                                        </label>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-danger btn-sm w-100 delete-empty-form">
+                                                            Quitar
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-success mt-3" id="add-form">
+                                        Agregar Producto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Datos del Menú -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5>Información del Menú</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">{{ form.nombre.label }} *</label>
+                                        {{ form.nombre }}
+                                        {% if form.nombre.errors %}
+                                        <div class="text-danger">{{ form.nombre.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">{{ form.categoria_menu.label }}</label>
+                                        {{ form.categoria_menu }}
+                                        {% if form.categoria_menu.errors %}
+                                        <div class="text-danger">{{ form.categoria_menu.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">{{ form.descripcion.label }}</label>
+                                        {{ form.descripcion }}
+                                        {% if form.descripcion.errors %}
+                                        <div class="text-danger">{{ form.descripcion.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">{{ form.precio_menu.label }} *</label>
+                                        {{ form.precio_menu }}
+                                        {% if form.precio_menu.errors %}
+                                        <div class="text-danger">{{ form.precio_menu.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">{{ form.descuento.label }}</label>
+                                        {{ form.descuento }}
+                                        {% if form.descuento.errors %}
+                                        <div class="text-danger">{{ form.descuento.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check mt-4">
+                                            {{ form.disponible }}
+                                            <label class="form-check-label" for="{{ form.disponible.id_for_label }}">
+                                                {{ form.disponible.label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12 text-end">
+                                <a href="{% url 'apl:menu_list' %}" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">Guardar Menú</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoItemSelect = document.getElementById('tipo_item');
+    const platoSection = document.getElementById('plato-section');
+    const productosSection = document.getElementById('productos-section');
+    
+    function toggleSections() {
+        const tipo = tipoItemSelect.value;
+        platoSection.style.display = 'none';
+        productosSection.style.display = 'none';
+        
+        if (tipo === 'plato') {
+            platoSection.style.display = 'block';
+        } else if (tipo === 'productos') {
+            productosSection.style.display = 'block';
+        }
+    }
+    
+    tipoItemSelect.addEventListener('change', toggleSections);
+    toggleSections();
+    
+    // Agregar producto
+    document.getElementById('add-form').addEventListener('click', function() {
+        const container = document.getElementById('formset-container');
+        const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
+        const currentCount = parseInt(totalForms.value);
+        const lastForm = container.querySelector('.formset-row:last-child');
+        
+        if (!lastForm) return;
+        
+        const newForm = lastForm.cloneNode(true);
+        const regex = new RegExp('menu_productos-(\\d+)-', 'g');
+        
+        newForm.innerHTML = newForm.innerHTML.replace(regex, `menu_productos-${currentCount}-`);
+        
+        newForm.querySelectorAll('input, select').forEach(el => {
+            if (el.type !== 'button') {
+                el.value = '';
+                if (el.name) {
+                    el.name = el.name.replace(regex, `menu_productos-${currentCount}-`);
+                }
+                if (el.id) {
+                    el.id = el.id.replace(/menu_productos-\d+/, `menu_productos-${currentCount}`);
+                }
+            }
+        });
+        
+        container.appendChild(newForm);
+        totalForms.value = currentCount + 1;
+    });
+    
+    // Eliminar producto
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-empty-form') || e.target.parentElement.classList.contains('delete-empty-form')) {
+            const formRow = e.target.closest('.formset-row');
+            const container = document.getElementById('formset-container');
+            
+            if (container.querySelectorAll('.formset-row').length > 1) {
+                formRow.remove();
+                const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        }
+    });
+});
+</script>
+{% endblock content %}
