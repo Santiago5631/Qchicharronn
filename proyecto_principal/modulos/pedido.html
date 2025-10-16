@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <a href="{% url 'apl:crear_pedido' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
+        </a>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th>ID</th>
+                        <th>Mesa</th>
+                        <th>Fecha</th>
+                        <th>Platos / Menús</th>
+                        <th>Subtotal</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pe in pedidos %}
+                    <tr>
+                        <td>{{ pe.id }}</td>
+                        <td>{{ pe.mesa.numero }}</td>
+                        <td>{{ pe.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% for det in pe.detalles.all %}
+                                {{ det.menu.nombre }} (x{{ det.cantidad }}){% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>${{ pe.subtotal }}</td>
+                        <td>{{ pe.estado|title }}</td>
+                        <td>
+                            <a href="{% url 'apl:editar_pedido' pe.id %}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <a href="{% url 'apl:eliminar_pedido' pe.id %}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                            {% if pe.estado != "entregado" %}
+                            <a href="{% url 'apl:finalizar_pedido' pe.id %}" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle-fill"></i> Completar
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No hay pedidos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

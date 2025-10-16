@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>NIT</th>
+                        <th>Nombre</th>
+                        <th>
+                            <a href="{% url 'apl:crear_proveedor' %}">
+                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </button>
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in proveedores %}
+                    <tr>
+                        <td>{{ p.nit }}</td>
+                        <td>{{ p.nombre }}</td>
+                        <td>
+                            <a href="{% url 'apl:editar_proveedor' p.id %}">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                    <i class="bi bi-pen-fill"></i>
+                                </button>
+                            </a>
+                            <a href="{% url 'apl:eliminar_proveedor' p.id %}">
+                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No hay proveedores registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

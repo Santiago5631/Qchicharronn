@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>nombre</th>
+                        <th>cedula</th>
+                        <th>cargo</th>
+                        <th>correo_electronico</th>
+                        <th>numero_celular</th>
+                        <th>estado</th>
+                        <th>contraseña</th>
+                        <th>
+                            <a href="{% url 'apl:crear_usuario' %}">
+                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </button>
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.nombre }}</td>
+                        <td>{{ u.cedula }}</td>
+                        <td>{{ u.cargo }}</td>
+                        <td>{{ u.correo_electronico }}</td>
+                        <td>{{ u.numero_celular }}</td>
+                        <td>{{ u.estado }}</td>
+                        <td>{{ u.contraseña }}</td>
+                        <td>
+                            <a href="{% url 'apl:editar_usuario' u.id %}">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                    <i class="bi bi-pen-fill"></i>
+                                </button>
+                            </a>
+                            <a href="{% url 'apl:eliminar_usuario' u.id %}">
+                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">No hay usuarios registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

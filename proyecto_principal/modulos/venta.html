@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <a href="{% url 'apl:venta_crear' %}">
+            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Nueva</button>
+        </a>
+    </div>
+</div>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Pedido</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Método de Pago</th>
+                    <th>Estado</th>
+                    <th>Administrador</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in ventas %}
+                <tr>
+                    <td>{{ v.id }}</td>
+                    <td>{{ v.pedido }}</td>
+                    <td>{{ v.fecha|date:"d/m/Y H:i" }}</td>
+                    <td>{{ v.total }}</td>
+                    <td>{{ v.metodo_pago }}</td>
+                    <td>{{ v.estado }}</td>
+                    <td>{{ v.admin }}</td>
+                    <td>
+                        <a href="{% url 'apl:venta_editar' v.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pen-fill"></i>
+                        </a>
+                        <button type="button" onclick="eliminarVenta({{ v.pk }})" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">No hay ventas registradas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card-body">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Menús</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Precio Base</th>
+                            <th>Descuento</th>
+                            <th>Precio Final</th>
+                            <th>Disponible</th>
+                            <th>Stock</th>
+                            <th>
+                                <a href="{% url 'apl:menu_create' %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Agregar Menú
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for menu in menus %}
+                        <tr>
+                            <td>{{ menu.nombre }}</td>
+                            <td>{{ menu.descripcion }}</td>
+                            <td>${{ menu.precio|floatformat:2 }}</td>
+                            <td>{{ menu.get_categoria_menu_display }}</td>
+                            <td>
+                                {% if menu.precio_menu %}
+                                    ${{ menu.precio_menu|floatformat:2 }}
+                                {% elif menu.precio %}
+                                    ${{ menu.precio|floatformat:2 }}
+                                {% elif menu.item and menu.item.precio %}
+                                    ${{ menu.item.precio|floatformat:2 }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ menu.descuento|floatformat:2 }}%</td>
+                            <td>${{ menu.get_precio_final|floatformat:2 }}</td>
+                            <td>
+                                 {% if menu.puede_servirse %}
+                                     ✅ Sí
+                                 {% else %}
+                                    ❌ No
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if menu.get_stock_disponible %}
+                                    {{ menu.get_stock_disponible }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'apl:menu_update' menu.id %}" class="btn btn-warning btn-sm d-inline">
+                                    <i class="bi bi-pen-fill"></i>
+                                </a>
+                                <button type="button" onclick="eliminarProducto({{ p.pk }})" class="btn btn-danger">
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+                <script>
+                    $(document).ready(function () {
+                    $('#menuTable').DataTable({
+                            "pageLength": 5,
+                            "language": {
+                                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                            }
+                        });
+                    });
+                 </script>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Mostrar/Ocultar campos según el tipo de ítem
+    function toggleTipoItem() {
+        const tipoItem = document.getElementById("tipo_item").value;
+
+        const productoField = document.getElementById("producto_field");
+        const platoField = document.getElementById("plato_field");
+
+        if (tipoItem === "producto") {
+            productoField.style.display = "block";
+            platoField.style.display = "none";
+        } else if (tipoItem === "plato") {
+            productoField.style.display = "none";
+            platoField.style.display = "block";
+        } else {
+            productoField.style.display = "none";
+            platoField.style.display = "none";
+        }
+    }
+
+    // Ejecutar al cargar la página
+    document.addEventListener("DOMContentLoaded", function() {
+        toggleTipoItem();
+    });
+</script>
+
+{% endblock %}
