@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="message-container">
+    <h1>✅ Mensaje Enviado</h1>
+    <p>Tu mensaje ha sido enviado exitosamente. ¡Gracias por contactarnos! 🍽️</p>
+    <a href="{% url 'apl:usuario_list' %}" class="btn btn-success">Volver al Menú</a>
+</div>
+{% endblock %}

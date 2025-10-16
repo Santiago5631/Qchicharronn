@@ -1,0 +1,183 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+
+<div class="form-container">
+    <h1>{{ titulo }}</h1>
+    
+    <div id="messages-container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <form method="post" id="formPlato">
+        {% csrf_token %}
+        
+        <!-- Campos del Plato -->
+        <p>
+            <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}:</label>
+            {{ form.nombre }}
+        </p>
+        
+        <p>
+            <label for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}:</label>
+            {{ form.descripcion }}
+        </p>
+        
+        <p>
+            <label for="{{ form.precio.id_for_label }}">{{ form.precio.label }}:</label>
+            {{ form.precio }}
+        </p>
+
+        <!-- Formset de productos existentes -->
+        {{ formset.management_form }}
+        <div id="productos-container">
+            {% for producto_form in formset %}
+                <div class="producto-item" style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                    {{ producto_form.as_p }}
+                </div>
+            {% endfor %}
+        </div>
+        
+                <!-- Botón para agregar productos vía modal -->
+        <button type="button" class="create-button" onclick="abrirModal('modalProducto')">
+            + Agregar Producto
+        </button>
+        
+        <button type="submit" style="margin-top: 20px;">Actualizar Plato</button>
+    </form>
+    
+    <div class="back-link">
+        <button type="button" onclick="window.history.back();">Volver</button>
+    </div>
+</div>
+
+<!-- MODAL PARA AGREGAR PRODUCTO -->
+<div id="modalProducto" class="simple-modal">
+    <div class="modal-content">
+        <h3>Agregar Producto al Plato</h3>
+        <form method="post" action="">
+            {% csrf_token %}
+            
+            <label for="productoSelect">Producto: *</label>
+            <select id="productoSelect" name="producto" required>
+                <option value="">-- Seleccionar --</option>
+                {% for producto in productos %}
+                    <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="cantidadInput">Cantidad: *</label>
+            <input type="number" id="cantidadInput" name="cantidad" step="0.01" min="0.01" placeholder="1.00" required>
+            
+            <label for="unidadInput">Unidad: *</label>
+            <input type="text" id="unidadInput" name="unidad" placeholder="kg, litros, unidades" required>
+            
+            <div class="modal-buttons">
+                <button type="button" class="btn-cancel" onclick="cerrarModal('modalProducto')">Cancelar</button>
+                <button type="submit" name="agregar_producto" class="btn-save">Agregar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 en los selects del formset
+    $('select[name*="producto"]').not('#productoSelect').select2({
+        width: '100%',
+        placeholder: 'Seleccione un producto'
+    });
+    
+    // NO inicializar #productoSelect aquí
+    // Se inicializará cuando se abra el modal
+    
+    // Cerrar modal al hacer clic fuera
+    $('.simple-modal').on('click', function(e) {
+        if (e.target === this) cerrarModalConAnimacion(this.id);
+    });
+    
+    // Cerrar modal con ESC
+    $(document).keydown(function(e) {
+        if (e.keyCode === 27) {
+            $('.simple-modal:visible').each(function() {
+                cerrarModalConAnimacion(this.id);
+            });
+        }
+    });
+
+    // Auto-ocultar mensajes después de 3 segundos
+    setTimeout(function() {
+        $('#messages-container .message').fadeOut(500, function() {
+            $(this).remove();
+        });
+    }, 3000);
+});
+
+function abrirModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'block';
+    modal.offsetHeight;
+    modal.style.opacity = '1';
+    
+    // IMPORTANTE: Inicializar Select2 DESPUÉS de mostrar el modal
+    if (modalId === 'modalProducto') {
+        // Destruir Select2 si ya existe (por si se abre el modal varias veces)
+        if ($('#productoSelect').hasClass('select2-hidden-accessible')) {
+            $('#productoSelect').select2('destroy');
+        }
+        
+        // Inicializar Select2 con dropdownParent
+        $('#productoSelect').select2({
+            width: '100%',
+            placeholder: 'Seleccione un producto',
+            dropdownParent: $('#modalProducto'), // MUY IMPORTANTE
+            allowClear: true
+        });
+        
+        console.log('✅ Select2 inicializado en el modal');
+    }
+}
+
+function cerrarModal(modalId) {
+    cerrarModalConAnimacion(modalId);
+}
+
+function cerrarModalConAnimacion(modalId) {
+    const modal = document.getElementById(modalId);
+    
+    // Destruir Select2 antes de cerrar el modal
+    if (modalId === 'modalProducto') {
+        if ($('#productoSelect').hasClass('select2-hidden-accessible')) {
+            $('#productoSelect').select2('destroy');
+        }
+    }
+    
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        // Limpiar campos del modal
+        const inputs = modal.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0;
+            } else {
+                input.value = '';
+            }
+        });
+    }, 300);
+}
+</script>
+{% endblock %}

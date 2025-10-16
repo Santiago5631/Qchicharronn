@@ -2,6 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from django_select2.forms import Select2Widget
 from .models import Plato
+from producto.models import Producto
 
 # Formulario principal de Plato
 class PlatoForm(forms.ModelForm):
@@ -19,11 +20,11 @@ class PlatoForm(forms.ModelForm):
 # Si cada plato tiene ingredientes (productos primarios)
 class PlatoProductoForm(forms.ModelForm):
     class Meta:
-        model = ProductoPrimario
+        model = Producto
         fields = ['nombre']
 
 PlatoProductoFormSet = inlineformset_factory(
-    Plato, ProductoPrimario,
+    Plato, Producto,
     form=PlatoProductoForm,
     extra=1,
     can_delete=True
