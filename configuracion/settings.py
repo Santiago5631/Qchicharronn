@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'menu',
     'mesa',
     'nomina',
-    "pedido",
+    'pedido',
     'plato',
     'producto',
     'proveedor',

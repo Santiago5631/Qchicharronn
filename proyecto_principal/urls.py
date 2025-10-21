@@ -3,9 +3,10 @@ from mesa.views import *
 from menu.views import *
 from categoria.views import *
 from marca.views import *
-from views import *
+from proyecto_principal import views
 
-app_name = "apl"
+
+
 
 urlpatterns = [
     path('', views.home, name='home'),
