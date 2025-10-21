@@ -1,4 +1,7 @@
 from django.db import models
+from administrador.models import Administrador
+from pedido.models import Pedido
+
 class Venta(models.Model):
     METODOS_PAGO = [
         ("efectivo", "Efectivo"),

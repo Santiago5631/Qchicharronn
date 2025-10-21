@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 class Informe(models.Model):
     TIPO_INFORME_CHOICES = [
         ('venta', 'Informe de Ventas'),
