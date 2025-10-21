@@ -3,14 +3,7 @@ from mesa.views import *
 from menu.views import *
 from categoria.views import *
 from marca.views import *
-<<<<<<< HEAD
-from . import views
-=======
 from proyecto_principal import views
-
-
->>>>>>> 1709539d19cbdb61ec7481f8c780b4479c35a369
-
 
 urlpatterns = [
     path('', views.home, name='home'),
