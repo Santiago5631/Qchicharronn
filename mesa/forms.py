@@ -1,5 +1,5 @@
 from django import forms
-from models import Mesa
+from .models import  *
 
 class MesaForm(forms.ModelForm):
     class Meta:

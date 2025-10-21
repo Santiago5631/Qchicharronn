@@ -3,10 +3,11 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db import transaction
 from django.contrib import messages
+from .forms import *
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from models import Menu, MenuProducto
-from forms import MenuForm, MenuProductoFormSet
+from .models import Menu, MenuProducto
+
 
 
 class MenuListView(ListView):
