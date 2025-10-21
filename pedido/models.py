@@ -1,74 +1,59 @@
 from django.db import models
+from django.utils import timezone
+from plato.models import Plato
 from usuario.models import Usuario
 from empleado.models import Empleado
-from plato.models import Plato
 from menu.models import Menu
-
+from mesa.models import Mesa
 
 class Pedido(models.Model):
-    ESTADO_CHOICES = [
-        ('PENDIENTE', 'Pendiente'),
-        ('EN_PROCESO', 'En proceso'),
-        ('ENTREGADO', 'Entregado'),
-        ('CANCELADO', 'Cancelado'),
-    ]
-
-    usuario = models.ForeignKey('usuario.Usuario', on_delete=models.CASCADE, related_name='pedidos')
-    empleado = models.ForeignKey('empleado.Empleado', on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='pedidos_asignados')
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    observacion = models.TextField(blank=True, null=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    mesa = models.ForeignKey("mesa.Mesa", on_delete=models.CASCADE)
+    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE, default=1)
+    fecha = models.DateTimeField(default=timezone.now)
+    estado = models.CharField(
+        max_length=20,
+        choices=[('pendiente', 'Pendiente'), ('entregado', 'Entregado')],
+        default='pendiente'
+    )
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Pedido #{self.id} - {self.usuario.username} ({self.estado})"
+        return f"Pedido {self.id} - Mesa {self.mesa.id}"
+
+    def calcular_subtotal(self):
+        total = sum(detalle.menu.precio * detalle.cantidad for detalle in self.detalles.all())
+        self.subtotal = total
+        return total
+
+    def save(self, *args, **kwargs):
+        self.calcular_subtotal()
+        super().save(*args, **kwargs)
 
 
-# -----------------------------
-# RELACIONES DEL PEDIDO
-# -----------------------------
-
-class PedidoPlato(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='platos')
-    plato = models.ForeignKey(Plato, on_delete=models.CASCADE)
+class PedidoDetalle(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="detalles")
+    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.plato.nombre} x{self.cantidad}"
+        return f"{self.cantidad} x {self.menu.nombre} (Pedido {self.pedido.id})"
+
+class PedidoProducto(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    producto = models.ForeignKey(
+        "inventario.Producto",
+        on_delete=models.CASCADE,
+        related_name="pedidos_producto"
+    )
+
+    def __str__(self):
+        return f"Producto {self.producto.nombre} en pedido {self.pedido.id}"
 
 
 class PedidoMenu(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='menus')
-    menu = models.ForeignKey('menu.Menu', on_delete=models.CASCADE)
-    cantidad = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE, related_name="pedidos_menu")
+    cantidad = models.IntegerField()
 
     def __str__(self):
-        return f"{self.menu.nombre} x{self.cantidad}"
-
-
-class PedidoProductoPrimario(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='productos_primarios')
-    producto = models.ForeignKey('producto.Producto', on_delete=models.CASCADE)
-    cantidad = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.producto.nombre} x{self.cantidad}"
-
-
-class PedidoProductoProcesado(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='productos_procesados')
-    producto = models.ForeignKey('producto.Producto', on_delete=models.CASCADE)
-    cantidad = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.producto.nombre} x{self.cantidad}"
-#ajsjad
-
-from django.db import models
-
-# Create your models here.
+        return f"{self.cantidad}x {self.menu.nombre} en pedido {self.pedido.id}"

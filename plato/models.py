@@ -1,17 +1,32 @@
 from django.db import models
-from categoria.models import Categoria
-from marca.models import Marca
+from producto.models import Producto
+
 
 class Plato(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    descripcion = models.TextField(blank=True, null=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
-    marca = models.ForeignKey(Marca, on_delete=models.SET_NULL, null=True, blank=True)
-    disponible = models.BooleanField(default=True)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, null=True, blank=True)
+
+    productos = models.ManyToManyField(
+        Producto,
+        through="PlatoProducto",
+        related_name="platos"
+    )
 
     def __str__(self):
         return self.nombre
-from django.db import models
 
-# Create your models here.
+
+class PlatoProducto(models.Model):
+    plato = models.ForeignKey("Plato", on_delete=models.CASCADE)
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        related_name="platos_producto"
+    )
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2)
+    unidad = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.cantidad} {self.unidad} de {self.producto.nombre} para {self.plato.nombre}"

@@ -1,19 +1,25 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-class Usuario(AbstractUser):
-    TIPO_USUARIO = [
-        ('ADMIN', 'Administrador'),
-        ('CLIENTE', 'Cliente'),
-        ('EMPLEADO', 'Empleado'),
-    ]
-
-    tipo = models.CharField(max_length=20, choices=TIPO_USUARIO, default='CLIENTE')
-    telefono = models.CharField(max_length=15, blank=True, null=True)
-    direccion = models.CharField(max_length=200, blank=True, null=True)
+class Usuario(models.Model):
+    nombre = models.CharField(max_length=100)
+    cedula = models.CharField(max_length=20)
+    cargo = models.CharField(
+        max_length=50,
+        default="operador",
+        choices=[
+            ('mesero', 'Mesero'),
+            ('administrador', 'Administrador'),
+            ('cocinero', 'Cocinero'),
+            ('proveedor', 'Proveedor'),
+        ]
+    )
+    correo_electronico = models.EmailField()
+    numero_celular = models.CharField(max_length=20)
+    estado = models.CharField(
+        max_length=20,
+        choices=[('activo', 'Activo'), ('inactivo', 'Inactivo')]
+    )
+    contraseña = models.CharField(max_length=250)
 
     def __str__(self):
-        return f"{self.username} ({self.tipo})"
-from django.db import models
-
-# Create your models here.
+        return self.nombre
