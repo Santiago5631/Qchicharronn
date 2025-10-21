@@ -1,7 +1,9 @@
 from django import forms
 from django.forms import inlineformset_factory
-from models import Menu, MenuProducto
-from productos.models import *
+from .models import Menu, MenuProducto
+from plato.models import *
+from producto.models import *
+
 class MenuForm(forms.ModelForm):
     """Formulario principal para crear/editar menús"""
     TIPO_ITEM_CHOICES = [

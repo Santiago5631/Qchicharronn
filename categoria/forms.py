@@ -1,5 +1,5 @@
 from django import forms
-from models import Categoria
+from .models import Categoria
 
 # Formulario principal para crear/editar categorías
 class CategoriaForm(forms.ModelForm):

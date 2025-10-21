@@ -1,5 +1,5 @@
 from django import forms
-from models import Marca
+from .models import Marca
 
 class CrearMarcaForm(forms.ModelForm):
     class Meta:
