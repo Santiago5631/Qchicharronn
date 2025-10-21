@@ -3,7 +3,7 @@ from mesa.views import *
 from menu.views import *
 from categoria.views import *
 from marca.views import *
-from views import *
+from . import views
 
 app_name = "apl"
 
