@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
-
+from django.contrib.messages import constants as messages
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -57,7 +58,10 @@ INSTALLED_APPS = [
     'unidad',
     'usuario',
     'venta',
-
+    #aplicaciones extras
+    "login",
+    "widget_tweaks",
+    "django_select2",
 ]
 
 MIDDLEWARE = [
@@ -152,3 +156,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'usuario.Usuario'
+
+LOGIN_REDIRECT_URL = '/apps/usuarios/'   # o la URL que quieras
+LOGOUT_REDIRECT_URL = '/login/'
+
+MESSAGE_TAGS = {
+    messages.DEBUG: "info",
+    messages.INFO: "info",
+    messages.SUCCESS: "success",
+    messages.WARNING: "warning",
+    messages.ERROR: "error",
+}
