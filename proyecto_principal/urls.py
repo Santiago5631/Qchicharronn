@@ -1,8 +1,9 @@
-from django.urls import path
-from aplicacion.modulos.views_mesa import *
-from aplicacion.modulos.views_menu import *
-from aplicacion.modulos.views_categoria import *
-from aplicacion.modulos.views_marca import *
+from django.urls import path,include
+from mesa.views import *
+from menu.views import *
+from categoria.views import *
+from marca.views import *
+from views import *
 
 app_name = "apl"
 
