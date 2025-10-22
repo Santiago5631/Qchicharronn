@@ -1,9 +1,12 @@
 from django.urls import path,include
+import empleado
+import pedido
+import plato
+import usuario
 from mesa.views import *
 from menu.views import *
 from categoria.views import *
 from marca.views import *
-from . import views
 from proyecto_principal import views
 
 
@@ -33,4 +36,15 @@ urlpatterns = [
     path('marcas/crear/', MarcaCreateView.as_view(), name='marca_create'),
     path('marcas/actualizar/<int:pk>/', MarcaUpdateView.as_view(), name='marca_update'),
     path('marcas/eliminar/<int:pk>/', MarcaDeleteView.as_view(), name='marca_delete'),
+
+    # _________________________ Modulos de Usuario __________________________
+    path('usuarios/', include(usuario.urls), name='usuario_list'),
+
+    # _________________________ Modulos de Plato __________________________
+    path('platos/listar/', include(plato.urls), name='listar_plato'),
+
+    # _________________________ Modulos de Pedido __________________________
+    path('pedidos/listar/', include(pedido.urls), name='listar_pedido'),
+    # _________________________ Modulos de Empleado __________________________
+    path('empleados/listar/', include(empleado.urls), name='listar_empleado'),
 ]
