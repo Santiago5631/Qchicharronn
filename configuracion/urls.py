@@ -21,5 +21,6 @@ from proyecto_principal import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
+    path('', include('proyecto_principal.urls', namespace='pollo')),
 
 ]
