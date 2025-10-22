@@ -1,135 +1,68 @@
-from django.shortcuts import render, redirect
-from plato.models import *
-from django.views.generic import *
-from plato.forms import PlatoForm, PlatoProductoFormSet
+from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.contrib import messages
+from usuario.models import *
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.shortcuts import render
 
 
-# 🔹 Mixin genérico para manejar mensajes de éxito
-class SuccessMessageMixinCustom:
-    success_message = None
-
-    def __init__(self):
-        self.request = None
-
-    def form_valid(self, form, formset=None):
-        response = super().form_valid(form)
-        if self.success_message:
-            messages.success(self.request, self.success_message)
-        return response
-
-
-# 🔹 Listar con función
-def listar_plato(request):
+def prueba(request):
     data = {
-        "platos": "platos",
-        "titulo": "Listado de Platos",
-        "plato": Plato.objects.all()
+        'usuario': 'usuario',
+        'titulo': 'lista de Usuarios',
+        'usuarios': Usuario.objects.all()
     }
-    return render(request, 'modulos/plato.html', data)
+    return render(request, 'modulos/usuarios.html', data)
 
 
-# 🔹 Listar con clase
-class PlatoListView(ListView):
-    model = Plato
-    template_name = 'modulos/plato.html'
-    context_object_name = 'platos'
+class UsuarioListView(ListView):
+    model = Usuario
+    template_name = 'modulos/usuarios.html'
+    context_object_name = 'usuarios'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Listado de Platos'
+        context['titulo'] = 'Lista de usuarios'
+        context['usuario'] = 'usuario'
         return context
 
 
-# 🔹 Crear Plato
-class PlatoCreateView(SuccessMessageMixinCustom, CreateView):
-    model = Plato
-    form_class = PlatoForm
-    template_name = 'forms/formulario_crear_plato.html'
-    success_url = reverse_lazy('apl:listar_plato')
-    success_message = "✅ El plato se ha creado correctamente "
+class UsuarioUpdateView(UpdateView):
+    model = Usuario
+    template_name = 'forms/formulario_actualizacion.html'
+    fields = ['nombre', 'cedula', 'cargo', 'correo_electronico', 'numero_celular', 'estado', 'contraseña']
+
+    def get_success_url(self):
+        return reverse_lazy('apl:usuario_list')
+
+
+class UsuarioDeleteView(DeleteView):
+    model = Usuario
+    template_name = 'forms/confirmar_eliminacion.html'
+
+    def get_success_url(self):
+        return reverse_lazy('apl:usuario_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Eliminar usuario'
+        return context
 
     def get(self, request, *args, **kwargs):
-        self.object = None
-        form = self.get_form()
-        formset = PlatoProductoFormSet(queryset=PlatoProducto.objects.none())
-        return render(request, self.template_name, {
-            'form': form,
-            'formset': formset,
-            'titulo': 'Crear Plato',
-            'entidad': 'Plato'
-        })
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form = self.get_form()
-        formset = PlatoProductoFormSet(self.request.POST)
-
-        if form.is_valid() and formset.is_valid():
-            plato = form.save()
-            formset.instance = plato
-            formset.save()
-            messages.success(request, self.success_message)  # 👈 mensaje automático
-            return redirect(self.success_url)
-
-        return render(request, self.template_name, {
-            'form': form,
-            'formset': formset,
-            'titulo': 'Crear Plato',
-            'entidad': 'Plato'
-        })
-
-
-# 🔹 Actualizar Plato
-class PlatoUpdateView(SuccessMessageMixinCustom, UpdateView):
-    model = Plato
-    form_class = PlatoForm
-    template_name = 'forms/formulario_actualizar_plato.html'
-    success_url = reverse_lazy('apl:listar_plato')
-    success_message = "El plato se ha actualizado correctamente ✅"
-
-    def get(self, request, *args, **kwargs):
+        # Renderiza solo el contenido para el modal
         self.object = self.get_object()
-        form = self.get_form()
-        formset = PlatoProductoFormSet(instance=self.object)
-        return render(request, self.template_name, {
-            'form': form,
-            'formset': formset,
-            'titulo': 'Editar Plato',
-            'entidad': 'Plato'
-        })
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form = self.get_form()
-        formset = PlatoProductoFormSet(self.request.POST, instance=self.object)
-
-        if form.is_valid() and formset.is_valid():
-            plato = form.save()
-            formset.instance = plato
-            formset.save()
-            messages.success(request, self.success_message)  # 👈 mensaje automático
-            return redirect(self.success_url)
-
-        return render(request, self.template_name, {
-            'form': form,
-            'formset': formset,
-            'titulo': 'Editar Plato',
-            'entidad': 'Plato'
-        })
+        return render(request, self.template_name, {'object': self.object})
 
 
-# 🔹 Eliminar Plato (AJAX + SweetAlert)
-@method_decorator(csrf_exempt, name="dispatch")
-class PlatoDeleteView(DeleteView):
-    model = Plato
-    success_url = reverse_lazy('apl:listar_plato')
+class UsuarioCreateView(CreateView):
+    model = Usuario
+    template_name = 'forms/formulario_crear.html'
+    fields = ['nombre', 'cedula', 'cargo', 'correo_electronico', 'numero_celular', 'estado', 'contraseña']
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.delete()
-        return JsonResponse({"status": "ok"})
+    def get_success_url(self):
+        return reverse_lazy('apl:usuario_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Crear nuevo usuario'
+        context['modulo'] = "usuario"
+        return context

@@ -1,5 +1,5 @@
-from django.urls import path,include
-from usuario.views import *
+from django.urls import path
+from usuario.views import UsuarioListView, UsuarioCreateView, UsuarioUpdateView, UsuarioDeleteView
 
 urlpatterns = [
     path('usuarios/', UsuarioListView.as_view(), name='usuario_list'),
