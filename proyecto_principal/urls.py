@@ -1,4 +1,5 @@
 from django.urls import path,include
+import categoria
 import empleado
 import pedido
 import plato
@@ -7,8 +8,10 @@ from mesa.views import *
 from menu.views import *
 from categoria.views import *
 from marca.views import *
+from . import views
 from proyecto_principal import views
 
+app_name = 'proyecto_principal'
 
 urlpatterns = [
     path('', views.home, name='home'),
