@@ -21,9 +21,5 @@ from proyecto_principal import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
-    path('', include('proyecto_principal.urls')),
-    path('mesas/', include('mesa.urls', namespace='mesa')),
-    path('menus/', include('menu.urls', namespace='menu')),
-    path('categorias/', include('categoria.urls', namespace='categoria')),
-    path('marcas/', include('marca.urls', namespace='marca')),
+
 ]
