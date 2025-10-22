@@ -58,8 +58,3 @@ class EmpleadoDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Eliminar Empleado'
         return context
-
-
-from django.shortcuts import render
-
-# Create your views here.

@@ -5,10 +5,9 @@ import plato
 import usuario
 from proyecto_principal import views
 
-app_name = 'proyecto_principal'
+app_name = 'apl'
 
 urlpatterns = [
-    path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
     #-------------- Mesa ----------------------
     path('mesas/', include('mesa.urls', namespace='mesa')),
@@ -19,11 +18,11 @@ urlpatterns = [
     #------------------ Marca ------------------------------
     path('marcas/', include('marca.urls', namespace='marca')),
     # _________________________ Modulos de Usuario __________________________
-    path('usuarios/', include(usuario.urls), name='usuario_list'),
+    path('usuarios/', include("usuario.urls"), name='usuario_list'),
     # _________________________ Modulos de Plato __________________________
-    path('platos/listar/', include(plato.urls), name='listar_plato'),
+    path('platos/', include("plato.urls"), name='listar_plato'),
     # _________________________ Modulos de Pedido __________________________
-    path('pedidos/listar/', include(pedido.urls), name='listar_pedido'),
+    path('pedidos/', include("pedido.urls"), name='listar_pedido'),
     # _________________________ Modulos de Empleado __________________________
-    path('empleados/listar/', include(empleado.urls), name='listar_empleado'),
+    path('empleados/', include("empleado.urls"), name='listar_empleado'),
 ]

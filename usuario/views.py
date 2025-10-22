@@ -66,8 +66,3 @@ class UsuarioCreateView(CreateView):
         context['titulo'] = 'Crear nuevo usuario'
         context['modulo'] = "usuario"
         return context
-
-
-from django.shortcuts import render
-
-# Create your views here.

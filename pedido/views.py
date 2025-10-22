@@ -58,8 +58,3 @@ class PedidoDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Eliminar Pedido'
         return context
-
-
-from django.shortcuts import render
-
-# Create your views here.

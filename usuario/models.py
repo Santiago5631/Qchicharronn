@@ -10,7 +10,7 @@ class Usuario(models.Model):
             ('mesero', 'Mesero'),
             ('administrador', 'Administrador'),
             ('cocinero', 'Cocinero'),
-            ('proveedor', 'Proveedor'),
+            ("proveedor", "Proveedor")
         ]
     )
     correo_electronico = models.EmailField()

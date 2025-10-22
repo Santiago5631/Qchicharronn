@@ -1,14 +1,16 @@
 from django.db import models
 from django.utils import timezone
 from plato.models import Plato
-from usuario.models import Usuario
-from empleado.models import Empleado
-from menu.models import Menu
-from mesa.models import Mesa
+from producto.models import Producto
+
 
 class Pedido(models.Model):
+    # Relación a la app de mesas (sin importar dónde esté)
     mesa = models.ForeignKey("mesa.Mesa", on_delete=models.CASCADE)
+
+    # Si tu modelo Menu está en la app 'menus'
     menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE, default=1)
+
     fecha = models.DateTimeField(default=timezone.now)
     estado = models.CharField(
         max_length=20,
@@ -38,10 +40,11 @@ class PedidoDetalle(models.Model):
     def __str__(self):
         return f"{self.cantidad} x {self.menu.nombre} (Pedido {self.pedido.id})"
 
+
 class PedidoProducto(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     producto = models.ForeignKey(
-        "inventario.Producto",
+        Producto,
         on_delete=models.CASCADE,
         related_name="pedidos_producto"
     )
@@ -52,7 +55,11 @@ class PedidoProducto(models.Model):
 
 class PedidoMenu(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE, related_name="pedidos_menu")
+    menu = models.ForeignKey(
+        "menu.Menu",
+        on_delete=models.CASCADE,
+        related_name="pedidos_menu"
+    )
     cantidad = models.IntegerField()
 
     def __str__(self):
