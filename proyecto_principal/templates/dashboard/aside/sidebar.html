@@ -40,11 +40,8 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Roles:</h6>
                 <a class="collapse-item" href="{% url 'apl:administrador:administrador_list' %}">Administrador</a>
-                <a class="collapse-item" href="{% url 'apl:venta:venta_list' %}">Administrador</a>
-                <a class="collapse-item" href="{% url 'apl:compra:compra_list' %}">Administrador</a>
-                <a class="collapse-item" href="{% url 'apl:informe:informe_list' %}">Administrador</a>
                 <a class="collapse-item" href="{% url 'apl:usuario:usuario_list' %}">Empleados</a>
-                <a class="collapse-item" href="{% url 'proveedor:proveedor_list' %}">Proveedor</a>
+                <!--<a class="collapse-item" href="{#% url 'proveedor:proveedor_list' %#}">Proveedor</a>-->
             </div>
         </div>
     </li>
@@ -63,7 +60,7 @@
                 <!--<a class="collapse-item" href="{#% url 'producto:producto_list' %#}">Producto</a>-->
                 <!--<a class="collapse-item" href="{#% url 'marca:marca_list' %#}">Marca</a>-->
                 <!--<a class="collapse-item" href="{#% url 'categoria:listar_categoria' %#}">Categoría</a>-->
-                <!--<a class="collapse-item" href="{#% url 'informe:informe_listar' %#}">Informe</a>-->
+                <a class="collapse-item" href="{% url 'apl:informe:informe_list' %}">Informe</a>
                 <!--<a class="collapse-item" href="{#% url 'unidad:unidad_list' %#}">Unidad</a>-->
             </div>
         </div>
@@ -91,14 +88,14 @@
                 <!--<a class="collapse-item" href="{#% url 'mesa:mesa_list' %#}">Mesa</a>-->
                 <a class="collapse-item" href="{% url 'apl:plato:listar_plato' %}">Plato</a>
                 <a class="collapse-item" href="{% url 'apl:pedido:listar_pedido' %}">Pedido</a>
-                <!--<a class="collapse-item" href="{#% url 'venta:venta_listar' %#}">Venta</a>-->
+                <a class="collapse-item" href="{% url 'apl:venta:venta_list' %}">Venta</a>
             </div>
         </div>
     </li>
 
     <!-- Nav Item - Tables -->
     <li class="nav-item">
-        <!--<a class="nav-link" href="{#% url 'compra:compra_listar' %#}" data-tooltip="Compra">
+        <a class="nav-link" href="{% url 'apl:compra:compra_list' %}" data-tooltip="Compra">
             <i class="bi bi-bag-plus-fill nav-icon"></i>
             <span>Compra</span>
         </a>-->

@@ -29,7 +29,6 @@ urlpatterns = [
     path('pedidos/', include(("pedido.urls", 'pedido'), namespace='pedido')),
     # _________________________ Modulos de Empleado __________________________
     path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
-    path('empleados/', include("empleado.urls"), name='listar_empleado'),
 
     # -------------------- Compra --------------------
     path('compras/', include('compra.urls', namespace='compra')),
