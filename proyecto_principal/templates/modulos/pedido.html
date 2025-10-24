@@ -1,11 +1,11 @@
-{% extends "layout.html" %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 
 {% block content %}
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
-        <a href="{% url 'apl:crear_pedido' %}" class="btn btn-success btn-sm">
+        <a href="{% url 'apl:pedido:crear_pedido' %}" class="btn btn-success btn-sm">
             <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
         </a>
     </div>
@@ -38,10 +38,10 @@
                         <td>${{ pe.subtotal }}</td>
                         <td>{{ pe.estado|title }}</td>
                         <td>
-                            <a href="{% url 'apl:editar_pedido' pe.id %}" class="btn btn-warning btn-sm">
+                            <a href="{% url 'apl:pedido:editar_pedido' pe.id %}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil-fill"></i>
                             </a>
-                            <a href="{% url 'apl:eliminar_pedido' pe.id %}" class="btn btn-danger btn-sm">
+                            <a href="{% url 'apl:pedido:eliminar_pedido' pe.id %}" class="btn btn-danger btn-sm">
                                 <i class="bi bi-trash3-fill"></i>
                             </a>
                             {% if pe.estado != "entregado" %}

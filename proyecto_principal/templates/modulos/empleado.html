@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "dashboard/layout.html" %}
 
 {% block content %}
 <div class="card shadow mb-4">
@@ -15,7 +15,7 @@
                         <th>estado</th>
                         <th>usuario_id</th>
                         <th>
-                            <a href="{% url 'apl:crear_empleado' %}">
+                            <a href="{% url 'apl:empleado:crear_empleado' %}">
                                 <button type="button" class="btn btn-block btn-success btn-lg">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
@@ -31,12 +31,12 @@
                         <td>{{ e.estado }}</td>
                         <td>{{ e.usuario_id }}</td>
                         <td>
-                            <a href="{% url 'apl:editar_empleado' e.id %}">
+                            <a href="{% url 'apl:empleado:editar_empleado' e.id %}">
                                 <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-                            <a href="{% url 'apl:eliminar_empleado' e.id %}">
+                            <a href="{% url 'apl:empleado:eliminar_empleado' e.id %}">
                                 <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
                                     <i class="bi bi-trash3-fill"></i>
                                 </button>
