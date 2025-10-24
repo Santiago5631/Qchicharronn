@@ -1,4 +1,8 @@
 from django.urls import path,include
+import empleado
+import pedido
+import plato
+import usuario
 from proyecto_principal import views
 
 app_name = 'apl'
@@ -14,11 +18,11 @@ urlpatterns = [
     #------------------ Marca ------------------------------
     path('marcas/', include('marca.urls', namespace='marca')),
     # _________________________ Modulos de Usuario __________________________
-    path('usuarios/', include("usuario.urls"), name='usuario'),
+    path('usuarios/', include("usuario.urls"), name='usuario_list'),
     # _________________________ Modulos de Plato __________________________
-    path('platos/', include("plato.urls"), name='plato'),
+    path('platos/', include("plato.urls"), name='listar_plato'),
     # _________________________ Modulos de Pedido __________________________
-    path('pedidos/', include("pedido.urls"), name='pedido'),
+    path('pedidos/', include("pedido.urls"), name='listar_pedido'),
     # _________________________ Modulos de Empleado __________________________
     path('empleados/', include("empleado.urls"), name='empleado'),
     #---------------------------Modulo de Producto ----------------------------

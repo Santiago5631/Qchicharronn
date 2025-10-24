@@ -1,9 +1,20 @@
 from django.db import models
 
-# Create your models here.
 class Unidad(models.Model):
-    nombre = models.CharField(max_length=50)  # Ej: kg, L, unidades
-    descripcion = models.CharField(max_length=100, blank=True, null=True)  # opcional
+    class TipoUnidad(models.TextChoices):
+        KILOGRAMO = 'kg', 'Kilogramos'
+        LITRO = 'L', 'Litros'
+        MILILITRO = "ml", "Millitros"
+        UNIDAD = 'u', 'Unidades'
+        GRAMO = 'g', 'Gramos'
+
+    nombre = models.CharField(
+        max_length=10,
+        choices=TipoUnidad.choices,
+        default=TipoUnidad.UNIDAD
+    )
+    descripcion = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return self.nombre
+        # Muestra el nombre legible en el admin o en las vistas
+        return self.get_nombre_display()

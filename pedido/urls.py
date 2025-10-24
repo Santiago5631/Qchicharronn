@@ -1,6 +1,7 @@
 from django.urls import path,include
 from pedido.views import *
 
+app_name = 'pedido'
 urlpatterns = [
     path('listar/', PedidoListView.as_view(), name='listar_pedido'),
     path('crear/', PedidoCreateView.as_view(), name='crear_pedido'),

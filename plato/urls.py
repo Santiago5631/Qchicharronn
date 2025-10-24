@@ -1,6 +1,7 @@
 from django.urls import path,include
 from plato.views import *
 
+app_name = 'plato'
 urlpatterns = [
 
 path('listar/', PlatoListView.as_view(), name='listar_plato'),

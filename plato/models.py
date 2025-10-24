@@ -1,5 +1,6 @@
 from django.db import models
 from producto.models import Producto
+from unidad.models import Unidad  # Importamos el modelo Unidad
 
 
 class Plato(models.Model):
@@ -26,7 +27,7 @@ class PlatoProducto(models.Model):
         related_name="platos_producto"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2)
-    unidad = models.CharField(max_length=20)
+    unidad = models.ForeignKey(Unidad, on_delete=models.CASCADE)  # 👈 debe ser ForeignKey
 
     def __str__(self):
-        return f"{self.cantidad} {self.unidad} de {self.producto.nombre} para {self.plato.nombre}"
+        return f"{self.cantidad} {self.unidad.nombre} de {self.producto.nombre} para {self.plato.nombre}"
