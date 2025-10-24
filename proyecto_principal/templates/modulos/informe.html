@@ -1,9 +1,9 @@
-{% extends "layout.html" %}
+{% extends "templates/dashboard/layout.html" %}
 {% block content %}
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
-        <a href="{% url 'apl:informe_crear' %}">
+        <a href="{% url 'apl:informe:crear_informe' %}">
             <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Crear</button>
         </a>
     </div>
@@ -60,7 +60,7 @@ function eliminarInforme(pk) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            const url = "{% url 'apl:informe_eliminar' 0 %}".replace("0", pk);
+            const url = "{% url 'apl:informe:eliminar_informe' 0 %}".replace("0", pk);
 
             fetch(url, {
                 method: "DELETE",
