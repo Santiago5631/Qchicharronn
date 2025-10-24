@@ -18,11 +18,11 @@ urlpatterns = [
     #------------------ Marca ------------------------------
     path('marcas/', include('marca.urls', namespace='marca')),
     # _________________________ Modulos de Usuario __________________________
-    path('usuarios/', include("usuario.urls"), name='usuario_list'),
+    path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),
     # _________________________ Modulos de Plato __________________________
-    path('platos/', include("plato.urls"), name='listar_plato'),
+    path('platos/', include(("plato.urls", 'plato'), namespace='plato')),
     # _________________________ Modulos de Pedido __________________________
-    path('pedidos/', include("pedido.urls"), name='listar_pedido'),
+    path('pedidos/', include(("pedido.urls", 'pedido'), namespace='pedido')),
     # _________________________ Modulos de Empleado __________________________
-    path('empleados/', include("empleado.urls"), name='listar_empleado'),
+    path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
 ]

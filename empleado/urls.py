@@ -1,6 +1,8 @@
 from django.urls import path,include
 from empleado.views import *
 
+app_name = 'empleado'
+
 urlpatterns = [
     path('listar/', EmpleadoListView.as_view(), name='listar_empleado'),
     path('crear/', EmpleadoCreateView.as_view(), name='crear_empleado'),
