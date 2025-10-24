@@ -3,6 +3,10 @@ import empleado
 import pedido
 import plato
 import usuario
+import compra
+import venta
+import administrador
+import informe
 from proyecto_principal import views
 
 app_name = 'apl'
@@ -25,4 +29,16 @@ urlpatterns = [
     path('pedidos/', include("pedido.urls"), name='listar_pedido'),
     # _________________________ Modulos de Empleado __________________________
     path('empleados/', include("empleado.urls"), name='listar_empleado'),
+
+    # -------------------- Compra --------------------
+    path('compras/', include('compra.urls', namespace='compra')),
+
+    # -------------------- Venta --------------------
+    path('ventas/', include('venta.urls', namespace='venta')),
+
+    # -------------------- Administrador --------------------
+    path('administradores/', include('administrador.urls', namespace='administrador')),
+
+    # -------------------- Informe --------------------
+    path('informes/', include('informe.urls', namespace='informe')),
 ]
