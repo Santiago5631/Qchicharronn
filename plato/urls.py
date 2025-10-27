@@ -8,5 +8,5 @@ path('listar/', PlatoListView.as_view(), name='listar_plato'),
 path('crear/', PlatoCreateView.as_view(), name='crear_plato'),
 path('editar/', PlatoUpdateView.as_view(), name='editar_plato'),
 path('eliminar/', PlatoDeleteView.as_view(), name='eliminar_plato'),
-
+path('ajax/agregar_producto/', agregar_producto_ajax, name='agregar_producto_ajax'),
 ]
