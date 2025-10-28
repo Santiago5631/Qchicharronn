@@ -31,7 +31,7 @@
                         <td>{{ p.descripcion }}</td>
                         <td>{{ p.precio }}</td>
                         <td>
-                            <a href="{% url 'apl:editar_plato' p.id %}">
+                            <a href="{% url 'apl:plato:editar_plato' p.id %}">
                                 <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
@@ -40,7 +40,7 @@
                                 <!-- Botón eliminar con SweetAlert -->
                                     <button type="button"
                                             class="btn btn-danger btn-sm btn-delete"
-                                            data-url="{% url 'apl:eliminar_plato' p.pk %}"
+                                            data-url="{% url 'apl:plato:eliminar_plato' p.pk %}"
                                             data-name="el plato {{ p.nombre }}">
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>

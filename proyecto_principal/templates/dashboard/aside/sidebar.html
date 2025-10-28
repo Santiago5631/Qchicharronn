@@ -39,7 +39,7 @@
         <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Roles:</h6>
-                <!--<a class="collapse-item" href="{#% url 'administrador:administrador_listar' %#}">Administrador</a>-->
+                <a class="collapse-item" href="{% url 'apl:administrador:administrador_list' %}">Administrador</a>
                 <a class="collapse-item" href="{% url 'apl:usuario:usuario_list' %}">Empleados</a>
                 <!--<a class="collapse-item" href="{#% url 'proveedor:proveedor_list' %#}">Proveedor</a>-->
             </div>
@@ -95,10 +95,10 @@
 
     <!-- Nav Item - Tables -->
     <li class="nav-item">
-        <!--<a class="nav-link" href="{#% url 'compra:compra_listar' %#}" data-tooltip="Compra">
+        <a class="nav-link" href="{#% url 'compra:compra_listar' %#}" data-tooltip="Compra">
             <i class="bi bi-bag-plus-fill nav-icon"></i>
             <span>Compra</span>
-        </a>-->
+        </a>
     </li>
 
     <li class="nav-item">

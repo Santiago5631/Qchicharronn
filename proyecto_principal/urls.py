@@ -3,6 +3,10 @@ import empleado
 import pedido
 import plato
 import usuario
+import compra
+import venta
+import administrador
+import informe
 from proyecto_principal import views
 
 app_name = 'apl'
@@ -18,16 +22,23 @@ urlpatterns = [
     #------------------ Marca ------------------------------
     path('marcas/', include('marca.urls', namespace='marca')),
     # _________________________ Modulos de Usuario __________________________
-    path('usuarios/', include("usuario.urls"), name='usuario_list'),
+    path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),
     # _________________________ Modulos de Plato __________________________
-    path('platos/', include("plato.urls"), name='listar_plato'),
+    path('platos/', include(("plato.urls", 'plato'), namespace='plato')),
     # _________________________ Modulos de Pedido __________________________
-    path('pedidos/', include("pedido.urls"), name='listar_pedido'),
+    path('pedidos/', include(("pedido.urls", 'pedido'), namespace='pedido')),
     # _________________________ Modulos de Empleado __________________________
-    path('empleados/', include("empleado.urls"), name='empleado'),
-    #---------------------------Modulo de Producto ----------------------------
-    path('producto/', include("producto.urls"), name='producto'),
-    #----------------------------Modulo de proveedor ---------------------------
-    path('proveedor/', include("proveedor.urls"), name='proveedor'),
+    path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
 
+    # -------------------- Compra --------------------
+    path('compras/', include('compra.urls', namespace='compra')),
+
+    # -------------------- Venta --------------------
+    path('ventas/', include('venta.urls', namespace='venta')),
+
+    # -------------------- Administrador --------------------
+    path('administradores/', include('administrador.urls', namespace='administrador')),
+
+    # -------------------- Informe --------------------
+    path('informes/', include('informe.urls', namespace='informe')),
 ]
