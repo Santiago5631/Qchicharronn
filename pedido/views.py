@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from pedido.models import *
 from django.views.generic import *
 
@@ -58,3 +58,13 @@ class PedidoDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Eliminar Pedido'
         return context
+
+def comanda_parrilla(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    detalles = pedido.obtener_comanda_parrilla()
+    return render(request, 'templates/pedido/comanda_parrila.html', {'pedido': pedido, 'detalles': detalles})
+
+def comanda_cocina(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    detalles = pedido.obtener_comanda_cocina()
+    return render(request, 'templates/pedido/comanda_cocina.html', {'pedido': pedido, 'detalles': detalles})
