@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Accesibilidad</title>
+
+    <!-- Estilos del widget desde CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sienna-accessibility@latest/dist/sienna-accessibility.min.css">
+
+    <!-- (Opcional) Tus propios estilos -->
+    <link rel="stylesheet" href="{% static 'accesibilidad/custom.css' %}">
+</head>
+<body>
+
+    <h1>Bienvenido a la Prueba de Accesibilidad</h1>
+    <p>Esta es una página de ejemplo para verificar el funcionamiento del widget.</p>
+
+    <!-- Script del widget -->
+    <script src="https://cdn.jsdelivr.net/npm/sienna-accessibility@latest/dist/sienna-accessibility.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          new SiennaAccessibility();
+      });
+    </script>
+</body>
+</html>
