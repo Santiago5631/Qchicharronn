@@ -3,36 +3,72 @@
 {% block content %}
 <div class="card-body">
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Lista de Menús</h6>
+            <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-circle"></i> Agregar Menú
+            </a>
         </div>
+
         <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
             <div class="table-responsive">
-                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered" id="menuTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>Nombre</th>
                             <th>Descripción</th>
                             <th>Categoría</th>
+                            <th>Tipo</th>
                             <th>Precio Base</th>
                             <th>Descuento</th>
                             <th>Precio Final</th>
                             <th>Disponible</th>
-                            <th>Stock</th>
-                            <th>
-                                <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle"></i> Agregar Menú
-                                </a>
-                            </th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for menu in menus %}
                         <tr>
-                            <td>{{ menu.nombre }}</td>
-                            <td>{{ menu.descripcion }}</td>
-                            <td>${{ menu.precio|floatformat:2 }}</td>
+                            <!-- Nombre -->
+                            <td><strong>{{ menu.nombre }}</strong></td>
+
+                            <!-- Descripción -->
+                            <td>
+                                {% if menu.descripcion %}
+                                    {{ menu.descripcion|truncatewords:8 }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Categoría -->
                             <td>{{ menu.get_categoria_menu_display }}</td>
+
+                            <!-- Tipo de Item -->
+                            <td>
+                                {% if menu.content_type %}
+                                    {% if menu.content_type.model == 'plato' %}
+                                        <span class="badge bg-info">Plato</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ menu.content_type.model|title }}</span>
+                                    {% endif %}
+                                {% elif menu.menu_productos.exists %}
+                                    <span class="badge bg-warning text-dark">Productos ({{ menu.menu_productos.count }})</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Menú Simple</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Precio Base -->
                             <td>
                                 {% if menu.precio_menu %}
                                     ${{ menu.precio_menu|floatformat:2 }}
@@ -41,80 +77,99 @@
                                 {% elif menu.item and menu.item.precio %}
                                     ${{ menu.item.precio|floatformat:2 }}
                                 {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>{{ menu.descuento|floatformat:2 }}%</td>
-                            <td>${{ menu.get_precio_final|floatformat:2 }}</td>
-                            <td>
-                                 {% if menu.puede_servirse %}
-                                     ✅ Sí
-                                 {% else %}
-                                    ❌ No
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if menu.get_stock_disponible %}
-                                    {{ menu.get_stock_disponible }}
-                                {% else %}
-                                    -
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
 
-                            <td class="text-end">
-                                <a href="{% url 'apl:menu:menu_update' menu.id %}" class="btn btn-warning btn-sm d-inline">
-                                    <i class="bi bi-pen-fill"></i>
-                                </a>
-                                <button type="button" onclick="eliminarProducto({{ p.pk }})" class="btn btn-danger">
-                                </a>
+                            <!-- Descuento -->
+                            <td>
+                                {% if menu.descuento > 0 %}
+                                    <span class="badge bg-danger">{{ menu.descuento|floatformat:0 }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
+
+                            <!-- Precio Final -->
+                            <td><strong class="text-success">${{ menu.get_precio_final|floatformat:2 }}</strong></td>
+
+                            <!-- Disponible -->
+                            <td class="text-center">
+                                {% if menu.puede_servirse %}
+                                    <span class="badge bg-success">✓ Disponible</span>
+                                {% else %}
+                                    <span class="badge bg-danger">✗ No disponible</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Acciones -->
+                            <td class="text-center">
+                                <a href="{% url 'apl:menu:menu_update' menu.id %}"
+                                   class="btn btn-warning btn-sm"
+                                   title="Editar">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                <button type="button"
+                                        onclick="eliminarMenu({{ menu.pk }})"
+                                        class="btn btn-danger btn-sm"
+                                        title="Eliminar">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">No hay menús registrados</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-                    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-                <script>
-                    $(document).ready(function () {
-                    $('#menuTable').DataTable({
-                            "pageLength": 5,
-                            "language": {
-                                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-                            }
-                        });
-                    });
-                 </script>
-
             </div>
         </div>
     </div>
 </div>
+
+<!-- Scripts de DataTables -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
-    // Mostrar/Ocultar campos según el tipo de ítem
-    function toggleTipoItem() {
-        const tipoItem = document.getElementById("tipo_item").value;
+    $(document).ready(function() {
+        $('#menuTable').DataTable({
+            "pageLength": 10,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "order": [[0, "asc"]],
+            "columnDefs": [
+                { "orderable": false, "targets": [8] } // Deshabilitar orden en columna Acciones
+            ]
+        });
+    });
 
-        const productoField = document.getElementById("producto_field");
-        const platoField = document.getElementById("plato_field");
+    // Función para eliminar menú con confirmación
+    function eliminarMenu(menuId) {
+        if (confirm('¿Está seguro de eliminar este menú? Esta acción no se puede deshacer.')) {
+            // Crear formulario para enviar DELETE request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/menu/${menuId}/delete/`; // Ajusta esta URL según tu configuración
 
-        if (tipoItem === "producto") {
-            productoField.style.display = "block";
-            platoField.style.display = "none";
-        } else if (tipoItem === "plato") {
-            productoField.style.display = "none";
-            platoField.style.display = "block";
-        } else {
-            productoField.style.display = "none";
-            platoField.style.display = "none";
+            // Agregar CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfToken) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'csrfmiddlewaretoken';
+                input.value = csrfToken.value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
         }
     }
-
-    // Ejecutar al cargar la página
-    document.addEventListener("DOMContentLoaded", function() {
-        toggleTipoItem();
-    });
 </script>
 
 {% endblock %}
