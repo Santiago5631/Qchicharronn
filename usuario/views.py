@@ -32,7 +32,7 @@ class UsuarioUpdateView(UpdateView):
     fields = ['nombre', 'cedula', 'cargo', 'correo_electronico', 'numero_celular', 'estado', 'contraseña']
 
     def get_success_url(self):
-        return reverse_lazy('apl:usuario_list')
+        return reverse_lazy('apl:usuario:usuario_list')
 
 
 class UsuarioDeleteView(DeleteView):
@@ -40,7 +40,7 @@ class UsuarioDeleteView(DeleteView):
     template_name = 'forms/confirmar_eliminacion.html'
 
     def get_success_url(self):
-        return reverse_lazy('apl:usuario_list')
+        return reverse_lazy('apl:usuario:usuario_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -59,7 +59,7 @@ class UsuarioCreateView(CreateView):
     fields = ['nombre', 'cedula', 'cargo', 'correo_electronico', 'numero_celular', 'estado', 'contraseña']
 
     def get_success_url(self):
-        return reverse_lazy('apl:usuario_list')
+        return reverse_lazy('apl:usuario:usuario_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

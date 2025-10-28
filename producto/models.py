@@ -1,10 +1,5 @@
 from django.db import models
-from django.utils import timezone
-import datetime
-import uuid
-from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+
 
 # Create your models here.
 class Producto(models.Model):
@@ -13,7 +8,14 @@ class Producto(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     categoria = models.ForeignKey('categoria.Categoria', on_delete=models.CASCADE)
     proveedor = models.ForeignKey('proveedor.Proveedor', on_delete=models.CASCADE)
-    unidad = models.ForeignKey('unidad.Unidad', on_delete=models.CASCADE, null=False, blank=False)
+    unidad = models.CharField(
+        max_length=20,
+        choices=[('kg', 'Kilogramos'),
+                 ('L', 'Litros'),
+                 ("ml", "Millitros"),
+                 ('u', 'Unidades'),
+                 ('g', 'Gramos')]
+    )
 
     tipo_uso = models.CharField(
         max_length=20,

@@ -5,14 +5,13 @@ from django.http import JsonResponse
 from categoria.models import Categoria
 from marca.models import Marca
 from proveedor.models import Proveedor
-from unidad.models import Unidad
 from .models import *
 from .forms import (
     ProductoForm,
     MarcaModalForm,
     CategoriaModalForm,
     ProveedorModalForm,
-    UnidadModalForm,
+
 )
 import json
 from django.shortcuts import redirect
@@ -46,7 +45,7 @@ class ProductoCreateView(CreateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'forms/formulario_crear_producto.html'
-    success_url = reverse_lazy('apl:producto_list')
+    success_url = reverse_lazy('apl:producto:producto_list')
     success_message = "Producto creado exitosamente"
 
     def get_context_data(self, **kwargs):
@@ -61,7 +60,6 @@ class ProductoCreateView(CreateView):
         context['marca_form'] = MarcaModalForm()
         context['categoria_form'] = CategoriaModalForm()
         context['proveedor_form'] = ProveedorModalForm()
-        context['unidad_form'] = UnidadModalForm()
 
         return context
 
@@ -76,8 +74,6 @@ class ProductoCreateView(CreateView):
             return self.crear_categoria(request)
         elif 'crear_proveedor' in request.POST:
             return self.crear_proveedor(request)
-        elif 'crear_unidad' in request.POST:
-            return self.crear_unidad(request)
         else:
             # Formulario principal de producto
             return super().post(request, *args, **kwargs)
@@ -113,15 +109,6 @@ class ProductoCreateView(CreateView):
             messages.error(request, 'Error al crear el proveedor. Verifique los datos.')
             return self.render_to_response(self.get_context_data())
 
-    def crear_unidad(self, request):
-        form = UnidadModalForm(request.POST)
-        if form.is_valid():
-            unidad = form.save()
-            messages.success(request, f'Unidad "{unidad.nombre}" creada exitosamente')
-            return redirect(request.path)
-        else:
-            messages.error(request, 'Error al crear la unidad. Verifique los datos.')
-            return self.render_to_response(self.get_context_data())
 
     def form_valid(self, form):
         messages.success(self.request, 'Producto creado exitosamente')
@@ -139,12 +126,12 @@ class ProductoUpdateView(UpdateView):
     success_message = "Producto creado exitosamente"
 
     def get_success_url(self):
-        return reverse_lazy('apl:producto_list')
+        return reverse_lazy('apl:producto:producto_list')
 
 
 class ProductoDeleteView(DeleteView):
     model = Producto
-    success_url = reverse_lazy('apl:producto_list')
+    success_url = reverse_lazy('apl:producto:   producto_list')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -296,48 +283,4 @@ def crear_proveedor_ajax(request):
             'success': False,
             'error': str(e)
         })
-
-
-@require_POST
-def crear_unidad_ajax(request):
-    """Vista AJAX para crear nueva unidad"""
-    try:
-        data = json.loads(request.body)
-        nombre = data.get('nombre', '').strip()
-        descripcion = data.get('descripcion', '').strip()
-
-        if not nombre:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre de la unidad es requerido'
-            })
-
-        if Unidad.objects.filter(nombre=nombre).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe una unidad con este nombre'
-            })
-
-        unidad = Unidad.objects.create(
-            nombre=nombre,
-            descripcion=descripcion if descripcion else None
-        )
-
-        return JsonResponse({
-            'success': True,
-            'id': unidad.id,
-            'text': str(unidad)
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'Datos JSON inválidos'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
-
 # Create your views here.
