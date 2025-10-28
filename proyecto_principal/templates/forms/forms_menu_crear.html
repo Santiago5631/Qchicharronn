@@ -47,7 +47,7 @@
                         <div class="row mb-3 plato-section" id="plato-section">
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">{{ form.plato_id.label }}</label>
-                                <select name="plato_id" id="plato_id" class="form-control">
+                                <select name="plato_id" id="id_plato_id" class="form-control">
                                     <option value="">-- Seleccionar Plato --</option>
                                     {% for plato in form.plato_id.field.queryset %}
                                     <option value="{{ plato.id }}" {% if form.plato_id.value == plato.id|stringformat:"s" %}selected{% endif %}>
@@ -60,7 +60,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <!-- Productos -->
                         <div id="productos-section" class="productos-section">
                             <div class="card mb-3">
@@ -69,17 +69,17 @@
                                 </div>
                                 <div class="card-body">
                                     {{ formset.management_form }}
-                                    
+
                                     {% if formset.non_form_errors %}
                                     <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
                                     {% endif %}
-                                    
+
                                     <div id="formset-container">
                                         {% for form in formset %}
                                         <div class="formset-row">
                                             <div class="row">
                                                 {{ form.id }}
-                                                
+
                                                 <div class="col-md-5">
                                                     <label class="form-label">Producto</label>
                                                     <select name="{{ form.producto.html_name }}" id="{{ form.producto.id_for_label }}" class="form-control">
@@ -94,7 +94,7 @@
                                                     <div class="text-danger small">{{ form.producto.errors }}</div>
                                                     {% endif %}
                                                 </div>
-                                                
+
                                                 <div class="col-md-3">
                                                     <label class="form-label">Cantidad</label>
                                                     {{ form.cantidad }}
@@ -102,7 +102,7 @@
                                                     <div class="text-danger small">{{ form.cantidad.errors }}</div>
                                                     {% endif %}
                                                 </div>
-                                                
+
                                                 <div class="col-md-2">
                                                     <label class="form-label">Orden</label>
                                                     {{ form.orden }}
@@ -110,7 +110,7 @@
                                                     <div class="text-danger small">{{ form.orden.errors }}</div>
                                                     {% endif %}
                                                 </div>
-                                                
+
                                                 <div class="col-md-2 d-flex align-items-end">
                                                     {% if form.instance.pk %}
                                                         {{ form.DELETE }}
@@ -127,14 +127,14 @@
                                         </div>
                                         {% endfor %}
                                     </div>
-                                    
+
                                     <button type="button" class="btn btn-success mt-3" id="add-form">
                                         Agregar Producto
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Datos del Menú -->
                         <div class="card mb-3">
                             <div class="card-header bg-info text-white">
@@ -149,7 +149,7 @@
                                         <div class="text-danger">{{ form.nombre.errors }}</div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">{{ form.categoria_menu.label }}</label>
                                         {{ form.categoria_menu }}
@@ -157,7 +157,7 @@
                                         <div class="text-danger">{{ form.categoria_menu.errors }}</div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label fw-bold">{{ form.descripcion.label }}</label>
                                         {{ form.descripcion }}
@@ -165,7 +165,7 @@
                                         <div class="text-danger">{{ form.descripcion.errors }}</div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold">{{ form.precio_menu.label }} *</label>
                                         {{ form.precio_menu }}
@@ -173,7 +173,7 @@
                                         <div class="text-danger">{{ form.precio_menu.errors }}</div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold">{{ form.descuento.label }}</label>
                                         {{ form.descuento }}
@@ -181,7 +181,7 @@
                                         <div class="text-danger">{{ form.descuento.errors }}</div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
                                         <div class="form-check mt-4">
                                             {{ form.disponible }}
@@ -193,10 +193,10 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row mt-4">
                             <div class="col-md-12 text-end">
-                                <a href="{% url 'apl:menu_list' %}" class="btn btn-secondary">Cancelar</a>
+                                <a href="{% url 'apl:menu:menu_list' %}" class="btn btn-secondary">Cancelar</a>
                                 <button type="submit" class="btn btn-primary">Guardar Menú</button>
                             </div>
                         </div>
@@ -209,65 +209,124 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoItemSelect = document.getElementById('tipo_item');
+    // ✅ CORREGIDO: Usar el ID correcto del formulario
+    const tipoItemSelect = document.getElementById('id_tipo_item');
     const platoSection = document.getElementById('plato-section');
     const productosSection = document.getElementById('productos-section');
-    
+
+    // Verificar que los elementos existen
+    if (!tipoItemSelect) {
+        console.error('No se encontró el select de tipo_item');
+        return;
+    }
+
     function toggleSections() {
         const tipo = tipoItemSelect.value;
+        console.log('Tipo seleccionado:', tipo); // Debug
+
+        // Ocultar ambas secciones
         platoSection.style.display = 'none';
         productosSection.style.display = 'none';
-        
+
+        // Mostrar la sección correspondiente
         if (tipo === 'plato') {
             platoSection.style.display = 'block';
+            console.log('Mostrando sección de platos');
         } else if (tipo === 'productos') {
             productosSection.style.display = 'block';
+            console.log('Mostrando sección de productos');
         }
     }
-    
+
+    // Ejecutar al cambiar
     tipoItemSelect.addEventListener('change', toggleSections);
+
+    // Ejecutar al cargar la página
     toggleSections();
-    
+
     // Agregar producto
-    document.getElementById('add-form').addEventListener('click', function() {
-        const container = document.getElementById('formset-container');
-        const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
-        const currentCount = parseInt(totalForms.value);
-        const lastForm = container.querySelector('.formset-row:last-child');
-        
-        if (!lastForm) return;
-        
-        const newForm = lastForm.cloneNode(true);
-        const regex = new RegExp('menu_productos-(\\d+)-', 'g');
-        
-        newForm.innerHTML = newForm.innerHTML.replace(regex, `menu_productos-${currentCount}-`);
-        
-        newForm.querySelectorAll('input, select').forEach(el => {
-            if (el.type !== 'button') {
-                el.value = '';
-                if (el.name) {
-                    el.name = el.name.replace(regex, `menu_productos-${currentCount}-`);
-                }
-                if (el.id) {
-                    el.id = el.id.replace(/menu_productos-\d+/, `menu_productos-${currentCount}`);
-                }
+    const addFormBtn = document.getElementById('add-form');
+    if (addFormBtn) {
+        addFormBtn.addEventListener('click', function() {
+            const container = document.getElementById('formset-container');
+            const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
+
+            if (!totalForms) {
+                console.error('No se encontró TOTAL_FORMS');
+                return;
             }
+
+            const currentCount = parseInt(totalForms.value);
+            const formsetRows = container.querySelectorAll('.formset-row');
+
+            if (formsetRows.length === 0) {
+                console.error('No hay formularios base para clonar');
+                return;
+            }
+
+            const lastForm = formsetRows[formsetRows.length - 1];
+            const newForm = lastForm.cloneNode(true);
+
+            // Reemplazar los índices
+            const regex = new RegExp('menu_productos-(\\d+)-', 'g');
+            newForm.innerHTML = newForm.innerHTML.replace(regex, `menu_productos-${currentCount}-`);
+
+            // Limpiar valores de los inputs
+            newForm.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.type === 'checkbox') {
+                    el.checked = false;
+                } else if (el.type !== 'button' && el.type !== 'submit') {
+                    el.value = '';
+                }
+
+                // Actualizar name e id
+                if (el.name && el.name.includes('menu_productos-')) {
+                    el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${currentCount}-`);
+                }
+                if (el.id && el.id.includes('menu_productos-')) {
+                    el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${currentCount}-`);
+                }
+            });
+
+            // Agregar el nuevo formulario
+            container.appendChild(newForm);
+            totalForms.value = currentCount + 1;
+
+            console.log('Formulario agregado. Total:', totalForms.value);
         });
-        
-        container.appendChild(newForm);
-        totalForms.value = currentCount + 1;
-    });
-    
+    }
+
     // Eliminar producto
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-empty-form') || e.target.parentElement.classList.contains('delete-empty-form')) {
+        if (e.target.classList.contains('delete-empty-form') ||
+            e.target.closest('.delete-empty-form')) {
+
             const formRow = e.target.closest('.formset-row');
             const container = document.getElementById('formset-container');
-            
+            const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
+
             if (container.querySelectorAll('.formset-row').length > 1) {
                 formRow.remove();
-                const totalForms = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
-                totalForms.value = parseInt(totalForms.value) - 1;
+
+                if (totalForms) {
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                    console.log('Formulario eliminado. Total:', totalForms.value);
+                }
+
+                // Reindexar los formularios restantes
+                const remainingForms = container.querySelectorAll('.formset-row');
+                remainingForms.forEach((form, index) => {
+                    form.querySelectorAll('input, select, textarea').forEach(el => {
+                        if (el.name && el.name.includes('menu_productos-')) {
+                            el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${index}-`);
+                        }
+                        if (el.id && el.id.includes('menu_productos-')) {
+                            el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${index}-`);
+                        }
+                    });
+                });
+            } else {
+                alert('Debe mantener al menos un producto');
             }
         }
     });

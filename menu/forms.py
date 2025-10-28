@@ -146,6 +146,8 @@ class MenuForm(forms.ModelForm):
 
 
 # Formulario inline para MenuProducto (sin cambios)
+
+# Formulario inline para MenuProducto (sin cambios)
 class MenuProductoInlineForm(forms.ModelForm):
     """Formulario inline para productos dentro de un menú"""
 
@@ -176,3 +178,16 @@ class MenuProductoInlineForm(forms.ModelForm):
         if cantidad is not None and cantidad <= 0:
             raise forms.ValidationError("La cantidad debe ser mayor a 0.")
         return cantidad
+
+
+# Formset para MenuProducto (sin cambios)
+MenuProductoFormSet = inlineformset_factory(
+    Menu,
+    MenuProducto,
+    form=MenuProductoInlineForm,
+    extra=1,
+    can_delete=True,
+    min_num=0,
+    validate_min=False,
+)
+

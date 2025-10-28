@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva: Instalar Sienna Accessibility en Django</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        details {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        details[open] {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 20px;
+            cursor: pointer;
+            outline: none;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        summary::after {
+            content: '👇 Expandir';
+            font-size: 0.8em;
+            font-weight: normal;
+            color: #3498db;
+        }
+        details[open] summary::after {
+            content: '👆 Contraer';
+        }
+        .content {
+            padding: 0 20px 20px;
+            border-top: 1px solid #eee;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            position: relative;
+        }
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .copy-btn:hover {
+            background-color: #45a049;
+        }
+        strong {
+            color: #e67e22;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Guía Interactiva: Instalar Sienna Accessibility en Django ♿</h1>
+    <p>Sigue estos pasos para integrar el widget de accesibilidad en tu proyecto Django existente.</p>
+
+    <details>
+        <summary>Paso 1: Preparar tu Proyecto Django</summary>
+        <div class="content">
+            <p>Es fundamental que tu proyecto esté configurado para manejar archivos estáticos. Generalmente, esto ya está listo en <code>settings.py</code>.</p>
+            <ol>
+                <li><strong>Asegúrate de tener una carpeta `static`</strong> en tu aplicación.</li>
+                <li><strong>Verifica <code>settings.py</code></strong> y asegúrate de que <code>STATIC_URL</code> esté definido. Es recomendable también definir <code>STATICFILES_DIRS</code>.</li>
+            </ol>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code># tu_proyecto/settings.py
+
+STATIC_URL = '/static/'
+
+# Recomendado para desarrollo
+STATICFILES_DIRS = [BASE_DIR / "static"]</code></pre>
+            </div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Paso 2: Instalar Sienna Accessibility vía NPM</summary>
+        <div class="content">
+            <p>Vamos a usar <strong>Node Package Manager (npm)</strong> para instalar la herramienta.</p>
+            <ol>
+                <li>Abre una terminal en la raíz de tu proyecto Django.</li>
+                <li>Si no tienes un archivo <code>package.json</code>, créalo con:</li>
+            </ol>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code>npm init -y</code></pre>
+            </div>
+            <p>3. Ahora, instala el paquete:</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code>npm install sienna-accessibility</code></pre>
+            </div>
+            <p>Esto creará una carpeta <code>node_modules</code> en tu proyecto.</p>
+        </div>
+    </details>
+
+    <details>
+        <summary>Paso 3: Integrar los Archivos en Django</summary>
+        <div class="content">
+            <p>Debemos mover los archivos necesarios desde <code>node_modules</code> a la carpeta <code>static</code> de Django.</p>
+            <ol>
+                <li>Localiza los archivos en <code>node_modules/sienna-accessibility/dist/</code>.</li>
+                <li>Copia <strong><code>sienna-accessibility.min.css</code></strong> a tu carpeta <code>static/tu_app/css/</code>.</li>
+                <li>Copia <strong><code>sienna-accessibility.min.js</code></strong> a tu carpeta <code>static/tu_app/js/</code>.</li>
+            </ol>
+            <p>Este método manual es simple y efectivo para empezar.</p>
+        </div>
+    </details>
+
+    <details>
+        <summary>Paso 4: Cargar y Activar el Widget en la Plantilla Base</summary>
+        <div class="content">
+            <p>Edita tu plantilla principal (usualmente <code>base.html</code>) para que el widget aparezca en todas las páginas.</p>
+            <ol>
+                <li>Asegúrate de tener <code>{% load static %}</code> al inicio de la plantilla.</li>
+                <li>Dentro de la etiqueta <code>&lt;head&gt;</code>, añade el CSS:</li>
+            </ol>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code>&lt;!-- CSS de Sienna Accessibility --&gt;
+&lt;link rel="stylesheet" href="{% static 'tu_app/css/sienna-accessibility.min.css' %}"&gt;</code></pre>
+            </div>
+            <p>3. Justo antes de cerrar la etiqueta <code>&lt;/body&gt;</code>, añade el JS y el script de inicialización:</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code>&lt;!-- JS de Sienna Accessibility --&gt;
+&lt;script src="{% static 'tu_app/js/sienna-accessibility.min.js' %}"&gt;&lt;/script&gt;
+
+&lt;!-- Inicialización del Widget --&gt;
+&lt;script&gt;
+    document.addEventListener('DOMContentLoaded', function() {
+        new SiennaAccessibility();
+    });
+&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Paso 5: ¡Verificar la Instalación!</summary>
+        <div class="content">
+            <p>¡Ya casi terminas! Ahora solo queda comprobar que todo funciona.</p>
+            <ol>
+                <li>Ejecuta el servidor de desarrollo de Django:</li>
+            </ol>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre><code>python manage.py runserver</code></pre>
+            </div>
+            <p>2. Abre tu navegador y visita tu proyecto. Deberías ver un <strong>ícono de accesibilidad</strong> flotante en la pantalla. ¡Felicidades!</p>
+        </div>
+    </details>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.parentElement.querySelector('pre');
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.innerText = '¡Copiado!';
+                setTimeout(() => {
+                    button.innerText = 'Copiar';
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar el código: ', err);
+            });
+        }
+    </script>
+
+</body>
+</html>

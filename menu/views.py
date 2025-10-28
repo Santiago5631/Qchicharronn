@@ -9,7 +9,6 @@ from django.utils import timezone
 from .models import Menu, MenuProducto
 
 
-
 class MenuListView(ListView):
     model = Menu
     template_name = 'modulos/menu.html'
