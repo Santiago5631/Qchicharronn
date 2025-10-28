@@ -1,65 +1,68 @@
 {% extends "dashboard/layout.html" %}
 
 {% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
 
-    <div class="card shadow mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center py-3 mb-3">
-                <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
-                <a href="{% url 'apl:crear_producto' %}" class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-circle"></i> Nuevo Producto
-                </a>
-            </div>
-</div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID Producto</th>
+                        <th>Nombre</th>
+                        <th>Marca</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th>Fecha</th>
+                        <th>Unidad</th>
+                        <th>Stock</th>
+                        <th>Tipo de Uso</th>
+                        <th>
+                            <a href="{% url 'apl:producto:crear_producto' %}">
+                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </button>
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
 
-<thead>
-    <tr>
-        <th>ID Producto</th>
-        <th>Nombre</th>
-        <th>Marca</th>
-        <th>Categoría</th>
-        <th>Proveedor</th>
-        
-        <th>Fecha</th>
-        
-        <th>Unidad</th>
-
-        <th>Stock</th>
-        <th>Detalle</th>
-        <th>Acciones</th>
-
-    </tr>
-</thead>
-<tbody>
-    {% for p in productos %}
-    <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.nombre }}</td>
-        <td>{{ p.marca }}</td>
-        <td>{{ p.categoria }}</td>
-        <td>{{ p.proveedor }}</td>
-       
-        <td>{{ p.fecha }}</td>
-       <td>{{ p.unidad }}</td>
-        <td>{{ p.stock }}</td>
-        <td>{{ p.tipo_uso}}</td>
-        <td>
-            <a href="{% url 'apl:editar_producto' p.id %}">
-                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
-                    <i class="bi bi-pen-fill"></i>
-                </button>
-            </a>
-          
-
-                                <!-- Botón eliminar con SweetAlert -->
-                                    <button type="button"
-                                            class="btn btn-danger btn-sm btn-delete"
-                                            data-url="{% url 'apl:eliminar_producto' p.pk %}"
-                                            data-name="el producto {{ p.nombre }}">
-                                        <i class="bi bi-trash3-fill"></i>
-                                    </button>
-{%endfor%}
-{%endblock%}
-
+                <tbody>
+                    {% for p in productos %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.marca }}</td>
+                        <td>{{ p.categoria }}</td>
+                        <td>{{ p.proveedor }}</td>
+                        <td>{{ p.fecha }}</td>
+                        <td>{{ p.unidad }}</td>
+                        <td>{{ p.stock }}</td>
+                        <td>{{ p.tipo_uso }}</td>
+                        <td>
+                            <a href="{% url 'apl:producto:editar_producto' p.id %}">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                    <i class="bi bi-pen-fill"></i>
+                                </button>
+                            </a>
+                            <a href="{% url 'apl:producto:eliminar_producto' p.id %}">
+                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10">No hay productos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
