@@ -51,7 +51,7 @@ class PlatoCreateView(SuccessMessageMixinCustom, CreateView):
     model = Plato
     form_class = PlatoForm
     template_name = 'forms/formulario_crear_plato.html'
-    success_url = reverse_lazy('apl:listar_plato')
+    success_url = reverse_lazy('apl:plato:listar_plato')
     success_message = "✅ El plato se ha creado correctamente "
 
     def get(self, request, *args, **kwargs):
@@ -98,7 +98,7 @@ class PlatoUpdateView(SuccessMessageMixinCustom, UpdateView):
     model = Plato
     form_class = PlatoForm
     template_name = 'forms/formulario_actualizar_plato.html'
-    success_url = reverse_lazy('apl:listar_plato')
+    success_url = reverse_lazy('apl:plato:editar_plato')
     success_message = "El plato se ha actualizado correctamente ✅"
 
     def get(self, request, *args, **kwargs):

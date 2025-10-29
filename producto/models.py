@@ -19,6 +19,7 @@ class Producto(models.Model):
         ],
         default='cocina'
     )
+    disponible = models.BooleanField(default=True)
 
     def reducir_stock(self, cantidad):
         if self.stock >= cantidad:

@@ -18,7 +18,7 @@ class MesaCreateView(CreateView):
     model = Mesa
     form_class = MesaForm  # Usar el formulario personalizado
     template_name = 'forms/formulario_crear.html'
-    success_url = reverse_lazy('apl:mesa_list')
+    success_url = reverse_lazy('apl:mesa:mesa_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

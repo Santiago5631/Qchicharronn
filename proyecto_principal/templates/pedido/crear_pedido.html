@@ -1,0 +1,77 @@
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="container mt-5">
+    <h6 class="text-center mb-4">CREAR PEDIDO</h6>
+
+    <form id="formPedido" method="post">
+        {% csrf_token %}
+        <div class="card shadow-sm p-4 mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Mesa:</label>
+                    {{ form.mesa }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Estado:</label>
+                    {{ form.estado }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Buscador -->
+        <div class="card shadow-sm p-4 mb-4">
+            <h5>Seleccionar productos</h5>
+            <input type="text" id="buscarProducto" class="form-control mb-3" placeholder="Buscar producto...">
+
+            <table class="table table-bordered text-center align-middle" id="tablaProductos">
+                <thead class="table-warning">
+                    <tr>
+                        <th>Seleccionar</th>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Categoría</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr>
+                        <td><input type="checkbox" class="check-producto" data-id="{{ p.id }}" data-nombre="{{ p.nombre }}" data-precio="{{ p.precio }}"></td>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.precio }}</td>
+                        <td>{{ p.categoria.nombre }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Productos seleccionados -->
+        <div class="card shadow-sm p-4 mb-4">
+            <h5>Productos seleccionados</h5>
+            <table class="table table-bordered text-center align-middle" id="tablaSeleccionados">
+                <thead class="table-danger">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <h5 class="text-end">Total: $<span id="total">0</span></h5>
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100">Crear Pedido</button>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="{% static 'pedido/pedido.js' %}"></script>
+{% endblock %}

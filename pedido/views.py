@@ -1,4 +1,6 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+
+from pedido.forms import PedidoDetalleFormSet, PedidoForm
 from pedido.models import *
 from django.views.generic import *
 
@@ -25,18 +27,30 @@ class PedidoListView(ListView):
 
 class PedidoCreateView(CreateView):
     model = Pedido
-    template_name = 'forms/formulario_crear.html'
-    fields = ['mesa', 'fecha', 'estado', 'subtotal']
+    form_class = PedidoForm
+    template_name = 'pedido/crear_pedido.html'
     success_url = '/apps/pedidos/listar/'
-
-    def form_valid(self, form):
-        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Crear Pedido'
-        context['modulo'] = "pedido"
+        context['productos'] = Producto.objects.filter(disponible=True)
         return context
+
+    def post(self, request, *args, **kwargs):
+        form = PedidoForm(request.POST)
+        if form.is_valid():
+            pedido = form.save()
+            productos_ids = request.POST.getlist('productos_seleccionados[]')
+            cantidades = request.POST.getlist('cantidades[]')
+
+            for i, producto_id in enumerate(productos_ids):
+                PedidoDetalle.objects.create(
+                    pedido=pedido,
+                    menu_id=producto_id,
+                    cantidad=cantidades[i]
+                )
+            return redirect(self.success_url)
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class PedidoUpdateView(UpdateView):
