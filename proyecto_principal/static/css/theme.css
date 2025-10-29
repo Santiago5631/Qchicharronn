@@ -1,0 +1,47 @@
+:root {
+  --bg: #ffffff;
+  --text: #1e293b;
+  --card: #f8fafc;
+  --border: #e2e8f0;
+  --primary: #16a34a;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+  --card: #1e293b;
+  --border: #334155;
+  --primary: #22c55e;
+}
+
+/* Aplicación global de variables */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Ejemplo de header */
+header {
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button.theme-toggle {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button.theme-toggle:hover {
+  opacity: 0.8;
+}

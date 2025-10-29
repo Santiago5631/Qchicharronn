@@ -39,7 +39,7 @@ class MesaUpdateView(UpdateView):
     model = Mesa
     form_class = MesaForm  # Usar el formulario personalizado
     template_name = 'forms/formulario_actualizacion.html'
-    success_url = reverse_lazy('apl:mesa_list')
+    success_url = reverse_lazy('apl:mesa:mesa_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -59,7 +59,7 @@ class MesaUpdateView(UpdateView):
 class MesaDeleteView(DeleteView):
     model = Mesa
     template_name = 'forms/confirmar_eliminacion.html'
-    success_url = reverse_lazy('apl:mesa_list')
+    success_url = reverse_lazy('apl:mesa:mesa_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
