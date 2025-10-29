@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 
-from pedido.forms import PedidoDetalleFormSet, PedidoForm
+from pedido.forms import PedidoForm
 from pedido.models import *
 from django.views.generic import *
 
@@ -22,7 +22,7 @@ class PedidoListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Listado de Pedidos'
-        return super().get_context_data(**kwargs)
+        return context
 
 
 class PedidoCreateView(CreateView):
@@ -40,15 +40,18 @@ class PedidoCreateView(CreateView):
         form = PedidoForm(request.POST)
         if form.is_valid():
             pedido = form.save()
-            productos_ids = request.POST.getlist('productos_seleccionados[]')
-            cantidades = request.POST.getlist('cantidades[]')
+
+            productos_ids = request.POST.get('productos_seleccionados', '').split(',')
+            cantidades = request.POST.get('cantidades', '').split(',')
 
             for i, producto_id in enumerate(productos_ids):
-                PedidoDetalle.objects.create(
-                    pedido=pedido,
-                    menu_id=producto_id,
-                    cantidad=cantidades[i]
-                )
+                if producto_id.strip():
+                    PedidoDetalle.objects.create(
+                        pedido=pedido,
+                        menu_id=int(producto_id),
+                        cantidad=int(cantidades[i])
+                    )
+
             return redirect(self.success_url)
         return self.render_to_response(self.get_context_data(form=form))
 

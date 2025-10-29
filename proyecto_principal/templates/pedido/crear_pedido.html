@@ -63,10 +63,16 @@
                         <th>Acción</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+          /     <tbody>
+                <script src ="{% static 'static/lib/js/pedido.js'%}"></script>
+                </tbody>
             </table>
             <h5 class="text-end">Total: $<span id="total">0</span></h5>
         </div>
+
+        <!-- Inputs ocultos para enviar productos seleccionados -->
+        <input type="hidden" name="productos_seleccionados" id="productosSeleccionados">
+        <input type="hidden" name="cantidades" id="cantidadesSeleccionadas">
 
         <button type="submit" class="btn btn-warning w-100">Crear Pedido</button>
     </form>

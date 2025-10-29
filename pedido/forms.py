@@ -1,8 +1,6 @@
 from django import forms
-from django.forms import inlineformset_factory, ModelForm
-from .models import (
-    Pedido, PedidoDetalle,
-)
+from django.forms import ModelForm
+from .models import Pedido, PedidoDetalle
 from mesa.models import Mesa
 
 class PedidoForm(ModelForm):
@@ -19,10 +17,3 @@ class PedidoForm(ModelForm):
         widgets = {
             'estado': forms.Select(attrs={'class': 'form-control'}),
         }
-
-PedidoDetalleFormSet = inlineformset_factory(
-    Pedido,
-    PedidoDetalle,
-    fields=['menu', 'cantidad'],
-    extra=1,
-)
