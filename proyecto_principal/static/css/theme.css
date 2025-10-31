@@ -1,47 +1,65 @@
-:root {
-  --bg: #ffffff;
-  --text: #1e293b;
-  --card: #f8fafc;
-  --border: #e2e8f0;
-  --primary: #16a34a;
+/* ======== MODO OSCURO GLOBAL ======== */
+[data-theme="dark"] body,
+[data-theme="dark"] html {
+  background-color: #000 !important;
+  color: #fff !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-[data-theme="dark"] {
-  --bg: #0f172a;
-  --text: #e2e8f0;
-  --card: #1e293b;
-  --border: #334155;
-  --primary: #22c55e;
+/* ======== TEXTO ======== */
+[data-theme="dark"] * {
+  color: #fff !important;
 }
 
-/* Aplicación global de variables */
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
+/* ======== FONDOS DE CUALQUIER CONTENEDOR ======== */
+[data-theme="dark"] div,
+[data-theme="dark"] section,
+[data-theme="dark"] main,
+[data-theme="dark"] article,
+[data-theme="dark"] aside {
+  background-color: #000 !important;
+  border-color: #333 !important;
 }
 
-/* Ejemplo de header */
-header {
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ======== CAMPOS DE FORMULARIOS ======== */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #111 !important;
+  color: #fff !important;
+  border-color: #444 !important;
 }
 
-button.theme-toggle {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: 0.3s;
+/* ======== TABLAS Y TARJETAS ======== */
+[data-theme="dark"] .card,
+[data-theme="dark"] .table,
+[data-theme="dark"] .modal-content {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #333 !important;
 }
 
-button.theme-toggle:hover {
-  opacity: 0.8;
+/* ======== NAVBAR, HEADER Y FOOTER ======== */
+[data-theme="dark"] header,
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .main-header,
+[data-theme="dark"] footer,
+[data-theme="dark"] .main-footer {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* ======== EXCEPCIÓN: BOTONES Y ALERTAS ======== */
+[data-theme="dark"] .alert {
+  color: inherit !important;
+  background-color: inherit !important;
+}
+/* ======== Quitar fondo negro de los títulos del menú lateral ======== */
+[data-theme="dark"] .nav-header,
+[data-theme="dark"] .sidebar-heading,
+[data-theme="dark"] .menu-title,
+[data-theme="dark"] .main-sidebar .nav-header {
+  background-color: transparent !important;
+  color: #fff !important; /* Mantén el texto blanco */
+  border: none !important;
 }
