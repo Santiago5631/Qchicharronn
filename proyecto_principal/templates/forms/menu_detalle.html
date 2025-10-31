@@ -1,0 +1,268 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .menu-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .menu-image-large {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .producto-item {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .producto-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .info-badge {
+        background: white;
+        color: #667eea;
+        padding: 10px 20px;
+        border-radius: 20px;
+        display: inline-block;
+        margin: 5px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'apl:menu:menu_list' %}">Menús</a></li>
+            <li class="breadcrumb-item active">{{ menu.nombre }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header del menú -->
+    <div class="menu-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-3">
+                        <i class="bi bi-menu-button-wide me-2"></i>
+                        {{ menu.nombre }}
+                    </h1>
+                    
+                    <div class="mb-3">
+                        <span class="info-badge">
+                            <i class="bi bi-tag me-1"></i>
+                            {{ menu.get_categoria_menu_display }}
+                        </span>
+                        
+                        <span class="info-badge {% if menu.disponible %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
+                            <i class="bi bi-{% if menu.disponible %}check-circle{% else %}x-circle{% endif %} me-1"></i>
+                            {% if menu.disponible %}Disponible{% else %}No disponible{% endif %}
+                        </span>
+                        
+                        {% if menu.descuento > 0 %}
+                        <span class="info-badge bg-danger text-white">
+                            <i class="bi bi-percent me-1"></i>
+                            {{ menu.descuento|floatformat:0 }}% Descuento
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if menu.descripcion %}
+                    <p class="lead mb-0">{{ menu.descripcion }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4 text-end">
+                    <h2 class="mb-2">
+                        {% if menu.descuento > 0 %}
+                        <span style="text-decoration: line-through; opacity: 0.7; font-size: 1.5rem;">
+                            ${{ menu.precio_base|floatformat:2 }}
+                        </span>
+                        <br>
+                        {% endif %}
+                        <span style="font-size: 3rem;">
+                            ${{ menu.get_precio_final|floatformat:2 }}
+                        </span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="row">
+        <!-- Imagen del menú -->
+        <div class="col-md-5 mb-4">
+            {% if menu.imagen %}
+                <img src="{{ menu.imagen.url }}" class="menu-image-large" alt="{{ menu.nombre }}">
+            {% else %}
+                <div class="menu-image-large d-flex align-items-center justify-content-center bg-light">
+                    <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Información y productos -->
+        <div class="col-md-7">
+            <!-- Información general -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información General</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-calendar me-1"></i> Fecha de creación:</strong>
+                            <p class="mb-0">{{ menu.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-cash me-1"></i> Precio base:</strong>
+                            <p class="mb-0">${{ menu.precio_base|floatformat:2 }}</p>
+                        </div>
+                        {% if menu.descuento > 0 %}
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-percent me-1"></i> Descuento:</strong>
+                            <p class="mb-0 text-danger">{{ menu.descuento|floatformat:0 }}%</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-tag-fill me-1"></i> Precio final:</strong>
+                            <p class="mb-0 text-success fw-bold">${{ menu.get_precio_final|floatformat:2 }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-box-seam me-1"></i> Total de productos:</strong>
+                            <p class="mb-0">{{ productos.count }} producto(s)</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-check-circle me-1"></i> Estado:</strong>
+                            <p class="mb-0">
+                                {% if menu.puede_servirse %}
+                                    <span class="badge bg-success">✓ Puede servirse</span>
+                                {% else %}
+                                    <span class="badge bg-danger">✗ No puede servirse</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de productos -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-basket me-2"></i>
+                        Productos del Menú
+                        <span class="badge bg-light text-dark ms-2">{{ productos.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if productos %}
+                        {% for mp in productos %}
+                        <div class="producto-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <h4 class="text-primary mb-0">{{ forloop.counter }}</h4>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">{{ mp.producto.nombre }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-building me-1"></i>{{ mp.producto.marca }}
+                                        {% if mp.producto.categoria %}
+                                        | <i class="bi bi-tag me-1"></i>{{ mp.producto.categoria }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <strong>Cantidad:</strong>
+                                    <p class="mb-0 text-primary">{{ mp.cantidad }}</p>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <small class="text-muted d-block">Precio unitario:</small>
+                                    <strong>${{ mp.producto.precio|floatformat:2 }}</strong>
+                                    <p class="mb-0 text-success">
+                                        <small>Subtotal: ${{ mp.get_subtotal|floatformat:2 }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Total de productos -->
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-8 text-end">
+                                    <strong>Total productos (sin descuento):</strong>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h5 class="mb-0 text-primary">
+                                        ${% widthratio productos|length 1 productos.0.get_subtotal|default:0 %}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">No hay productos en este menú</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'apl:menu:menu_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Volver a la lista
+                </a>
+                <div>
+                    <a href="{% url 'apl:menu:menu_update' menu.pk %}" class="btn btn-warning me-2">
+                        <i class="bi bi-pencil me-1"></i>
+                        Editar Menú
+                    </a>
+                    <button onclick="eliminarMenu({{ menu.pk }}, '{{ menu.nombre }}')" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>
+                        Eliminar Menú
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
+
+<script>
+    function eliminarMenu(menuId, menuNombre) {
+        if (confirm(`¿Está seguro de eliminar el menú "${menuNombre}"?\n\nEsta acción no se puede deshacer.`)) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/apl/menu/eliminar/${menuId}/`;
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}
