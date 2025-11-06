@@ -22,4 +22,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('apps/', include('proyecto_principal.urls', namespace='apl')),
+
+    # Tu vista personalizada
+    path('login/', views.Login_view.as_view(), name='login'),
+    path('logout/', views.custom_logout_view, name='logout'),
+
+    # Allauth y captcha
+    path('accounts/', include('allauth.urls')),
+    path('captcha/', include('captcha.urls')),
 ]

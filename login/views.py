@@ -1,9 +1,12 @@
+from allauth.account.views import logout
 from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
 
-#logica login 
+
+#logica login
 
 class Login_view(LoginView):
-    template_name = 'login.html'
+    template_name = 'login/login.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)    

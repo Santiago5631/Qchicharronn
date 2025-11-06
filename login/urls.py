@@ -1,8 +1,10 @@
+from multiprocessing.resource_tracker import register
+
 from  django.urls import path
 from login.views import *
 
 urlpatterns = [
-    path('', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('register/', register_view, name='register'),
+    path('', Login_view, name='login'),
+    path('logout/', logout, name='logout'),
+    path('register/', register, name='register'),
 ]
