@@ -27,7 +27,7 @@
                         <th>Capacidad</th>
                         <th>Ubicación</th>
                         <th>
-                            <a href="{% url 'apl:crear_mesa' %}">
+                            <a href="{% url 'apl:mesa:crear_mesa' %}">
                                 <button type="button" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle-fill"></i> Nueva Mesa
                                 </button>
@@ -43,14 +43,14 @@
                         <td>{{ m.capacidad }}</td>
                         <td>{{ m.ubicacion }}</td>
                         <td>
-                            <a href="{% url 'apl:editar_mesa' m.id %}" class="btn btn-warning btn-sm">
+                            <a href="{% url 'apl:mesa:editar_mesa' m.id %}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pen-fill"></i>
                             </a>
                             
                             <!-- Botón de eliminar con modal de confirmación -->
                             <button type="button"
                                             class="btn btn-danger btn-sm btn-delete"
-                                            data-url="{% url 'apl:eliminar_mesa' m.id %}"
+                                            data-url="{% url 'apl:mesa:eliminar_mesa' m.id %}"
                                             data-name="la mesa {{ m.id }}">
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>

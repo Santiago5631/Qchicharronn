@@ -14,22 +14,22 @@
                             <th>Nombre</th>
                             <th>Descripción</th>
                             <th>
-                                <a href="{% url 'apl:crear_categoria' %}" class="btn btn-success btn-sm">
+                                <a href="{% url 'apl:categoria:crear_categoria' %}" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle"></i> Agregar Categoría
                                 </a>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for categoria in categorias %}
+                        {% for categoria in categoria %}
                         <tr>
                             <td>{{ categoria.nombre }}</td>
                             <td>{{ categoria.descripcion }}</td>
                             <td class="text-end">
-                                <a href="{% url 'apl:editar_categoria' categoria.id %}" class="btn btn-warning btn-sm d-inline">
+                                <a href="{% url 'apl:categoria:editar_categoria' categoria.id %}" class="btn btn-warning btn-sm d-inline">
                                     <i class="bi bi-pen-fill"></i>
                                 </a>
-                                <a href="{% url 'apl:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm d-inline">
+                                <a href="{% url 'apl:categoria:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm d-inline">
                                     <i class="bi bi-trash3-fill"></i>
                                 </a>
                             </td>

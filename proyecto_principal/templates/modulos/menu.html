@@ -1,4 +1,4 @@
-{% extends "dashboard/layout.html" %}
+{% extends "templates/dashboard/layout.html" %}
 
 {% block content %}
 <div class="card-body">
@@ -20,7 +20,7 @@
                             <th>Disponible</th>
                             <th>Stock</th>
                             <th>
-                                <a href="{% url 'apl:menu_create' %}" class="btn btn-success btn-sm">
+                                <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle"></i> Agregar Menú
                                 </a>
                             </th>
@@ -62,7 +62,7 @@
                             </td>
 
                             <td class="text-end">
-                                <a href="{% url 'apl:menu_update' menu.id %}" class="btn btn-warning btn-sm d-inline">
+                                <a href="{% url 'apl:menu:menu_update' menu.id %}" class="btn btn-warning btn-sm d-inline">
                                     <i class="bi bi-pen-fill"></i>
                                 </a>
                                 <button type="button" onclick="eliminarProducto({{ p.pk }})" class="btn btn-danger">
