@@ -1,120 +1,358 @@
 {% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .menu-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .menu-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .menu-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1;
+        background: #ff4757;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .precio-original {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .precio-final {
+        color: #28a745;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-btn {
+        border-radius: 20px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    .productos-list {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card-body">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Lista de Menús</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Categoría</th>
-                            <th>Precio Base</th>
-                            <th>Descuento</th>
-                            <th>Precio Final</th>
-                            <th>Disponible</th>
-                            <th>Stock</th>
-                            <th>
-                                <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle"></i> Agregar Menú
-                                </a>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for menu in menus %}
-                        <tr>
-                            <td>{{ menu.nombre }}</td>
-                            <td>{{ menu.descripcion }}</td>
-                            <td>${{ menu.precio|floatformat:2 }}</td>
-                            <td>{{ menu.get_categoria_menu_display }}</td>
-                            <td>
-                                {% if menu.precio_menu %}
-                                    ${{ menu.precio_menu|floatformat:2 }}
-                                {% elif menu.precio %}
-                                    ${{ menu.precio|floatformat:2 }}
-                                {% elif menu.item and menu.item.precio %}
-                                    ${{ menu.item.precio|floatformat:2 }}
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>{{ menu.descuento|floatformat:2 }}%</td>
-                            <td>${{ menu.get_precio_final|floatformat:2 }}</td>
-                            <td>
-                                 {% if menu.puede_servirse %}
-                                     ✅ Sí
-                                 {% else %}
-                                    ❌ No
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if menu.get_stock_disponible %}
-                                    {{ menu.get_stock_disponible }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-
-                            <td class="text-end">
-                                <a href="{% url 'apl:menu:menu_update' menu.id %}" class="btn btn-warning btn-sm d-inline">
-                                    <i class="bi bi-pen-fill"></i>
-                                </a>
-                                <button type="button" onclick="eliminarProducto({{ p.pk }})" class="btn btn-danger">
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-                    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-                <script>
-                    $(document).ready(function () {
-                    $('#menuTable').DataTable({
-                            "pageLength": 5,
-                            "language": {
-                                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-                            }
-                        });
-                    });
-                 </script>
-
+<div class="container-fluid">
+    <!-- Header con estadísticas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2><i class="bi bi-menu-button-wide me-2"></i>Gestión de Menús</h2>
+                <div>
+                    <a href="{% url 'apl:menu:pedido_create' %}" class="btn btn-success me-2">
+                        <i class="bi bi-cart-plus me-1"></i>
+                        Nuevo Pedido
+                    </a>
+                    <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-info me-2">
+                        <i class="bi bi-list-check me-1"></i>
+                        Ver Pedidos
+                    </a>
+                    <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Nuevo Menú
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ menus.count }}</h3>
+                        <p class="mb-0">Total Menús</p>
+                    </div>
+                    <i class="bi bi-menu-button-wide" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ menus|length|add:"-1" }}</h3>
+                        <p class="mb-0">Disponibles</p>
+                    </div>
+                    <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">5</h3>
+                        <p class="mb-0">Categorías</p>
+                    </div>
+                    <i class="bi bi-grid" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ menus.0.menu_productos.count|default:0 }}</h3>
+                        <p class="mb-0">Productos</p>
+                    </div>
+                    <i class="bi bi-box-seam" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center">
+                <span class="me-3 fw-bold">Filtrar por categoría:</span>
+                <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                    Todos
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="entrada">
+                    Entradas
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="plato_principal">
+                    Platos Principales
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="postre">
+                    Postres
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="bebida">
+                    Bebidas
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="combo">
+                    Combos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de menús -->
+    <div class="row" id="menus-grid">
+        {% for menu in menus %}
+        <div class="col-md-6 col-lg-4 col-xl-3 mb-4 menu-item" data-categoria="{{ menu.categoria_menu }}">
+            <div class="card menu-card h-100">
+                <!-- Imagen del menú -->
+                <div class="position-relative">
+                    {% if menu.imagen %}
+                        <img src="{{ menu.imagen.url }}" class="menu-image" alt="{{ menu.nombre }}">
+                    {% else %}
+                        <div class="menu-image d-flex align-items-center justify-content-center text-white">
+                            <i class="bi bi-image" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    {% endif %}
+
+                    <!-- Badge de disponibilidad -->
+                    <span class="badge menu-badge {% if menu.disponible and menu.puede_servirse %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if menu.disponible and menu.puede_servirse %}
+                            <i class="bi bi-check-circle"></i> Disponible
+                        {% else %}
+                            <i class="bi bi-x-circle"></i> No disponible
+                        {% endif %}
+                    </span>
+
+                    <!-- Badge de descuento -->
+                    {% if menu.descuento > 0 %}
+                    <span class="discount-badge">
+                        -{{ menu.descuento|floatformat:0 }}%
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <!-- Nombre y categoría -->
+                    <h5 class="card-title mb-2">{{ menu.nombre }}</h5>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-tag me-1"></i>
+                        {{ menu.get_categoria_menu_display }}
+                    </p>
+
+                    <!-- Descripción -->
+                    {% if menu.descripcion %}
+                    <p class="card-text small text-muted">
+                        {{ menu.descripcion|truncatewords:10 }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Productos del menú -->
+                    {% if menu.menu_productos.exists %}
+                    <div class="productos-list mb-2">
+                        <strong><i class="bi bi-box-seam me-1"></i>Incluye:</strong>
+                        <ul class="mb-0 ps-3">
+                            {% for mp in menu.menu_productos.all|slice:":3" %}
+                            <li>{{ mp.producto.nombre }} ({{ mp.cantidad }})</li>
+                            {% endfor %}
+                            {% if menu.menu_productos.count > 3 %}
+                            <li class="text-primary">+ {{ menu.menu_productos.count|add:"-3" }} más...</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Precios -->
+                    <div class="mt-3">
+                        {% if menu.descuento > 0 %}
+                        <span class="precio-original">${{ menu.precio_base|floatformat:2 }}</span>
+                        {% endif %}
+                        <div class="precio-final">
+                            ${{ menu.get_precio_final|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'apl:menu:menu_detail' menu.pk %}"
+                           class="btn btn-sm btn-info flex-fill"
+                           title="Ver detalle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'apl:menu:menu_update' menu.pk %}"
+                           class="btn btn-sm btn-warning flex-fill"
+                           title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button"
+                                onclick="eliminarMenu({{ menu.pk }}, '{{ menu.nombre }}')"
+                                class="btn btn-sm btn-danger flex-fill"
+                                title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 5rem; opacity: 0.2;"></i>
+                <h4 class="mt-3 text-muted">No hay menús registrados</h4>
+                <p class="text-muted">Comienza creando tu primer menú</p>
+                <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Crear Primer Menú
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<!-- Modal de confirmación (oculto, se usa con JS) -->
+<form id="deleteForm" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
+
 <script>
-    // Mostrar/Ocultar campos según el tipo de ítem
-    function toggleTipoItem() {
-        const tipoItem = document.getElementById("tipo_item").value;
+    // Filtros de categoría
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remover active de todos
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
 
-        const productoField = document.getElementById("producto_field");
-        const platoField = document.getElementById("plato_field");
+            const filter = this.dataset.filter;
+            const items = document.querySelectorAll('.menu-item');
 
-        if (tipoItem === "producto") {
-            productoField.style.display = "block";
-            platoField.style.display = "none";
-        } else if (tipoItem === "plato") {
-            productoField.style.display = "none";
-            platoField.style.display = "block";
-        } else {
-            productoField.style.display = "none";
-            platoField.style.display = "none";
+            items.forEach(item => {
+                if (filter === 'all' || item.dataset.categoria === filter) {
+                    item.style.display = 'block';
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'scale(1)';
+                    }, 10);
+                } else {
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        item.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    });
+
+    // Función para eliminar menú
+    function eliminarMenu(menuId, menuNombre) {
+        if (confirm(`¿Está seguro de eliminar el menú "${menuNombre}"?\n\nEsta acción no se puede deshacer.`)) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/apl/menu/eliminar/${menuId}/`;
+            form.submit();
         }
     }
 
-    // Ejecutar al cargar la página
-    document.addEventListener("DOMContentLoaded", function() {
-        toggleTipoItem();
+    // Animación de entrada
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                item.style.transition = 'all 0.3s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
     });
 </script>
-
 {% endblock %}

@@ -34,7 +34,7 @@ $(document).ready(function () {
         e.preventDefault();
 
         $.ajax({
-            url: "/plato/ajax/agregar_producto/",
+            url: "/apps/platos/ajax/agregar_producto/",
             method: "POST",
             data: $(this).serialize(),
             headers: { "X-CSRFToken": $("input[name=csrfmiddlewaretoken]").val() },

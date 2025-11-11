@@ -10,7 +10,7 @@
     <!-- Bootstrap y base -->
     <link href="{% static 'lib/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
     <link href="{% static 'lib/css/sb-admin-2.min.css' %}" rel="stylesheet">
-
+    <link rel="stylesheet" href="{% static 'lib/css/custom-sienna.css' %}">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
@@ -23,7 +23,11 @@
 
     <!-- Iconos Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'lib/js/theme.js' %}">
+
+
+
     {% block extra_css %}{% endblock %}
 </head>
 <body id="page-top">
@@ -67,7 +71,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <!-- Validación de formularios -->
-<script src="{% static 'lib/js/form_validation.js' %}"></script>
+<!--<script src="{#% static 'lib/js/form_validation.js' %#}"></script>-->
 
 <!-- SweetAlert2 plantilla -->
 <script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
@@ -76,8 +80,27 @@
 <script src="{% static 'lib/js/sweetalert_delete.js' %}"></script>
 
 <!-- Validación de formularios -->
-<!--<script src="{% static 'lib/js/form_validation.js' %}"></script>-->
+<!--<script src="{#% static 'lib/js/form_validation.js' %#}"></script>-->
 
+<!-- JS de Sienna Accessibility -->
+<script src="{% static 'lib/js/custom.js' %}"></script>
+<script src="{% static 'lib/js/sienna.js' %}"></script>
+<!-- Modo oscuro  -->
+<script src="{% static 'lib/js/theme.js' %}"></script>
+<!-- Inicialización del Widget -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new SiennaAccessibility();
+    });
+</script>
+
+
+<!-- Inicialización del Widget -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new SiennaAccessibility();
+    });
+</script>
 <script>
 $(document).ready(function() {
     // DataTables

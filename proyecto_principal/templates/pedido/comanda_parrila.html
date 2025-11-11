@@ -1,0 +1,17 @@
+<h2>Comanda - Parrilla</h2>
+<p><strong>Pedido:</strong> {{ pedido.id }} | <strong>Mesa:</strong> {{ pedido.mesa }}</p>
+<hr>
+<table border="1" cellspacing="0" cellpadding="5">
+  <tr>
+    <th>Producto</th>
+    <th>Cantidad</th>
+  </tr>
+  {% for d in detalles %}
+  <tr>
+    <td>{{ d.menu.producto.nombre }}</td>
+    <td>{{ d.cantidad }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="2">No hay productos para la parrilla</td></tr>
+  {% endfor %}
+</table>

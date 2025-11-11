@@ -21,15 +21,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for categoria in categoria %}
+                        {% for categoria in categorias %}
                         <tr>
-                            <td>{{ categoria.nombre }}</td>
-                            <td>{{ categoria.descripcion }}</td>
+                            <td>{{ categorias.nombre }}</td>
+                            <td>{{ categorias.descripcion }}</td>
                             <td class="text-end">
-                                <a href="{% url 'apl:categoria:editar_categoria' categoria.id %}" class="btn btn-warning btn-sm d-inline">
+                                <a href="{% url 'apl:categoria:editar_categoria' categorias.id %}" class="btn btn-warning btn-sm d-inline">
                                     <i class="bi bi-pen-fill"></i>
                                 </a>
-                                <a href="{% url 'apl:categoria:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm d-inline">
+                                <a href="{% url 'apl:categoria:eliminar_categoria' categorias.id %}" class="btn btn-danger btn-sm d-inline">
                                     <i class="bi bi-trash3-fill"></i>
                                 </a>
                             </td>

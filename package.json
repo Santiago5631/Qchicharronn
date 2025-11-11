@@ -1,0 +1,24 @@
+{
+  "name": "qchicharronn",
+  "version": "1.0.0",
+  "description": "repositorio definitivo para el proyecto qchicharron",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Santiago5631/Qchicharronn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Santiago5631/Qchicharronn/issues"
+  },
+  "homepage": "https://github.com/Santiago5631/Qchicharronn#readme",
+  "dependencies": {
+    "sienna-accessibility": "^2.0.1"
+  }
+}

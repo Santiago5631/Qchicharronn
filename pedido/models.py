@@ -1,66 +1,59 @@
 from django.db import models
 from django.utils import timezone
-from plato.models import Plato
-from producto.models import Producto
+from producto.models import Producto  # Importa el producto para conocer el área de preparación
+from menu.models import Menu  # O plato si así lo tienes
+from django.core.validators import MinValueValidator
 
 
+# -----------------------------
+# MODELO PEDIDO
+# -----------------------------
 class Pedido(models.Model):
-    # Relación a la app de mesas (sin importar dónde esté)
-    mesa = models.ForeignKey("mesa.Mesa", on_delete=models.CASCADE)
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('en_preparacion', 'En preparación'),
+        ('listo', 'Listo'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
 
-    # Si tu modelo Menu está en la app 'menus'
-    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE, default=1)
-
+    mesa = models.CharField(max_length=10)
     fecha = models.DateTimeField(default=timezone.now)
-    estado = models.CharField(
-        max_length=20,
-        choices=[('pendiente', 'Pendiente'), ('entregado', 'Entregado')],
-        default='pendiente'
-    )
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
 
     def __str__(self):
-        return f"Pedido {self.id} - Mesa {self.mesa.id}"
+        return f"Pedido #{self.id} - Mesa {self.mesa}"
 
-    def calcular_subtotal(self):
-        total = sum(detalle.menu.precio * detalle.cantidad for detalle in self.detalles.all())
-        self.subtotal = total
-        return total
+    # -----------------------------
+    # DIVISIÓN AUTOMÁTICA DE COMANDAS
+    # -----------------------------
+    def obtener_productos_parrilla(self):
+        """Devuelve los productos del pedido que van a la parrilla"""
+        return self.detalles.filter(menu__producto__area_preparacion='parrilla')
 
-    def save(self, *args, **kwargs):
-        self.calcular_subtotal()
-        super().save(*args, **kwargs)
+    def obtener_productos_cocina(self):
+        """Devuelve los productos del pedido que van a la cocina"""
+        return self.detalles.filter(menu__producto__area_preparacion='cocina')
+
+    def tiene_parrilla(self):
+        return self.obtener_productos_parrilla().exists()
+
+    def tiene_cocina(self):
+        return self.obtener_productos_cocina().exists()
 
 
+# -----------------------------
+# MODELO DETALLE DEL PEDIDO
+# -----------------------------
 class PedidoDetalle(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="detalles")
-    menu = models.ForeignKey("menu.Menu", on_delete=models.CASCADE)
-    cantidad = models.PositiveIntegerField(default=1)
+    pedido = models.ForeignKey(Pedido, related_name='detalles', on_delete=models.CASCADE)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)], default=1)
 
     def __str__(self):
-        return f"{self.cantidad} x {self.menu.nombre} (Pedido {self.pedido.id})"
+        return f"{self.menu.nombre} x {self.cantidad}"
 
-
-class PedidoProducto(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    producto = models.ForeignKey(
-        Producto,
-        on_delete=models.CASCADE,
-        related_name="pedidos_producto"
-    )
-
-    def __str__(self):
-        return f"Producto {self.producto.nombre} en pedido {self.pedido.id}"
-
-
-class PedidoMenu(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    menu = models.ForeignKey(
-        "menu.Menu",
-        on_delete=models.CASCADE,
-        related_name="pedidos_menu"
-    )
-    cantidad = models.IntegerField()
-
-    def __str__(self):
-        return f"{self.cantidad}x {self.menu.nombre} en pedido {self.pedido.id}"
+    @property
+    def area_preparacion(self):
+        """Permite acceder directamente al área del producto desde el detalle"""
+        return self.menu.producto.area_preparacion if hasattr(self.menu, 'producto') else 'cocina'

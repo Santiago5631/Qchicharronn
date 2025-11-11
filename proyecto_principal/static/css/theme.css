@@ -1,0 +1,65 @@
+/* ======== MODO OSCURO GLOBAL ======== */
+[data-theme="dark"] body,
+[data-theme="dark"] html {
+  background-color: #000 !important;
+  color: #fff !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ======== TEXTO ======== */
+[data-theme="dark"] * {
+  color: #fff !important;
+}
+
+/* ======== FONDOS DE CUALQUIER CONTENEDOR ======== */
+[data-theme="dark"] div,
+[data-theme="dark"] section,
+[data-theme="dark"] main,
+[data-theme="dark"] article,
+[data-theme="dark"] aside {
+  background-color: #000 !important;
+  border-color: #333 !important;
+}
+
+/* ======== CAMPOS DE FORMULARIOS ======== */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #111 !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+
+/* ======== TABLAS Y TARJETAS ======== */
+[data-theme="dark"] .card,
+[data-theme="dark"] .table,
+[data-theme="dark"] .modal-content {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+
+/* ======== NAVBAR, HEADER Y FOOTER ======== */
+[data-theme="dark"] header,
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .main-header,
+[data-theme="dark"] footer,
+[data-theme="dark"] .main-footer {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* ======== EXCEPCIÓN: BOTONES Y ALERTAS ======== */
+[data-theme="dark"] .alert {
+  color: inherit !important;
+  background-color: inherit !important;
+}
+/* ======== Quitar fondo negro de los títulos del menú lateral ======== */
+[data-theme="dark"] .nav-header,
+[data-theme="dark"] .sidebar-heading,
+[data-theme="dark"] .menu-title,
+[data-theme="dark"] .main-sidebar .nav-header {
+  background-color: transparent !important;
+  color: #fff !important; /* Mantén el texto blanco */
+  border: none !important;
+}
