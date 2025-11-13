@@ -45,3 +45,7 @@ staticfiles/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+
+generar_informe.py
+

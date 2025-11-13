@@ -154,6 +154,14 @@ STATICFILES_DIRS = [ BASE_DIR / "static"]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Configuración de medios para imágenes
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Configuración de sesión para el carrito
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400  # 24 horas
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

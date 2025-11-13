@@ -1,0 +1,357 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .pedido-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    .pedido-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .pedido-header {
+        padding: 20px;
+        border-radius: 15px 15px 0 0;
+        color: white;
+    }
+    
+    .estado-pendiente { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .estado-preparando { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .estado-listo { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .estado-entregado { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .estado-cancelado { background: linear-gradient(135deg, #868f96 0%, #596164 100%); }
+    
+    .stats-badge {
+        background: white;
+        color: #333;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .filter-tabs .btn {
+        border-radius: 25px;
+        margin: 5px;
+        padding: 8px 20px;
+    }
+    
+    .pedido-numero {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-list-check me-2"></i>Gestión de Pedidos</h2>
+                <div>
+                    <a href="{% url 'apl:menu:menu_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-menu-button-wide me-1"></i>
+                        Ver Menús
+                    </a>
+                    <a href="{% url 'apl:menu:pedido_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Nuevo Pedido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-primary">{{ pedidos|length }}</h3>
+                <small class="text-muted">Total Pedidos</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-danger">
+                    {% widthratio pedidos|length 5 1 %}
+                </h3>
+                <small class="text-muted">Pendientes</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-info">
+                    {% widthratio pedidos|length 4 1 %}
+                </h3>
+                <small class="text-muted">En Preparación</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-success">
+                    {% widthratio pedidos|length 6 1 %}
+                </h3>
+                <small class="text-muted">Listos</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-primary">
+                    {% widthratio pedidos|length 3 1 %}
+                </h3>
+                <small class="text-muted">Entregados</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-badge">
+                <h3 class="mb-1 text-secondary">0</h3>
+                <small class="text-muted">Cancelados</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="filter-tabs">
+                <strong class="me-3">Filtrar por estado:</strong>
+                <a href="{% url 'apl:menu:pedido_list' %}" 
+                   class="btn btn-sm {% if not estado_actual %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Todos
+                </a>
+                {% for value, label in estados %}
+                <a href="?estado={{ value }}" 
+                   class="btn btn-sm {% if estado_actual == value %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ label }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Pedidos -->
+    <div class="row">
+        {% if pedidos %}
+            {% for pedido in pedidos %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="card pedido-card">
+                    <!-- Header del pedido -->
+                    <div class="pedido-header estado-{{ pedido.estado }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="pedido-numero">#{{ pedido.numero_pedido }}</div>
+                                <small>{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <span class="badge bg-white text-dark fs-6">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="card-body">
+                        <!-- Cliente -->
+                        <div class="mb-3">
+                            <strong><i class="bi bi-person me-2"></i>Cliente:</strong>
+                            <p class="mb-0">{{ pedido.cliente_nombre }}</p>
+                        </div>
+
+                        <!-- Mesa -->
+                        {% if pedido.mesa_numero %}
+                        <div class="mb-3">
+                            <strong><i class="bi bi-grid-3x3 me-2"></i>Mesa:</strong>
+                            <span class="badge bg-primary">{{ pedido.mesa_numero }}</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Items -->
+                        <div class="mb-3">
+                            <strong><i class="bi bi-bag me-2"></i>Items:</strong>
+                            <span class="badge bg-info">{{ pedido.items.count }} producto(s)</span>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>Total:</strong>
+                                <h4 class="text-success mb-0">${{ pedido.total|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        {% if pedido.observaciones %}
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-chat-left-text me-1"></i>
+                                {{ pedido.observaciones|truncatewords:10 }}
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Tiempo -->
+                        <div class="text-muted small mb-3">
+                            <i class="bi bi-clock me-1"></i>
+                            Actualizado: {{ pedido.fecha_actualizacion|timesince }} atrás
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'apl:menu:pedido_detail' pedido.pk %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>
+                                Ver Detalle
+                            </a>
+                            
+                            {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
+                            <div class="btn-group" role="group">
+                                {% if pedido.estado == 'pendiente' %}
+                                <button type="button" 
+                                        onclick="cambiarEstado({{ pedido.pk }}, 'preparando')"
+                                        class="btn btn-info btn-sm">
+                                    <i class="bi bi-play me-1"></i>
+                                    Preparar
+                                </button>
+                                {% elif pedido.estado == 'preparando' %}
+                                <button type="button" 
+                                        onclick="cambiarEstado({{ pedido.pk }}, 'listo')"
+                                        class="btn btn-success btn-sm">
+                                    <i class="bi bi-check me-1"></i>
+                                    Marcar Listo
+                                </button>
+                                {% elif pedido.estado == 'listo' %}
+                                <button type="button" 
+                                        onclick="cambiarEstado({{ pedido.pk }}, 'entregado')"
+                                        class="btn btn-primary btn-sm">
+                                    <i class="bi bi-box-arrow-right me-1"></i>
+                                    Entregar
+                                </button>
+                                {% endif %}
+                                
+                                <button type="button" 
+                                        onclick="cancelarPedido({{ pedido.pk }})"
+                                        class="btn btn-danger btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 5rem; opacity: 0.2;"></i>
+                    <h4 class="mt-3 text-muted">No hay pedidos registrados</h4>
+                    <p class="text-muted">Comienza creando tu primer pedido</p>
+                    <a href="{% url 'apl:menu:pedido_create' %}" class="btn btn-success mt-3">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Crear Primer Pedido
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">Última</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Formulario oculto para cambios de estado -->
+<form id="estadoForm" method="POST" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="estado" id="nuevo_estado">
+    <input type="hidden" name="observaciones" value="">
+</form>
+
+<script>
+    function cambiarEstado(pedidoId, nuevoEstado) {
+        if (confirm(`¿Cambiar el estado del pedido a "${nuevoEstado}"?`)) {
+            const form = document.getElementById('estadoForm');
+            form.action = `/apl/menu/pedidos/actualizar-estado/${pedidoId}/`;
+            document.getElementById('nuevo_estado').value = nuevoEstado;
+            form.submit();
+        }
+    }
+
+    function cancelarPedido(pedidoId) {
+        if (confirm('¿Está seguro de cancelar este pedido?\n\nEsta acción no se puede deshacer.')) {
+            window.location.href = `/apl/menu/pedidos/cancelar/${pedidoId}/`;
+        }
+    }
+
+    // Animación de entrada
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.pedido-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';S
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    });
+</script>
+{% endblock %}

@@ -72,6 +72,33 @@
         font-size: 0.85rem;
         color: #6c757d;
     }
+
+    /* Modal personalizado */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
 </style>
 {% endblock %}
 
@@ -272,12 +299,12 @@
                            title="Editar">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button type="button"
-                                onclick="eliminarMenu({{ menu.pk }}, '{{ menu.nombre }}')"
-                                class="btn btn-sm btn-danger flex-fill"
-                                title="Eliminar">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <a href="{% url 'apl:menu:menu
+                        _delete' menu.pk %}"
+   class="btn btn-sm btn-danger flex-fill"
+   title="Eliminar">
+    <i class="bi bi-trash"></i>
+</a>
                     </div>
                 </div>
             </div>
@@ -298,10 +325,30 @@
     </div>
 </div>
 
-<!-- Modal de confirmación (oculto, se usa con JS) -->
-<form id="deleteForm" method="POST" style="display: none;">
-    {% csrf_token %}
-</form>
+<!-- Modal de confirmación de eliminación -->
+<div class="modal-overlay" id="modalEliminar">
+    <div class="modal-content">
+        <div class="text-center mb-4">
+            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+        </div>
+        <h4 class="text-center mb-3">¿Eliminar Menú?</h4>
+        <p class="text-center text-muted mb-4" id="mensajeConfirmacion"></p>
+
+        <form method="POST" id="formEliminar">
+            {% csrf_token %}
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="button" onclick="cerrarModal()" class="btn btn-secondary px-4">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-danger px-4">
+                    <i class="bi bi-trash me-1"></i>
+                    Eliminar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
     // Filtros de categoría
@@ -332,14 +379,41 @@
         });
     });
 
-    // Función para eliminar menú
-    function eliminarMenu(menuId, menuNombre) {
-        if (confirm(`¿Está seguro de eliminar el menú "${menuNombre}"?\n\nEsta acción no se puede deshacer.`)) {
-            const form = document.getElementById('deleteForm');
-            form.action = `/apl/menu/eliminar/${menuId}/`;
-            form.submit();
-        }
+    // Función para mostrar modal de eliminación
+    function mostrarModalEliminar(menuId, menuNombre) {
+        const modal = document.getElementById('modalEliminar');
+        const form = document.getElementById('formEliminar');
+        const mensaje = document.getElementById('mensajeConfirmacion');
+
+        // Configurar el formulario con la URL correcta
+        form.action = `/apl/menu/eliminar/${menuId}/`;
+
+        // Configurar el mensaje
+        mensaje.textContent = `¿Está seguro de eliminar el menú "${menuNombre}"? Esta acción no se puede deshacer.`;
+
+        // Mostrar modal
+        modal.classList.add('active');
     }
+
+    // Función para cerrar modal
+    function cerrarModal() {
+        const modal = document.getElementById('modalEliminar');
+        modal.classList.remove('active');
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modalEliminar').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModal();
+        }
+    });
+
+    // Cerrar modal con tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModal();
+        }
+    });
 
     // Animación de entrada
     document.addEventListener('DOMContentLoaded', function() {

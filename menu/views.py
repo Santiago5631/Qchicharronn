@@ -4,11 +4,9 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.views import View
 from django.db import transaction
 from django.contrib import messages
-from django.http import JsonResponse
-from django.utils import timezone
+from django.http import HttpResponseRedirect
 from .forms import *
 from .models import Menu, MenuProducto, Pedido, PedidoItem
-from producto.models import Producto
 from decimal import Decimal
 
 
@@ -163,29 +161,47 @@ class MenuUpdateView(UpdateView):
             return self.form_invalid(form)
 
 
-class MenuDeleteView(DeleteView):
-    """Eliminar menú"""
-    model = Menu
-    template_name = 'forms/confirmar_eliminacion.html'
-    success_url = reverse_lazy('apl:menu:menu_list')
+class MenuDeleteView(View):
+    """Eliminar menú - Acepta POST directo desde modal"""
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Eliminar Menú'
-        return context
+    def post(self, request, pk):
+        """Eliminar el menú directamente"""
+        try:
+            menu = get_object_or_404(Menu, pk=pk)
+            nombre = menu.nombre
 
-    def delete(self, request, *args, **kwargs):
-        menu = self.get_object()
-        nombre = menu.nombre
-        response = super().delete(request, *args, **kwargs)
-        messages.success(request, f'Menú "{nombre}" eliminado exitosamente.')
-        return response
+            # Eliminar el menú
+            menu.delete()
+
+            messages.success(
+                request,
+                f'✅ Menú "{nombre}" eliminado exitosamente.'
+            )
+
+        except Exception as e:
+            messages.error(
+                request,
+                f'❌ Error al eliminar el menú: {str(e)}'
+            )
+
+        return redirect('apl:menu:menu_list')
+
+    def get(self, request, pk):
+        """Mostrar página de confirmación (opcional)"""
+        menu = get_object_or_404(Menu, pk=pk)
+
+        context = {
+            'titulo': 'Eliminar Menú',
+            'object': menu,
+        }
+
+        return render(request, 'forms/eliminacion_menu.html', context)
 
 
 class MenuDetailView(DetailView):
     """Ver detalle de un menú con sus productos"""
     model = Menu
-    template_name = 'modulos/menu_detalle.html'
+    template_name = 'forms/menu_detalle.html'
     context_object_name = 'menu'
 
     def get_context_data(self, **kwargs):
@@ -200,7 +216,7 @@ class MenuDetailView(DetailView):
 class PedidoListView(ListView):
     """Lista de todos los pedidos"""
     model = Pedido
-    template_name = 'modulos/pedido_lista.html'
+    template_name = 'forms/pedido_lista.html'
     context_object_name = 'pedidos'
     paginate_by = 20
 
@@ -225,7 +241,7 @@ class PedidoListView(ListView):
 
 class PedidoCreateView(View):
     """Vista para crear pedidos - Sistema de carrito"""
-    template_name = 'modulos/pedido_crear.html'
+    template_name = 'forms/pedido_crear.html'
 
     def get(self, request):
         # Obtener o crear carrito en sesión
@@ -345,26 +361,30 @@ class PedidoCreateView(View):
 
                         # Crear items del pedido
                         for menu_id, item_data in carrito.items():
-                            menu = Menu.objects.get(id=int(menu_id))
+                            try:
+                                menu = Menu.objects.get(id=int(menu_id))
 
-                            PedidoItem.objects.create(
-                                pedido=pedido,
-                                menu=menu,
-                                cantidad=item_data['cantidad'],
-                                precio_unitario=menu.get_precio_final(),
-                                descuento_aplicado=menu.descuento,
-                                observaciones=item_data.get('observaciones', '')
-                            )
+                                PedidoItem.objects.create(
+                                    pedido=pedido,
+                                    menu=menu,
+                                    cantidad=item_data['cantidad'],
+                                    precio_unitario=menu.get_precio_final(),
+                                    descuento_aplicado=menu.descuento,
+                                    observaciones=item_data.get('observaciones', '')
+                                )
+                            except Menu.DoesNotExist:
+                                continue
 
                         # Calcular totales
                         pedido.calcular_totales()
 
                         # Limpiar carrito
                         request.session['carrito'] = {}
+                        request.session.modified = True
 
                         messages.success(
                             request,
-                            f'Pedido #{pedido.numero_pedido} creado exitosamente'
+                            f'✅ Pedido #{pedido.numero_pedido} creado exitosamente. Total: ${pedido.total}'
                         )
                         return redirect('apl:menu:pedido_detail', pk=pedido.pk)
 
@@ -372,7 +392,7 @@ class PedidoCreateView(View):
                     messages.error(request, f'Error al crear el pedido: {str(e)}')
                     return redirect('apl:menu:pedido_create')
             else:
-                messages.error(request, 'Por favor complete los datos del cliente')
+                messages.error(request, 'Por favor complete los datos del cliente correctamente')
                 return redirect('apl:menu:pedido_create')
 
         return redirect('apl:menu:pedido_create')
@@ -381,7 +401,7 @@ class PedidoCreateView(View):
 class PedidoDetailView(DetailView):
     """Ver detalle de un pedido"""
     model = Pedido
-    template_name = 'modulos/pedido_detalle.html'
+    template_name = 'forms/pedido_detalle.html'
     context_object_name = 'pedido'
 
     def get_context_data(self, **kwargs):

@@ -1,0 +1,584 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .menu-card-shop {
+        height: 100%;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .menu-card-shop:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        border-color: #0d6efd;
+    }
+    
+    .menu-img-shop {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .cart-sidebar {
+        position: sticky;
+        top: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+    
+    .cart-item {
+        border-bottom: 1px solid #e9ecef;
+        padding: 15px 0;
+        transition: background 0.3s ease;
+    }
+    
+    .cart-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .cart-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .btn-add-cart {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-cart:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+    }
+    
+    .price-badge {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .discount-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ff4757;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        z-index: 1;
+    }
+    
+    .category-tabs {
+        background: white;
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .category-btn {
+        margin: 5px;
+        border-radius: 25px;
+        padding: 8px 20px;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+    }
+    
+    .category-btn.active, .category-btn:hover {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    
+    .total-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .qty-control input {
+        width: 60px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        border-radius: 5px;
+    }
+    
+    .modal-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-cart-plus me-2"></i>Crear Nuevo Pedido</h2>
+                <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-list-check me-1"></i>
+                    Ver Pedidos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Panel de Menús -->
+        <div class="col-lg-8">
+            <!-- Filtros por categoría -->
+            <div class="category-tabs">
+                <div class="d-flex flex-wrap align-items-center">
+                    <strong class="me-3"><i class="bi bi-filter me-1"></i>Categorías:</strong>
+                    <button class="category-btn active" data-category="all">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Todos
+                    </button>
+                    {% for categoria, nombre in menus_por_categoria.items %}
+                    <button class="category-btn" data-category="{{ categoria }}">
+                        {{ nombre.0.get_categoria_menu_display }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Grid de Menús -->
+            <div class="row" id="menus-grid">
+                {% for categoria, menus in menus_por_categoria.items %}
+                    {% for menu in menus %}
+                    <div class="col-md-6 col-xl-4 mb-4 menu-item" data-category="{{ menu.categoria_menu }}">
+                        <div class="card menu-card-shop">
+                            <!-- Imagen -->
+                            <div class="position-relative">
+                                {% if menu.imagen %}
+                                    <img src="{{ menu.imagen.url }}" class="menu-img-shop" alt="{{ menu.nombre }}">
+                                {% else %}
+                                    <div class="menu-img-shop d-flex align-items-center justify-content-center text-white">
+                                        <i class="bi bi-image" style="font-size: 3rem; opacity: 0.5;"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Badge de descuento -->
+                                {% if menu.descuento > 0 %}
+                                <span class="discount-tag">
+                                    -{{ menu.descuento|floatformat:0 }}%
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="card-body d-flex flex-column">
+                                <!-- Nombre -->
+                                <h5 class="card-title mb-2">{{ menu.nombre }}</h5>
+                                
+                                <!-- Categoría -->
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-tag me-1"></i>
+                                    {{ menu.get_categoria_menu_display }}
+                                </p>
+
+                                <!-- Descripción -->
+                                {% if menu.descripcion %}
+                                <p class="card-text small text-muted mb-2">
+                                    {{ menu.descripcion|truncatewords:8 }}
+                                </p>
+                                {% endif %}
+
+                                <!-- Productos incluidos -->
+                                <div class="small text-muted mb-3">
+                                    <strong><i class="bi bi-box-seam me-1"></i>Incluye:</strong>
+                                    {{ menu.menu_productos.count }} producto(s)
+                                </div>
+
+                                <!-- Precio -->
+                                <div class="mt-auto">
+                                    {% if menu.descuento > 0 %}
+                                    <span class="text-muted" style="text-decoration: line-through;">
+                                        ${{ menu.precio_base|floatformat:2 }}
+                                    </span>
+                                    {% endif %}
+                                    <div class="price-badge mb-3">
+                                        ${{ menu.get_precio_final|floatformat:2 }}
+                                    </div>
+
+                                    <!-- Botón agregar -->
+                                    <button type="button" 
+                                            class="btn btn-add-cart w-100"
+                                            onclick="abrirModalAgregar({{ menu.id }}, '{{ menu.nombre }}', {{ menu.get_precio_final }})">
+                                        <i class="bi bi-cart-plus me-2"></i>
+                                        Agregar al Pedido
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% empty %}
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 5rem; opacity: 0.2;"></i>
+                            <h4 class="mt-3 text-muted">No hay menús disponibles</h4>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Panel del Carrito -->
+        <div class="col-lg-4">
+            <div class="cart-sidebar">
+                <div class="p-4">
+                    <h4 class="mb-4">
+                        <i class="bi bi-cart3 me-2"></i>
+                        Carrito
+                        <span class="badge bg-primary">{{ items_carrito|length }}</span>
+                    </h4>
+
+                    <!-- Items del carrito -->
+                    <div id="cart-items">
+                        {% if items_carrito %}
+                            {% for item in items_carrito %}
+                            <div class="cart-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <strong>{{ item.menu.nombre }}</strong>
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="accion" value="eliminar">
+                                        <input type="hidden" name="menu_id" value="{{ item.menu.id }}">
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="qty-control">
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="accion" value="actualizar">
+                                            <input type="hidden" name="menu_id" value="{{ item.menu.id }}">
+                                            <input type="number" 
+                                                   name="cantidad" 
+                                                   value="{{ item.cantidad }}" 
+                                                   min="1" 
+                                                   class="form-control form-control-sm"
+                                                   onchange="this.form.submit()">
+                                        </form>
+                                        <span class="text-muted">x ${{ item.precio_unitario|floatformat:2 }}</span>
+                                    </div>
+                                    <strong class="text-success">
+                                        ${{ item.subtotal|floatformat:2 }}
+                                    </strong>
+                                </div>
+                                
+                                {% if item.observaciones %}
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-chat-left-text me-1"></i>
+                                    {{ item.observaciones }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="cart-empty">
+                                <i class="bi bi-cart-x" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <p class="mt-3 mb-0">Tu carrito está vacío</p>
+                                <small>Agrega menús para crear un pedido</small>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Totales -->
+                    {% if items_carrito %}
+                    <div class="total-section">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong>${{ subtotal|floatformat:2 }}</strong>
+                        </div>
+                        {% if descuento_total > 0 %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Descuento:</span>
+                            <strong class="text-warning">-${{ descuento_total|floatformat:2 }}</strong>
+                        </div>
+                        {% endif %}
+                        <hr style="border-color: rgba(255,255,255,0.3);">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0">Total:</h5>
+                            <h4 class="mb-0">${{ total|floatformat:2 }}</h4>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="mt-4 d-grid gap-2">
+                        <button type="button" 
+                                class="btn btn-success btn-lg"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#confirmarPedidoModal">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Confirmar Pedido
+                        </button>
+                        
+                        <form method="post" action="{% url 'apl:menu:limpiar_carrito' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-trash me-2"></i>
+                                Vaciar Carrito
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar al carrito -->
+<div class="modal fade" id="agregarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="bi bi-cart-plus me-2"></i>
+                    Agregar al Pedido
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="agregar">
+                <input type="hidden" name="menu_id" id="modal_menu_id">
+                
+                <div class="modal-body">
+                    <h6 id="modal_menu_nombre" class="mb-3"></h6>
+                    <p class="text-success fw-bold" id="modal_menu_precio"></p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cantidad:</label>
+                        <input type="number" 
+                               name="cantidad" 
+                               class="form-control" 
+                               value="1" 
+                               min="1" 
+                               required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Observaciones (opcional):</label>
+                        <textarea name="observaciones" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Ej: Sin cebolla, extra salsa..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar pedido -->
+<div class="modal fade" id="confirmarPedidoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Confirmar Pedido
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'apl:menu:pedido_create' %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="confirmar">
+
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Complete los datos del cliente para finalizar el pedido
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-bold">
+                                {{ form.cliente_nombre.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.cliente_nombre }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.mesa_numero.label }}</label>
+                            {{ form.mesa_numero }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.estado.label }}</label>
+                            {{ form.estado }}
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">{{ form.observaciones.label }}</label>
+                            {{ form.observaciones }}
+                        </div>
+                    </div>
+
+                    <!-- Resumen del pedido -->
+                    <div class="card bg-light mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">Resumen del Pedido:</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Items:</span>
+                                <strong>{{ items_carrito|length }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <strong>${{ subtotal|floatformat:2 }}</strong>
+                            </div>
+                            {% if descuento_total > 0 %}
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Descuento:</span>
+                                <strong>-${{ descuento_total|floatformat:2 }}</strong>
+                            </div>
+                            {% endif %}
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <h5>Total a pagar:</h5>
+                                <h4 class="text-success">${{ total|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Confirmar Pedido
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Debug: Verificar que el formulario existe
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔍 Verificando elementos del formulario...');
+
+        const modal = document.getElementById('confirmarPedidoModal');
+        const form = modal ? modal.querySelector('form') : null;
+        const btnConfirmar = modal ? modal.querySelector('button[type="submit"]') : null;
+
+        console.log('Modal existe:', !!modal);
+        console.log('Form existe:', !!form);
+        console.log('Botón confirmar existe:', !!btnConfirmar);
+
+        if (form) {
+            console.log('Action del form:', form.action);
+            console.log('Method del form:', form.method);
+
+            // Agregar listener al formulario
+            form.addEventListener('submit', function(e) {
+                console.log('📤 Formulario enviándose...');
+                console.log('FormData:', new FormData(this));
+
+                // Verificar que hay items en el carrito
+                const cartItems = document.querySelectorAll('.cart-item');
+                if (cartItems.length === 0) {
+                    e.preventDefault();
+                    alert('❌ El carrito está vacío. Agrega productos antes de confirmar.');
+                    return false;
+                }
+
+                // Verificar nombre del cliente
+                const clienteNombre = this.querySelector('[name="cliente_nombre"]');
+                if (clienteNombre && !clienteNombre.value.trim()) {
+                    e.preventDefault();
+                    alert('❌ Por favor ingresa el nombre del cliente.');
+                    clienteNombre.focus();
+                    return false;
+                }
+
+                console.log('✅ Validaciones pasadas, enviando formulario...');
+            });
+        }
+    });
+
+    // Filtrar por categoría
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const category = this.dataset.category;
+            const items = document.querySelectorAll('.menu-item');
+
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Abrir modal agregar
+    function abrirModalAgregar(menuId, menuNombre, menuPrecio) {
+        document.getElementById('modal_menu_id').value = menuId;
+        document.getElementById('modal_menu_nombre').textContent = menuNombre;
+        document.getElementById('modal_menu_precio').textContent = ''
+ + menuPrecio.toFixed(2);
+        
+        const modal = new bootstrap.Modal(document.getElementById('agregarModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}
