@@ -1,0 +1,168 @@
+{% extends "dashboard/layout.html" %}
+{% load custom_filters %}
+{{ diferencia|absolute }}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
+
+    <div class="card-body">
+        <!-- Información del Inventario -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Fecha: {{ inventario.fecha|date:"d/m/Y" }}</h5>
+                <p>
+                    Estado:
+                    <span class="badge badge-{% if inventario.estado == 'abierto' %}success{% else %}secondary{% endif %}">
+                        {{ inventario.get_estado_display }}
+                    </span>
+                </p>
+                <p><strong>Apertura:</strong> {{ inventario.fecha_apertura|date:"d/m/Y H:i" }}</p>
+                {% if inventario.fecha_cierre %}
+                <p><strong>Cierre:</strong> {{ inventario.fecha_cierre|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-right">
+                <div class="alert alert-info">
+                    <strong>Total Productos:</strong> {{ total_productos }}<br>
+                    <strong>Con Diferencias:</strong> {{ productos_con_diferencia }}
+                </div>
+                {% if inventario.estado == 'abierto' %}
+                <a href="{% url 'apl:inventario:cierre' inventario.pk %}" class="btn btn-warning">
+                    <i class="bi bi-lock-fill"></i> Cerrar Inventario
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if inventario.observaciones %}
+        <div class="alert alert-secondary">
+            <strong>Observaciones:</strong> {{ inventario.observaciones }}
+        </div>
+        {% endif %}
+
+        <!-- Productos por PESO -->
+        {% if movimientos_peso %}
+        <h5 class="mt-4 mb-3">
+            <i class="bi bi-thermometer-half text-warning"></i> Productos por PESO
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Inventario Inicial</th>
+                        <th>Inventario Final</th>
+                        <th>Consumo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos_peso %}
+                    <tr>
+                        <td>{{ mov.producto.nombre }}</td>
+                        <td>{{ mov.inventario_inicial }} kg</td>
+                        <td>
+                            {% if mov.inventario_final %}
+                                {{ mov.inventario_final }} kg
+                            {% else %}
+                                <span class="badge badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.inventario_final %}
+                                <span class="badge badge-success">{{ mov.consumo_calculado }} kg</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.inventario_final %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                                <i class="bi bi-hourglass-split text-warning"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Productos por UNIDAD -->
+        {% if movimientos_unidad %}
+        <h5 class="mt-4 mb-3">
+            <i class="bi bi-box-seam text-info"></i> Productos por UNIDAD
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Inicial</th>
+                        <th>Vendido</th>
+                        <th>Teórico</th>
+                        <th>Real</th>
+                        <th>Diferencia</th>
+                        <th>Motivo Ajuste</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos_unidad %}
+                    <tr>
+                        <td>{{ mov.producto.nombre }}</td>
+                        <td>{{ mov.inventario_inicial }}</td>
+                        <td>
+                            <span class="badge badge-danger">{{ mov.consumo_automatico }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary">{{ mov.inventario_teorico }}</span>
+                        </td>
+                        <td>
+                            {% if mov.inventario_final %}
+                                {{ mov.inventario_final }}
+                            {% else %}
+                                <span class="badge badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.inventario_final %}
+                                {% if mov.diferencia == 0 %}
+                                    <span class="badge badge-success">Sin diferencia</span>
+                                {% elif mov.diferencia > 0 %}
+                                    <span class="badge badge-danger">-{{ mov.diferencia }} (Falta)</span>
+                                {% else %}
+                                    <span class="badge badge-warning">+{{ mov.diferencia|absolute }} (Sobra)</span>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.motivo_ajuste %}
+                                <small>{{ mov.motivo_ajuste }}</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'apl:inventario:dashboard' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
+            <a href="{% url 'apl:inventario:lista' %}" class="btn btn-primary">
+                <i class="bi bi-list-ul"></i> Ver Todos los Inventarios
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

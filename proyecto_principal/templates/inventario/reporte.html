@@ -1,0 +1,187 @@
+{% extends "dashboard/layout.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
+
+    <div class="card-body">
+        <!-- Formulario de Filtros -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h6 class="m-0"><i class="bi bi-funnel-fill"></i> Filtros de Búsqueda</h6>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ form.fecha_desde.label_tag }}
+                            {{ form.fecha_desde }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.fecha_hasta.label_tag }}
+                            {{ form.fecha_hasta }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.producto.label_tag }}
+                            {{ form.producto }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.tipo_control.label_tag }}
+                            {{ form.tipo_control }}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Generar Reporte
+                            </button>
+                            <a href="{% url 'apl:inventario:reporte' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Limpiar Filtros
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        {% if estadisticas %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Registros
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ estadisticas.total_registros }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Consumo Total
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ estadisticas.total_consumo|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Diferencias
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ estadisticas.total_diferencias|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Con Ajustes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ estadisticas.productos_con_ajuste }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tabla de Resultados -->
+        {% if movimientos %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Inicial</th>
+                        <th>Vendido</th>
+                        <th>Final</th>
+                        <th>Consumo</th>
+                        <th>Diferencia</th>
+                        <th>Ajuste</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.inventario_diario.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ mov.producto.nombre }}</td>
+                        <td>
+                            <span class="badge badge-{% if mov.tipo_control == 'peso' %}warning{% else %}info{% endif %}">
+                                {{ mov.get_tipo_control_display }}
+                            </span>
+                        </td>
+                        <td>{{ mov.inventario_inicial }}</td>
+                        <td>{{ mov.consumo_automatico|default:"0" }}</td>
+                        <td>{{ mov.inventario_final }}</td>
+                        <td>
+                            <span class="badge badge-success">{{ mov.consumo_calculado }}</span>
+                        </td>
+                        <td>
+                            {% if mov.diferencia != 0 %}
+                                <span class="badge badge-{% if mov.diferencia > 0 %}danger{% else %}warning{% endif %}">
+                                    {{ mov.diferencia|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.motivo_ajuste %}
+                                <small>{{ mov.motivo_ajuste|truncatewords:5 }}</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="bi bi-printer-fill"></i> Imprimir
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i>
+            Seleccione los filtros y haga clic en "Generar Reporte" para ver los resultados.
+        </div>
+        {% endif %}
+
+        <div class="mt-3">
+            <a href="{% url 'apl:inventario:dashboard' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .alert { display: none; }
+    .card { border: none; box-shadow: none; }
+}
+</style>
+{% endblock %}

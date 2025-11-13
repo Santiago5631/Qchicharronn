@@ -25,14 +25,15 @@ class Menu(models.Model):
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Precio Base'
+        verbose_name='Precio Base',
+        default=Decimal('0.01')
     )
     descuento = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0.00,
+        default=Decimal(0.00),
         validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name='Descuento (%)'
+        verbose_name='Descuento (%)',
     )
     disponible = models.BooleanField(default=True, verbose_name='Disponible')
     imagen = models.ImageField(upload_to='menus/', blank=True, null=True, verbose_name='Imagen')

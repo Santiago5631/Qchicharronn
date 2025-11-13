@@ -1,0 +1,78 @@
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="form-container">
+    <h1 class="form-title">{{ titulo }}</h1>
+
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Atención:</strong> Los ajustes manuales modifican directamente el stock.
+        Use esta función solo para correcciones, entradas o salidas no registradas.
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                {{ form.as_p }}
+
+                <div class="alert alert-info mt-3">
+                    <h6><i class="bi bi-info-circle-fill"></i> Tipos de Movimiento:</h6>
+                    <ul>
+                        <li><strong>Entrada (Suma):</strong> Agregue stock (ej: compra nueva)</li>
+                        <li><strong>Salida (Resta):</strong> Quite stock (ej: producto dañado)</li>
+                        <li><strong>Ajuste (Corrección):</strong> Establezca el stock exacto</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">
+            <i class="bi bi-check-circle-fill"></i> Aplicar Ajuste
+        </button>
+
+        <div class="back-link">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                Volver
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productoSelect = document.querySelector('select[name="producto"]');
+    const cantidadInput = document.querySelector('input[name="cantidad"]');
+    const tipoSelect = document.querySelector('select[name="tipo_movimiento"]');
+
+    // Mostrar stock actual cuando se selecciona un producto
+    productoSelect?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const productText = selectedOption.text;
+
+        if (productText) {
+            // Extraer el stock del texto del option si está disponible
+            const stockMatch = productText.match(/\((\d+\.?\d*)\)/);
+            if (stockMatch) {
+                const stockActual = stockMatch[1];
+                alert('Stock actual: ' + stockActual);
+            }
+        }
+    });
+
+    // Validación extra para salidas
+    tipoSelect?.addEventListener('change', function() {
+        if (this.value === 'salida') {
+            cantidadInput.setAttribute('data-tipo', 'salida');
+        } else {
+            cantidadInput.removeAttribute('data-tipo');
+        }
+    });
+});
+</script>
+{% endblock %}

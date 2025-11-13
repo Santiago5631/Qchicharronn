@@ -1,0 +1,222 @@
+{% extends "dashboard/layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+    </div>
+
+    <!-- Estado del Inventario Hoy -->
+    <div class="row">
+        <div class="col-xl-12 col-md-12 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Estado del Inventario - {{ inventario_hoy.fecha|date:"d/m/Y"|default:"Hoy" }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if inventario_hoy %}
+                                    {% if inventario_hoy.estado == 'abierto' %}
+                                        <span class="badge badge-success">ABIERTO</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">CERRADO</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-warning">SIN INVENTARIO</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            {% if not inventario_hoy %}
+                                <a href="{% url 'apl:inventario:apertura' %}" class="btn btn-success">
+                                    <i class="bi bi-box-arrow-in-down"></i> Abrir Inventario
+                                </a>
+                            {% elif inventario_hoy.estado == 'abierto' %}
+                                <a href="{% url 'apl:inventario:cierre' inventario_hoy.pk %}" class="btn btn-warning">
+                                    <i class="bi bi-box-arrow-up"></i> Cerrar Inventario
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row">
+        <!-- Productos sin Stock -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Sin Stock
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ productos_sin_stock }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle-fill fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Bajo Stock -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Bajo Stock
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ productos_bajo_stock.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-circle-fill fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceso Rápido -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <a href="{% url 'apl:inventario:lista' %}" class="text-decoration-none">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Ver Historial
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ajustes Manuales -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <a href="{% url 'apl:inventario:ajuste' %}" class="text-decoration-none">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Ajuste Manual
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <i class="bi bi-gear-fill"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos con Bajo Stock -->
+    {% if productos_bajo_stock %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">Productos con Bajo Stock</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                            <th>Unidad</th>
+                            <th>Tipo Control</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_bajo_stock %}
+                        <tr>
+                            <td>{{ producto.nombre }}</td>
+                            <td>
+                                <span class="badge badge-{% if producto.stock == 0 %}danger{% else %}warning{% endif %}">
+                                    {{ producto.stock }}
+                                </span>
+                            </td>
+                            <td>{{ producto.unidad }}</td>
+                            <td>{{ producto.get_tipo_inventario_display }}</td>
+                            <td>
+                                <a href="{% url 'apl:inventario:ajuste' %}?producto={{ producto.id }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Agregar Stock
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Últimos Movimientos -->
+    {% if ultimos_movimientos %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Últimos Movimientos</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Inicial</th>
+                            <th>Consumo</th>
+                            <th>Final</th>
+                            <th>Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in ultimos_movimientos %}
+                        <tr>
+                            <td>{{ mov.inventario_diario.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ mov.producto.nombre }}</td>
+                            <td>{{ mov.inventario_inicial }}</td>
+                            <td>{{ mov.consumo_automatico|default:"0" }}</td>
+                            <td>{{ mov.inventario_final|default:"-" }}</td>
+                            <td>
+                                {% if mov.diferencia != 0 %}
+                                    <span class="badge badge-{% if mov.diferencia > 0 %}danger{% else %}success{% endif %}">
+                                        {{ mov.diferencia }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{% url 'apl:inventario:historial' %}" class="btn btn-primary btn-block">
+                Ver Historial Completo
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@ if (!localStorage.getItem("theme")) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("theme-toggle");
+  const toggle = document.getElementById("theme-toggle");
   const html = document.documentElement;
 
   // Detectar tema guardado
@@ -14,21 +14,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (currentTheme === "dark") {
     html.setAttribute("data-theme", "dark");
-    btn.textContent = "☀️ Modo claro";
+    toggle.checked = true;
   } else {
-    btn.textContent = "🌙 Modo oscuro";
+    toggle.checked = false;
   }
 
-  btn.addEventListener("click", function () {
-    const isDark = html.getAttribute("data-theme") === "dark";
+  toggle.addEventListener("change", function () {
+    const isDark = this.checked;
     if (isDark) {
-      html.removeAttribute("data-theme");
-      localStorage.setItem("theme", "light");
-      btn.textContent = "🌙 Modo oscuro";
-    } else {
       html.setAttribute("data-theme", "dark");
       localStorage.setItem("theme", "dark");
-      btn.textContent = "☀️ Modo claro";
+    } else {
+      html.removeAttribute("data-theme");
+      localStorage.setItem("theme", "light");
     }
   });
 });
