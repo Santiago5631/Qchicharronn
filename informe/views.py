@@ -2,6 +2,10 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render
 from .models import *
 from .forms import InformeForm
+import openpyxl
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 
 def listar_informes(request):
@@ -62,4 +66,59 @@ class InformeDeleteView(DeleteView):
 
 from django.shortcuts import render
 
+def exportar_excel(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Informes"
+
+    encabezados = ['Titulo', 'Descripcion', 'Tipo', 'Fecha inicio', 'Fecha fin', 'Creado por']
+    ws.append(encabezados)
+
+    informes = Informe.objects.all()
+    for i in informes:
+        ws.append([
+            i.titulo,
+            i.descripcion,
+            i.tipo,
+            i.fecha_inicio.strftime('%d/%m/%Y') if i.fecha_inicio else '',
+            i.fecha_fin.strftime('%d/%m/%Y') if i.fecha_fin else '',
+            i.creado_por.username if i.creado_por else '',
+        ])
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename="informes.xlsx"'
+    wb.save(response)
+    return response
+
+def exportar_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="informes.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(200, 770, "Informe General")
+    p.setFont("Helvetica", 11)
+
+    y = 740
+    informes = Informe.objects.all()
+    for i in informes:
+        p.drawString(50, y, f"Titulo: {i.titulo}")
+        y -= 15
+        p.drawString(50, y, f"Descripcion: {i.descripcion[:80]}...")
+        y -= 15
+        p.drawString(50, y, f"Tipo: {i.tipo}")
+        y -= 15
+        p.drawString(50, y, f"Fecha inicio: {i.fecha_inicio} | Fecha fin: {i.fecha_fin}")
+        y -= 15
+        p.drawString(50, y, f"Creado por: {i.creado_por.username if i.creado_por else 'N/A'}")
+        y -= 15
+
+        if y < 100:
+            p.showPage()
+            y = 750
+            p.setFont("Helvetica", 11)
+
+    p.save()
+    return response
 # Create your views here.
