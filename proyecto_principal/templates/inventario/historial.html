@@ -1,0 +1,123 @@
+{% extends "dashboard/layout.html" %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+    </div>
+
+    <div class="card-body">
+        <!-- Filtro por Producto -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <form method="get" class="form-inline">
+                    <label class="mr-2">Filtrar por producto:</label>
+                    <select name="producto" class="form-control mr-2">
+                        <option value="">Todos los productos</option>
+                        {% for prod in productos %}
+                        <option value="{{ prod.id }}" {% if producto_seleccionado == prod.id|stringformat:"s" %}selected{% endif %}>
+                            {{ prod.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel-fill"></i> Filtrar
+                    </button>
+                    {% if producto_seleccionado %}
+                    <a href="{% url 'apl:inventario:historial' %}" class="btn btn-secondary ml-2">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Stock Anterior</th>
+                        <th>Stock Nuevo</th>
+                        <th>Referencia</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ mov.producto.nombre }}</td>
+                        <td>
+                            <span class="badge badge-{% if mov.tipo_movimiento == 'entrada' %}success{% elif mov.tipo_movimiento == 'salida' %}danger{% elif mov.tipo_movimiento == 'ajuste' %}warning{% else %}info{% endif %}">
+                                {{ mov.get_tipo_movimiento_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if mov.tipo_movimiento == 'salida' %}
+                                <span class="text-danger">-{{ mov.cantidad }}</span>
+                            {% elif mov.tipo_movimiento == 'entrada' %}
+                                <span class="text-success">+{{ mov.cantidad }}</span>
+                            {% else %}
+                                {{ mov.cantidad }}
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.stock_anterior }}</td>
+                        <td>
+                            <strong>{{ mov.stock_nuevo }}</strong>
+                            {% if mov.stock_nuevo > mov.stock_anterior %}
+                                <i class="bi bi-arrow-up-circle-fill text-success"></i>
+                            {% elif mov.stock_nuevo < mov.stock_anterior %}
+                                <i class="bi bi-arrow-down-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ mov.referencia|default:"-" }}</small>
+                        </td>
+                        <td>
+                            <small>{{ mov.observaciones|default:"-"|truncatewords:10 }}</small>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No hay movimientos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if producto_seleccionado %}&producto={{ producto_seleccionado }}{% endif %}">Anterior</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if producto_seleccionado %}&producto={{ producto_seleccionado }}{% endif %}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        <div class="mt-3">
+            <a href="{% url 'apl:inventario:dashboard' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

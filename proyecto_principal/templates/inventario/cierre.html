@@ -1,0 +1,222 @@
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="form-container">
+    <h1 class="form-title">{{ titulo }}</h1>
+
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Importante:</strong> Registre el inventario físico real al final del día.
+        El sistema calculará automáticamente el consumo y las diferencias.
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Fecha: {{ inventario.fecha|date:"d/m/Y" }}</h5>
+            <p>Estado: <span class="badge badge-primary">{{ inventario.get_estado_display }}</span></p>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Productos por PESO -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-warning">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="bi bi-thermometer-half"></i> Productos por PESO (kg)
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    <small>Pese estos productos y registre el inventario final real</small>
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Inicial</th>
+                                <th>Inventario Final (Pesado)</th>
+                                <th>Consumo Calculado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimientos %}
+                            {% if mov.tipo_control == 'peso' %}
+                            <tr>
+                                <td>{{ mov.producto.nombre }}</td>
+                                <td>{{ mov.inventario_inicial }} kg</td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        name="inventario_final_{{ mov.id }}"
+                                        class="form-control inventario-final-peso"
+                                        step="0.01"
+                                        min="0"
+                                        max="{{ mov.inventario_inicial }}"
+                                        placeholder="0.00"
+                                        data-inicial="{{ mov.inventario_inicial }}"
+                                        data-target="consumo_{{ mov.id }}"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <span id="consumo_{{ mov.id }}" class="badge badge-info">-</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No hay productos por peso</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos por UNIDAD -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-info">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="bi bi-box-seam"></i> Productos por UNIDAD
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    <small>Cuente estos productos físicamente y ajuste si hay diferencias</small>
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Inicial</th>
+                                <th>Vendido (Sistema)</th>
+                                <th>Debería Quedar</th>
+                                <th>Inventario Final (Conteo)</th>
+                                <th>Diferencia</th>
+                                <th>Motivo Ajuste</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimientos %}
+                            {% if mov.tipo_control == 'unidad' %}
+                            <tr>
+                                <td>{{ mov.producto.nombre }}</td>
+                                <td>{{ mov.inventario_inicial }}</td>
+                                <td>
+                                    <span class="badge badge-danger">{{ mov.consumo_automatico }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-success">{{ mov.inventario_teorico }}</span>
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        name="inventario_final_{{ mov.id }}"
+                                        class="form-control inventario-final-unidad"
+                                        step="1"
+                                        min="0"
+                                        placeholder="0"
+                                        data-teorico="{{ mov.inventario_teorico }}"
+                                        data-target="diferencia_{{ mov.id }}"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <span id="diferencia_{{ mov.id }}" class="badge badge-secondary">-</span>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="motivo_ajuste_{{ mov.id }}"
+                                        class="form-control form-control-sm"
+                                        placeholder="Ej: Merma, rotura..."
+                                    >
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No hay productos por unidad</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-warning btn-lg btn-block">
+            <i class="bi bi-lock-fill"></i> Cerrar Inventario
+        </button>
+
+        <div class="back-link">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                Volver
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calcular consumo para productos por PESO
+    const inputsPeso = document.querySelectorAll('.inventario-final-peso');
+    inputsPeso.forEach(input => {
+        input.addEventListener('input', function() {
+            const inicial = parseFloat(this.dataset.inicial);
+            const final = parseFloat(this.value) || 0;
+            const consumo = inicial - final;
+            const targetId = this.dataset.target;
+            const badge = document.getElementById(targetId);
+
+            if (badge) {
+                badge.textContent = consumo.toFixed(2) + ' kg';
+                badge.className = consumo > 0 ? 'badge badge-success' : 'badge badge-secondary';
+            }
+        });
+    });
+
+    // Calcular diferencia para productos por UNIDAD
+    const inputsUnidad = document.querySelectorAll('.inventario-final-unidad');
+    inputsUnidad.forEach(input => {
+        input.addEventListener('input', function() {
+            const teorico = parseFloat(this.dataset.teorico);
+            const real = parseFloat(this.value) || 0;
+            const diferencia = real - teorico;
+            const targetId = this.dataset.target;
+            const badge = document.getElementById(targetId);
+
+            if (badge) {
+                const signo = diferencia > 0 ? '+' : '';
+                badge.textContent = signo + diferencia;
+
+                if (diferencia === 0) {
+                    badge.className = 'badge badge-success';
+                } else if (diferencia < 0) {
+                    badge.className = 'badge badge-danger';
+                } else {
+                    badge.className = 'badge badge-warning';
+                }
+            }
+        });
+    });
+
+    // Autoseleccionar inputs al hacer focus
+    const allInputs = document.querySelectorAll('input[type="number"]');
+    allInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.select();
+        });
+    });
+});
+</script>
+{% endblock %}
