@@ -223,11 +223,80 @@ class PedidoListView(ListView):
         return context
 
 
+def descontar_inventario_pedido(pedido):
+    """
+    Descuenta el inventario automáticamente cuando se confirma un pedido.
+    Solo descuenta productos tipo UNIDAD.
+    Los productos tipo PESO se descontarán al cierre del día.
+    """
+    from inventario.models import InventarioDiario, MovimientoInventario, HistorialStock
+
+    # Obtener inventario del día actual
+    hoy = timezone.now().date()
+    inventario_hoy = InventarioDiario.objects.filter(
+        fecha=hoy,
+        estado='abierto'
+    ).first()
+
+    if not inventario_hoy:
+        # No hay inventario abierto, no se puede descontar
+        return False, "No hay inventario abierto para hoy. Abra el inventario primero."
+
+    productos_descontados = []
+
+    # Procesar cada item del pedido
+    for item in pedido.items.all():
+        menu = item.menu
+        cantidad_pedido = item.cantidad
+
+        # Obtener los productos del menú
+        for menu_producto in menu.menu_productos.all():
+            producto = menu_producto.producto
+            cantidad_necesaria = menu_producto.cantidad * cantidad_pedido
+
+            # Solo descontar si es producto por UNIDAD
+            if producto.tipo_inventario == 'unidad':
+                # Verificar si hay stock suficiente
+                if producto.stock < cantidad_necesaria:
+                    return False, f"Stock insuficiente de {producto.nombre}. Disponible: {producto.stock}, Necesario: {cantidad_necesaria}"
+
+                # Descontar del stock
+                stock_anterior = producto.stock
+                producto.stock -= cantidad_necesaria
+                producto.save()
+
+                # Registrar en el movimiento de inventario
+                movimiento = MovimientoInventario.objects.filter(
+                    inventario_diario=inventario_hoy,
+                    producto=producto
+                ).first()
+
+                if movimiento:
+                    movimiento.registrar_consumo_venta(cantidad_necesaria)
+
+                # Registrar en historial
+                HistorialStock.objects.create(
+                    producto=producto,
+                    tipo_movimiento='salida',
+                    cantidad=cantidad_necesaria,
+                    stock_anterior=stock_anterior,
+                    stock_nuevo=producto.stock,
+                    referencia=f"Pedido #{pedido.numero_pedido}",
+                    observaciones=f"Venta: {menu.nombre} x{cantidad_pedido}"
+                )
+
+                productos_descontados.append({
+                    'producto': producto.nombre,
+                    'cantidad': cantidad_necesaria
+                })
+
+    return True, productos_descontados
 class PedidoCreateView(View):
     """Vista para crear pedidos - Sistema de carrito"""
     template_name = 'modulos/pedido_crear.html'
 
     def get(self, request):
+        # ... (mantener el código existente del GET)
         # Obtener o crear carrito en sesión
         carrito = request.session.get('carrito', {})
 
@@ -326,7 +395,7 @@ class PedidoCreateView(View):
 
             return redirect('apl:menu:pedido_create')
 
-        # Confirmar pedido
+        # Confirmar pedido - MODIFICADO PARA INCLUIR DESCUENTO DE INVENTARIO
         elif accion == 'confirmar':
             form = PedidoForm(request.POST)
 
@@ -359,13 +428,22 @@ class PedidoCreateView(View):
                         # Calcular totales
                         pedido.calcular_totales()
 
+                        # 🔥 DESCONTAR INVENTARIO AUTOMÁTICAMENTE
+                        exito, resultado = descontar_inventario_pedido(pedido)
+
+                        if not exito:
+                            # Si falla el descuento, revertir el pedido
+                            raise Exception(resultado)
+
                         # Limpiar carrito
                         request.session['carrito'] = {}
 
-                        messages.success(
-                            request,
-                            f'Pedido #{pedido.numero_pedido} creado exitosamente'
-                        )
+                        # Mensaje de éxito con detalle de productos descontados
+                        mensaje = f'Pedido #{pedido.numero_pedido} creado exitosamente'
+                        if isinstance(resultado, list) and len(resultado) > 0:
+                            mensaje += f'. Se descontaron {len(resultado)} productos del inventario.'
+
+                        messages.success(request, mensaje)
                         return redirect('apl:menu:pedido_detail', pk=pedido.pk)
 
                 except Exception as e:
@@ -376,7 +454,6 @@ class PedidoCreateView(View):
                 return redirect('apl:menu:pedido_create')
 
         return redirect('apl:menu:pedido_create')
-
 
 class PedidoDetailView(DetailView):
     """Ver detalle de un pedido"""
