@@ -1,18 +1,57 @@
-from allauth.account.views import logout
+import requests
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
 
 
-#logica login
+def verify_recaptcha(response_token, remoteip=None):
+    url = 'https://www.google.com/recaptcha/api/siteverify'
+    data = {
+        'secret': settings.RECAPTCHA_PRIVATE_KEY,
+        'response': response_token,
+    }
+    if remoteip:
+        data['remoteip'] = remoteip
+    try:
+        r = requests.post(url, data=data, timeout=5)
+        return r.json()
+    except requests.RequestException:
+        return {'success': False, 'error-codes': ['network-error']}
 
-class Login_view(LoginView):
+
+class CustomLoginView(LoginView):
     template_name = 'login/login.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)    
-        context["titulo"] = "Iniciar Sesion"
-        return context
-    
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        # Redirige a la lista de usuarios
+        return reverse_lazy('apl:usuario:usuario_list')
+
+    def form_valid(self, form):
+        # Verificar reCAPTCHA antes de autenticar
+        recaptcha_token = self.request.POST.get('g-recaptcha-response')
+
+        if not recaptcha_token:
+            messages.error(self.request, 'Por favor, completa el reCAPTCHA.')
+            return self.form_invalid(form)
+
+        # Verificar en el servidor de Google
+        result = verify_recaptcha(recaptcha_token, self.request.META.get('REMOTE_ADDR'))
+
+        if not result.get('success'):
+            error_codes = result.get('error-codes', [])
+            messages.error(self.request, f'reCAPTCHA inválido. Intenta de nuevo. Códigos: {error_codes}')
+            return self.form_invalid(form)
+
+        # Si todo está bien, continuar con el login normal
+        messages.success(self.request, '¡Bienvenido!')
+        return super().form_valid(form)
+
+
 def custom_logout_view(request):
-    logout(request)
-    return redirect('login')
+    auth_logout(request)
+    messages.info(request, 'Has cerrado sesión correctamente.')
+    return redirect('login:login')

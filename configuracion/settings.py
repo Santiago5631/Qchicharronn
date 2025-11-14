@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+from django.urls import reverse_lazy
 from pathlib import Path
 from decouple import config
 from django.contrib.messages import constants as messages
@@ -184,7 +184,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Redirect después del login
-LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
+LOGIN_REDIRECT_URL = reverse_lazy('usuario:usuario_list')
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 
@@ -193,8 +193,8 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 
 # Keys reCAPTCHA (obténlas en https://www.google.com/recaptcha/admin)
-RECAPTCHA_PUBLIC_KEY = '6LcwOforAAAAAMVYcPJjMSvFarb5TtXpd-2vZ7lS'
-RECAPTCHA_PRIVATE_KEY = config('PRIVATE_KEY'),
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
 #opcionales
 NOCAPTCHA = True    # para reCaptcha v2 "No Captcha"
 

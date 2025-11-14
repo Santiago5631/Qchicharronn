@@ -18,8 +18,8 @@
     <!-- SweetAlert2 JS -->
     <script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
     
-    <!-- reCAPTCHA Enterprise -->
-    <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+    <!-- reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 </head>
 
@@ -42,63 +42,70 @@
                                     <div class="text-center">
                                         <h1 class="h4 text-gray-900 mb-4">Bienvenido de nuevo!</h1>
                                     </div>
-                                    <form method="post">
+
+                                    <!-- Mostrar mensajes de Django -->
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                                {{ message }}
+                                                <button type="button" class="close" data-dismiss="alert">
+                                                    <span>&times;</span>
+                                                </button>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    <form method="post" id="loginForm">
                                         {% csrf_token %}
                                         <div class="form-group">
                                             {{ form.username|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Usuario' }}
+                                            {% if form.username.errors %}
+                                                <small class="text-danger">{{ form.username.errors.0 }}</small>
+                                            {% endif %}
                                         </div>
                                         <div class="form-group">
                                             {{ form.password|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Contraseña' }}
+                                            {% if form.password.errors %}
+                                                <small class="text-danger">{{ form.password.errors.0 }}</small>
+                                            {% endif %}
                                         </div>
+
+                                        {% if form.non_field_errors %}
+                                            <div class="alert alert-danger">
+                                                {{ form.non_field_errors.0 }}
+                                            </div>
+                                        {% endif %}
+
                                         <div class="form-group">
                                             <div class="custom-control custom-checkbox small">
-                                                <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                <label class="custom-control-label" for="customCheck">Recordarme </label>
+                                                <input type="checkbox" class="custom-control-input" id="customCheck" name="remember">
+                                                <label class="custom-control-label" for="customCheck">Recordarme</label>
                                             </div>
                                         </div>
 
                                         <!-- reCAPTCHA Widget -->
                                         <div class="form-group">
-                                            <div class="g-recaptcha" data-sitekey="6LcwOforAAAAAMVYcPJjMSvFarb5TtXpd-2vZ7lS" data-action="LOGIN"></div>
+                                            <div class="g-recaptcha" data-sitekey="6LdY9wssAAAAAGxHWaPN1ghggkzyEjzOI_7TCan6"></div>
                                         </div>
 
                                         <button type="submit" class="btn btn-primary btn-user btn-block">
                                             Iniciar Sesion
                                         </button>
                                         <hr>
-                                        <a href="index.html" class="btn btn-google btn-user btn-block">
+                                        <a href="{% url 'socialaccount_signup' %}" class="btn btn-google btn-user btn-block">
                                             <i class="fab fa-google fa-fw"></i> Iniciar Sesion Con Google
                                         </a>
-                                        <a href="index.html" class="btn btn-facebook btn-user btn-block">
+                                        <a href="{% url 'socialaccount_signup' %}" class="btn btn-facebook btn-user btn-block">
                                             <i class="fab fa-facebook-f fa-fw"></i> Iniciar Sesion Con Facebook
                                         </a>
                                     </form>
 
-                                    <script type="application/javascript">
-                                        {% if form.errors %}
-                                        var errors = '';
-                                        {% for field in form %}
-                                        {% for error in field.errors %}
-                                        errors += '{{ error }}\n';
-                                        {% endfor %}
-                                        {% endfor %}
-                                        {% for error in form.non_field_errors %}
-                                        errors += '{{ error }}\n';
-                                        {% endfor %}
-                                        Swal.fire({
-                                            title: 'Error!',
-                                            text: errors,
-                                            icon: 'error'
-                                        });
-                                        {% endif %}
-                                    </script>
-
                                     <hr>
                                     <div class="text-center">
-                                        <a class="small" href="forgot-password.html">Olvidaste tu contraseña?</a>
+                                        <a class="small" href="#">Olvidaste tu contraseña?</a>
                                     </div>
                                     <div class="text-center">
-                                        <a class="small" href="register.html">Crea una cuenta!</a>
+                                        <a class="small" href="#">Crea una cuenta!</a>
                                     </div>
                                 </div>
                             </div>
@@ -121,6 +128,41 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
+
+    <script>
+    // Validar reCAPTCHA antes de enviar
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const token = grecaptcha.getResponse();
+        if (!token || token.length === 0) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Error!',
+                text: 'Por favor completa el reCAPTCHA.',
+                icon: 'error'
+            });
+        }
+    });
+
+    // Mostrar errores con SweetAlert si existen
+    {% if form.errors and not messages %}
+        var errors = '';
+        {% for field in form %}
+            {% for error in field.errors %}
+                errors += '{{ error }}\n';
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            errors += '{{ error }}\n';
+        {% endfor %}
+        if (errors) {
+            Swal.fire({
+                title: 'Error!',
+                text: errors,
+                icon: 'error'
+            });
+        }
+    {% endif %}
+    </script>
 
 </body>
 
