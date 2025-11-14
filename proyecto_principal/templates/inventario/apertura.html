@@ -1,0 +1,95 @@
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+
+<div class="form-container">
+    <h1 class="form-title">{{ titulo }}</h1>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <strong>Instrucciones:</strong> Registre el inventario inicial de cada producto.
+        Los productos marcados como <strong>"Por Peso"</strong> se descontarán al cierre del día.
+        Los productos <strong>"Por Unidad"</strong> se descontarán automáticamente en cada venta.
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Inventario Inicial de Productos</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Unidad</th>
+                                <th>Tipo Control</th>
+                                <th>Stock Actual</th>
+                                <th>Inventario Inicial</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos %}
+                            <tr>
+                                <td>{{ p.nombre }}</td>
+                                <td>{{ p.unidad }}</td>
+                                <td>
+                                    <span class="badge badge-{% if p.tipo_inventario == 'peso' %}warning{% else %}info{% endif %}">
+                                        {{ p.get_tipo_inventario_display }}
+                                    </span>
+                                </td>
+                                <td>{{ p.stock }}</td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        name="producto_{{ p.id }}"
+                                        class="form-control"
+                                        step="0.01"
+                                        min="0"
+                                        value="{{ p.stock }}"
+                                        placeholder="0.00"
+                                    >
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No hay productos disponibles</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg btn-block">
+            <i class="bi bi-check-circle-fill"></i> Abrir Inventario
+        </button>
+
+        <div class="back-link">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                Volver
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Script para seleccionar todos los inputs automáticamente
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        });
+    });
+</script>
+{% endblock %}

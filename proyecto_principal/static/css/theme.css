@@ -63,3 +63,69 @@
   color: #fff !important; /* Mantén el texto blanco */
   border: none !important;
 }
+
+/* ==== CONTENEDOR ==== */
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+/* ==== SWITCH ==== */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+/* Oculta el checkbox original */
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* ==== FUNDO DEL SWITCH ==== */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: background-color 0.4s;
+  border-radius: 34px;
+}
+
+/* ==== CÍRCULO DESLIZANTE ==== */
+.slider:before {
+  content: "☀️";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.4s;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==== ACTIVADO ==== */
+input:checked + .slider {
+  background-color: #333;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+  content: "🌙";
+}
+
+/* ==== OPCIONAL: SOMBRITA ==== */
+.slider {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}

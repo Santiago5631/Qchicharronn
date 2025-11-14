@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import Unidad
 
-@admin.register(Unidad)
-class UnidadAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'descripcion')
-from django.contrib import admin
+# ❌ Eliminar el registro normal
+# @admin.register(Unidad)
+# class UnidadAdmin(admin.ModelAdmin):
+#     list_display = ('nombre', 'descripcion')
 
-# Register your models here.
+# ✅ Registrar el modelo pero ocultarlo completamente
+admin.site.unregister(Unidad) if admin.site.is_registered(Unidad) else None
