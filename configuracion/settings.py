@@ -9,11 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+from django.urls import reverse_lazy
 from pathlib import Path
 from decouple import config
 from django.contrib.messages import constants as messages
-import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +40,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # apps necesarias para allauth
+    'django.contrib.sites',  # obligatorio para allauth
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # proveedores sociales
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+
+    # captcha
+    'captcha',
     'proyecto_principal.apps.ProyectoPrincipalConfig',
     # Tus apps personalizadas
     'administrador.apps.AdministradorConfig',
@@ -64,6 +78,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "django_select2",
 ]
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,6 +86,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -162,8 +178,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #AUTH_USER_MODEL = 'usuario.Usuario'
 
-LOGIN_REDIRECT_URL = '/apps/usuarios/'   # o la URL que quieras
-LOGOUT_REDIRECT_URL = '/login/'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',        # login normal
+    'allauth.account.auth_backends.AuthenticationBackend',  # allauth
+]
+
+# Redirect después del login
+LOGIN_REDIRECT_URL = reverse_lazy('usuario:usuario_list')
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+
+# Keys reCAPTCHA (obténlas en https://www.google.com/recaptcha/admin)
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+#opcionales
+NOCAPTCHA = True    # para reCaptcha v2 "No Captcha"
 
 MESSAGE_TAGS = {
     messages.DEBUG: "info",
