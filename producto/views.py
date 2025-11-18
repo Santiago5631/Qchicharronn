@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from categoria.models import Categoria
 from marca.models import Marca
 from proveedor.models import Proveedor
+from unidad.models import Unidad
 from .models import *
 from .forms import (
     ProductoForm,
@@ -283,4 +284,21 @@ def crear_proveedor_ajax(request):
             'success': False,
             'error': str(e)
         })
-# Create your views here.
+
+
+@require_POST
+def crear_unidad_ajax(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido"})
+
+    data = json.loads(request.body)
+    nombre = data.get("nombre")
+    descripcion = data.get("descripcion", "")
+
+    unidad, created = Unidad.objects.get_or_create(nombre=nombre, defaults={"descripcion": descripcion})
+
+    return JsonResponse({
+        "success": True,
+        "id": unidad.id,
+        "text": unidad.nombre
+    })

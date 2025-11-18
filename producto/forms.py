@@ -18,7 +18,7 @@ class ProductoForm(forms.ModelForm):
             'categoria': Select2Widget(attrs={'class': 'select2'}),
             'proveedor': Select2Widget(attrs={'class': 'select2'}),
             'tipo_uso': forms.Select(attrs={'class': 'form-control'}),
-            'unidad': Select2Widget(attrs={'class': 'form-control'}),  # ✅ Solo selector, sin modal
+            'unidad': Select2Widget(attrs={'class': 'select2'}), 
             'stock': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
@@ -71,3 +71,8 @@ class ProveedorModalForm(forms.ModelForm):
     class Meta:
         model = Proveedor
         fields = ['nombre', 'nit']
+
+class UnidadModalForm(forms.ModelForm):
+    class Meta:
+        modal = Unidad
+        fields = ['nombre', 'descripcion']
