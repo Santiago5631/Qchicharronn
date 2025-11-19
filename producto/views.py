@@ -132,11 +132,11 @@ class ProductoUpdateView(UpdateView):
 
 class ProductoDeleteView(DeleteView):
     model = Producto
-    success_url = reverse_lazy('apl:producto:   producto_list')
+    success_url = reverse_lazy('apl:producto:producto_list')
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.delete()
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.delete()
         return JsonResponse({"status": "ok"})
 
 

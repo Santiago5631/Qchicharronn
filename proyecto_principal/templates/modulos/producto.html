@@ -1,6 +1,11 @@
 {% extends "dashboard/layout.html" %}
-
+{% load static %}
 {% block content %}
+
+    <form id="csrf-form" style="display:none;">
+    {% csrf_token %}
+    </form>
+
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
@@ -39,7 +44,7 @@
                         <td>{{ p.categoria }}</td>
                         <td>{{ p.proveedor }}</td>
                         <td>{{ p.fecha }}</td>
-                        <!--<td>{#  #}{ p.unidad }}</td>-->
+                        <td>{{ p.unidad }}</td>
                         <td>{{ p.stock }}</td>
                         <td>{{ p.tipo_uso }}</td>
                         <td>
@@ -48,11 +53,13 @@
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-                            <a href="{% url 'apl:producto:eliminar_producto' p.id %}">
-                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
+                                <button
+                                    type="button"
+                                        class="btn btn-danger btn-sm d-inline mb-1 btn-delete"
+                                        data-url="{% url 'apl:producto:eliminar_producto' p.id %}"
+                                        data-name="{{ p.nombre }}">
                                     <i class="bi bi-trash3-fill"></i>
                                 </button>
-                            </a>
                         </td>
                     </tr>
                     {% empty %}
@@ -66,3 +73,10 @@
     </div>
 </div>
 {% endblock %}
+
+{% block js_plugins %}
+<script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
+    <script src="{% static 'lib/js/sweetalert_delete.js' %}"></script>
+
+{% endblock %}
+
