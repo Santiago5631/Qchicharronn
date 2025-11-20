@@ -1,24 +1,13 @@
 {
   "name": "qchicharronn",
   "version": "1.0.0",
-  "description": "repositorio definitivo para el proyecto qchicharron",
-  "main": "index.js",
+  "description": "Proyecto Django con manejo de estáticos desde node_modules",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install-deps": "npm install bootstrap sweetalert2",
+    "build-static": "powershell -NoProfile -Command \"Copy-Item node_modules/bootstrap/dist/css/bootstrap.min.css proyecto_principal/static/css/ -Force; Copy-Item node_modules/bootstrap/dist/js/bootstrap.bundle.min.js proyecto_principal/static/js/ -Force; Copy-Item node_modules/sweetalert2/dist/sweetalert2.min.css proyecto_principal/static/css/ -Force; Copy-Item node_modules/sweetalert2/dist/sweetalert2.all.min.js proyecto_principal/static/js/ -Force\""
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Santiago5631/Qchicharronn.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Santiago5631/Qchicharronn/issues"
-  },
-  "homepage": "https://github.com/Santiago5631/Qchicharronn#readme",
   "dependencies": {
-    "sienna-accessibility": "^2.0.1"
+    "bootstrap": "^5.3.3",
+    "sweetalert2": "^11.7.20"
   }
 }
