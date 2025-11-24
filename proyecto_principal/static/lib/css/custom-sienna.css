@@ -15,3 +15,35 @@
     background: #ffcd06 !important;
     color: #fff;
 }
+
+/* Mover el botón de accesibilidad a la derecha */
+.asw-menu-btn {
+    position: fixed !important;
+    bottom: 100px !important;   /* distancia desde abajo */
+    right: 40px !important;    /* lo mueve a la derecha */
+    left: auto !important;     /* quitar posición izquierda */
+    z-index: 99999 !important; /* asegurarlo encima */
+}
+
+/* Cambiar tamaño del botón de accesibilidad */
+.asw-menu-btn {
+    width: 60px !important;
+    height: 60px !important;
+    padding: 10px !important;
+}
+
+/* Cambiar tamaño del ícono dentro del botón */
+.asw-menu-btn svg {
+    width: 60px !important;
+    height: 60px !important;
+}
+
+/* Mover el panel al lado derecho */
+.asw-menu {
+    position: fixed !important;
+    right: 20px !important;   /* separarlo del borde derecho */
+    left: auto !important;    /* desactivar la posición por defecto */
+    bottom: 20px !important;
+    height: 500px !important;
+    top: 80px !important;
+}
