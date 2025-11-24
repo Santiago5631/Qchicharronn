@@ -191,123 +191,74 @@
 
 <script>
 $(document).ready(function() {
-    // Destruir Select2 si ya existe
-    $('#id_marca, #id_categoria, #id_proveedor, #id_unidad').select2('destroy');
-    
-    // Inicializar Select2 correctamente
-    $('#id_marca').select2({
+    // Inicializar Select2
+    $('#id_marca, #id_categoria, #id_proveedor, #id_unidad').select2({
         width: '100%',
-        placeholder: 'Seleccione una marca',
         allowClear: true,
-        dropdownAutoWidth: true
+        placeholder: 'Seleccione una opción'
     });
-    
-    $('#id_categoria').select2({
-        width: '100%',
-        placeholder: 'Seleccione una categoría',
-        allowClear: true,
-        dropdownAutoWidth: true
-    });
-    
-    $('#id_proveedor').select2({
-        width: '100%',
-        placeholder: 'Seleccione un proveedor',
-        allowClear: true,
-        dropdownAutoWidth: true
-    });
-    
-    $('#id_unidad').select2({
-        width: '100%',
-        placeholder: 'Seleccione una unidad',
-        allowClear: true,
-        dropdownAutoWidth: true
-    });
-    
-    // Preseleccionar elementos recién creados
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.has('marca_id')) {
-        const marcaId = urlParams.get('marca_id');
-        $('#id_marca').val(marcaId).trigger('change');
-        console.log('Marca preseleccionada:', marcaId);
-    }
-    if (urlParams.has('categoria_id')) {
-        const categoriaId = urlParams.get('categoria_id');
-        $('#id_categoria').val(categoriaId).trigger('change');
-        console.log('Categoría preseleccionada:', categoriaId);
-    }
-    if (urlParams.has('proveedor_id')) {
-        const proveedorId = urlParams.get('proveedor_id');
-        $('#id_proveedor').val(proveedorId).trigger('change');
-        console.log('Proveedor preseleccionado:', proveedorId);
-    }
-    if (urlParams.has('unidad_id')) {
-        const unidadId = urlParams.get('unidad_id');
-        $('#id_unidad').val(unidadId).trigger('change');
-        console.log('Unidad preseleccionada:', unidadId);
-    }
-    
-    // Cerrar modal al hacer clic fuera
-    $('.simple-modal').on('click', function(e) {
-        if (e.target === this) cerrarModalConAnimacion(this.id);
-    });
-    
-    // Cerrar modal con ESC
-    $(document).keydown(function(e) {
-        if (e.keyCode === 27) {
-            $('.simple-modal:visible').each(function() {
-                cerrarModalConAnimacion(this.id);
+
+    // --- AJAX para cada modal ---
+    function enviarAjax(formSelector, url, selectSelector, modalId) {
+        $(formSelector).on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {};
+            $(this).serializeArray().forEach(item => {
+                formData[item.name] = item.value;
             });
-        }
-    });
 
-    // Auto-ocultar mensajes después de 3 segundos
-    setTimeout(function() {
-        $('#messages-container .message').fadeOut(500, function() {
-            $(this).remove();
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function(response) {
+                    if (response.success) {
+                        // Agregar nueva opción al select y seleccionarla
+                        const newOption = new Option(response.text, response.id, true, true);
+                        $(selectSelector).append(newOption).trigger('change');
+
+                        mostrarMensaje('success', 'Registro creado exitosamente');
+                        cerrarModal(modalId);
+                    } else {
+                        mostrarMensaje('error', response.error || 'Error desconocido');
+                    }
+                },
+                error: function() {
+                    mostrarMensaje('error', 'Error de conexión con el servidor');
+                }
+            });
         });
-    }, 3000);
-});
+    }
 
-// Funciones de modal (mantener igual)
-function abrirModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.style.display = 'block';
-    modal.offsetHeight;
-    modal.style.opacity = '1';
-}
+    // Inicializar AJAX para cada formulario de modal
+    enviarAjax('#modalMarca form', '{% url "apl:producto:crear_marca_ajax" %}', '#id_marca', 'modalMarca');
+    enviarAjax('#modalCategoria form', '{% url "apl:producto:crear_marca_ajax" %}', '#id_categoria', 'modalCategoria');
+    enviarAjax('#modalProveedor form', '{% url "apl:producto:crear_proveedor_ajax" %}', '#id_proveedor', 'modalProveedor');
+    enviarAjax('#modalunidad form', '{% url 'apl:producto:crear_unidad_ajax' %} ', '#id_unidad', 'modalunidad');
 
-function cerrarModal(modalId) {
-    cerrarModalConAnimacion(modalId);
-}
+    // --- Función para mostrar mensajes dinámicos ---
+    function mostrarMensaje(tipo, texto) {
+        const msgDiv = $(`<div class="message ${tipo}">${texto}</div>`);
+        $('#messages-container').append(msgDiv);
+        setTimeout(() => msgDiv.fadeOut(500, () => msgDiv.remove()), 3000);
+    }
 
-function cerrarModalConAnimacion(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.style.opacity = '0';
-    setTimeout(() => {
-        modal.style.display = 'none';
-        const inputs = modal.querySelectorAll('input, textarea');
-        inputs.forEach(input => input.value = '');
-    }, 300);
-}
-</script>
-<script>
-// Preseleccionar elementos recién creados
-$(document).ready(function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.has('marca_id')) {
-        $('#id_marca').val(urlParams.get('marca_id')).trigger('change');
-    }
-    if (urlParams.has('categoria_id')) {
-        $('#id_categoria').val(urlParams.get('categoria_id')).trigger('change');
-    }
-    if (urlParams.has('proveedor_id')) {
-        $('#id_proveedor').val(urlParams.get('proveedor_id')).trigger('change');
-    }
-    if (urlParams.has('unidad_id')) {
-        $('#id_unidad').val(urlParams.get('unidad_id')).trigger('change');
-    }
+    // --- Funciones de modal ---
+    window.abrirModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'block';
+        modal.offsetHeight;
+        modal.style.opacity = '1';
+    };
+
+    window.cerrarModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.opacity = '0';
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    };
 });
 </script>
 {% endblock %}
