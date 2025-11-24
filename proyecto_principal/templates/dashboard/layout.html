@@ -7,20 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}Mi Proyecto{% endblock %}</title>
 
-    <!-- ============================================ -->
-    <!-- ESTILOS CSS -->
-    <!-- ============================================ -->
-
-    <!-- Bootstrap y SB Admin Base -->
+    <!-- ============================= -->
+    <!-- CSS BASE                      -->
+    <!-- ============================= -->
     <link rel="stylesheet" href="{% static 'lib/vendor/fontawesome-free/css/all.min.css' %}">
     <link rel="stylesheet" href="{% static 'lib/css/sb-admin-2.min.css' %}">
     <link rel="stylesheet" href="{% static 'lib/css/custom-sienna.css' %}">
 
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
     <!-- Select2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -37,61 +35,59 @@
 
 <div id="wrapper">
     {% include 'dashboard/aside/sidebar.html' %}
+
     <div id="content-wrapper" class="d-flex flex-column">
         <div id="content">
+
             {% include 'dashboard/header.html' %}
 
             <div class="container-fluid">
                 {% block content %}{% endblock %}
             </div>
+
         </div>
 
-        {% include "dashboard/footer.html" %}
+        {% include 'dashboard/footer.html' %}
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- JS BASE -->
-<!-- ============================================ -->
-{% block js_base %}
+<!-- ============================= -->
+<!-- JS BASE                       -->
+<!-- ============================= -->
 <script src="{% static 'lib/vendor/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'lib/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-{% endblock %}
 
-<!-- ============================================ -->
-<!-- JS PLUGINS -->
-<!-- ============================================ -->
-{% block js_plugins %}
+<!-- ============================= -->
+<!-- JS PLUGINS                    -->
+<!-- ============================= -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<!-- SweetAlert2 -->
+<!-- SweetAlert2 (siempre arriba) -->
 <script src="{% static 'lib/vendor/sweetalert2/sweetalert2.all.min.js' %}"></script>
-{% endblock %}
 
-<!-- ============================================ -->
-<!-- JS DEL TEMA -->
-<!-- ============================================ -->
+<!-- Archivo que maneja eliminaciones -->
+<script src="{% static 'lib/js/sweetalert_delete.js' %}"></script>
+
+<!-- ============================= -->
+<!-- JS DEL TEMA                   -->
+<!-- ============================= -->
 <script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
 <script src="{% static 'lib/js/custom_sidebar.js' %}"></script>
 <script src="{% static 'lib/js/custom.js' %}"></script>
 <script src="{% static 'lib/js/sienna.js' %}"></script>
 <script src="{% static 'lib/js/theme.js' %}"></script>
 
-<!-- ============================================ -->
-<!-- INICIALIZACIONES -->
-<!-- ============================================ -->
+<!-- ============================= -->
+<!-- INICIALIZACIONES              -->
+<!-- ============================= -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Inicializar Sienna Accessibility
     if (typeof SiennaAccessibility !== "undefined") {
         new SiennaAccessibility();
     }
 
-    // DataTables
     if ($.fn.DataTable && $('#dataTable').length) {
         $('#dataTable').DataTable({
             language: {
@@ -112,35 +108,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Select2
     if ($.fn.select2) {
         $('.select2').select2({
             width: '100%'
         });
     }
+
 });
 </script>
 
-<!-- ============================================ -->
-<!-- MENSAJES DE DJANGO -->
-<!-- ============================================ -->
-{% block js_messages %}
+<!-- ============================= -->
+<!-- MENSAJES DE DJANGO            -->
+<!-- ============================= -->
 {% if messages %}
 <script>
     {% for message in messages %}
     Swal.fire({
-        title: "{{ message.tags|capfirst }}",
+        title: "{% if message.tags == 'success' %}Éxito{% elif message.tags == 'error' %}Error{% else %}Aviso{% endif %}",
         text: "{{ message|escapejs }}",
         icon: "{{ message.tags }}",
-        timer: 3000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        timer: 3000
     });
     {% endfor %}
 </script>
 {% endif %}
-{% endblock %}
 
-{% block js_extra %}{% endblock %}
 {% block extra_js %}{% endblock %}
 
 </body>
