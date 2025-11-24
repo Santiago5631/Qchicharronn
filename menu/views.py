@@ -1,14 +1,14 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-from django.views import View
 from django.db import transaction
 from django.contrib import messages
 from django.http import JsonResponse
-from django.utils import timezone
+from django.views import View
+from django.views.decorators.http import require_POST
 from .forms import *
 from .models import Menu, MenuProducto, Pedido, PedidoItem
-from producto.models import Producto
 from decimal import Decimal
 
 
@@ -177,15 +177,34 @@ class MenuDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         menu = self.get_object()
         nombre = menu.nombre
+
+        # Si es AJAX (SweetAlert), devolver JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            menu.delete()
+            return JsonResponse({'success': True, 'nombre': nombre})
+
+        # Si no es AJAX, eliminar y redirigir normalmente
         response = super().delete(request, *args, **kwargs)
         messages.success(request, f'Menú "{nombre}" eliminado exitosamente.')
         return response
 
 
+@require_POST
+def menu_delete_ajax(request, pk):
+    """Vista auxiliar para eliminar con AJAX"""
+    try:
+        menu = get_object_or_404(Menu, pk=pk)
+        nombre = menu.nombre
+        menu.delete()
+        return JsonResponse({'success': True, 'nombre': nombre})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 class MenuDetailView(DetailView):
     """Ver detalle de un menú con sus productos"""
     model = Menu
-    template_name = 'modulos/menu_detalle.html'
+    template_name = 'forms/menu_detalle.html'
     context_object_name = 'menu'
 
     def get_context_data(self, **kwargs):
@@ -196,145 +215,200 @@ class MenuDetailView(DetailView):
 
 
 # ==================== VISTAS DE PEDIDOS ====================
-
-class PedidoListView(ListView):
-    """Lista de todos los pedidos"""
+class PedidoListView( ListView):
     model = Pedido
-    template_name = 'modulos/pedido_lista.html'
+    template_name = 'forms/pedido_lista.html'  # ← CORREGIDO: nombre real del template
     context_object_name = 'pedidos'
-    paginate_by = 20
+    paginate_by = 12  # ← 12 queda más bonito en tarjetas
+    ordering = ['-fecha_creacion']  # ← más nuevos primero
 
     def get_queryset(self):
         queryset = Pedido.objects.prefetch_related('items__menu').all()
 
-        # Filtrar por estado si se proporciona
+        # Filtro por estado
         estado = self.request.GET.get('estado')
         if estado:
-            queryset = queryset.filter(estado=estado)
+            # Validamos que el estado sea válido
+            if estado in dict(Pedido.ESTADO_CHOICES):  # ← USA .ESTADOS (no ESTADO_CHOICES)
+                queryset = queryset.filter(estado=estado)
 
-        return queryset
+        return queryset.order_by('-fecha_creacion')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Lista de Pedidos'
+        context['titulo'] = 'Gestión de Pedidos'
         context['menu'] = 'pedido'
+
+        # ← CORREGIDO: usar Pedido.ESTADOS (el choices de tu modelo)
         context['estados'] = Pedido.ESTADO_CHOICES
+
+        # Para resaltar el filtro activo
         context['estado_actual'] = self.request.GET.get('estado', '')
+
+        # Estadísticas reales (opcional pero queda brutal)
+        context['stats'] = {
+            'total': Pedido.objects.count(),
+            'pendiente': Pedido.objects.filter(estado='pendiente').count(),
+            'preparando': Pedido.objects.filter(estado='preparando').count(),
+            'listo': Pedido.objects.filter(estado='listo').count(),
+            'entregado': Pedido.objects.filter(estado='entregado').count(),
+            'cancelado': Pedido.objects.filter(estado='cancelado').count(),
+        }
+
         return context
 
-
-def descontar_inventario_pedido(pedido):
-    """
-    Descuenta el inventario automáticamente cuando se confirma un pedido.
-    Solo descuenta productos tipo UNIDAD.
-    Los productos tipo PESO se descontarán al cierre del día.
-    """
-    from inventario.models import InventarioDiario, MovimientoInventario, HistorialStock
-
-    # Obtener inventario del día actual
-    hoy = timezone.now().date()
-    inventario_hoy = InventarioDiario.objects.filter(
-        fecha=hoy,
-        estado='abierto'
-    ).first()
-
-    if not inventario_hoy:
-        # No hay inventario abierto, no se puede descontar
-        return False, "No hay inventario abierto para hoy. Abra el inventario primero."
-
-    productos_descontados = []
-
-    # Procesar cada item del pedido
-    for item in pedido.items.all():
-        menu = item.menu
-        cantidad_pedido = item.cantidad
-
-        # Obtener los productos del menú
-        for menu_producto in menu.menu_productos.all():
-            producto = menu_producto.producto
-            cantidad_necesaria = menu_producto.cantidad * cantidad_pedido
-
-            # Solo descontar si es producto por UNIDAD
-            if producto.tipo_inventario == 'unidad':
-                # Verificar si hay stock suficiente
-                if producto.stock < cantidad_necesaria:
-                    return False, f"Stock insuficiente de {producto.nombre}. Disponible: {producto.stock}, Necesario: {cantidad_necesaria}"
-
-                # Descontar del stock
-                stock_anterior = producto.stock
-                producto.stock -= cantidad_necesaria
-                producto.save()
-
-                # Registrar en el movimiento de inventario
-                movimiento = MovimientoInventario.objects.filter(
-                    inventario_diario=inventario_hoy,
-                    producto=producto
-                ).first()
-
-                if movimiento:
-                    movimiento.registrar_consumo_venta(cantidad_necesaria)
-
-                # Registrar en historial
-                HistorialStock.objects.create(
-                    producto=producto,
-                    tipo_movimiento='salida',
-                    cantidad=cantidad_necesaria,
-                    stock_anterior=stock_anterior,
-                    stock_nuevo=producto.stock,
-                    referencia=f"Pedido #{pedido.numero_pedido}",
-                    observaciones=f"Venta: {menu.nombre} x{cantidad_pedido}"
-                )
-
-                productos_descontados.append({
-                    'producto': producto.nombre,
-                    'cantidad': cantidad_necesaria
-                })
-
-    return True, productos_descontados
 class PedidoCreateView(View):
-    """Vista para crear pedidos - Sistema de carrito"""
-    template_name = 'modulos/pedido_crear.html'
+    template_name = 'forms/pedido_crear.html'
 
-    def get(self, request):
-        # ... (mantener el código existente del GET)
-        # Obtener o crear carrito en sesión
+    def get(self, request, *args, **kwargs):
+        return self._renderizar_pagina(request)
+
+    def post(self, request, *args, **kwargs):
+        accion = request.POST.get('accion')
+
+        # 1. Agregar al carrito
+        if accion == 'agregar':
+            menu_id = request.POST.get('menu_id')
+            if not menu_id or not menu_id.isdigit():
+                messages.error(request, 'Menú no válido.')
+                return redirect('apl:menu:pedido_create')
+
+            cantidad = int(request.POST.get('cantidad', 1))
+            observaciones = request.POST.get('observaciones', '').strip()
+
+            carrito = request.session.get('carrito', {})
+            if menu_id in carrito:
+                carrito[menu_id]['cantidad'] += cantidad
+            else:
+                carrito[menu_id] = {'cantidad': cantidad, 'observaciones': observaciones}
+
+            request.session['carrito'] = carrito
+            request.session.modified = True
+            messages.success(request, 'Producto agregado al carrito')
+            return redirect('apl:menu:pedido_create')
+
+        # 2. Actualizar cantidad
+        elif accion == 'actualizar':
+            menu_id = request.POST.get('menu_id')
+            if menu_id and menu_id.isdigit():
+                cantidad = max(int(request.POST.get('cantidad', 1)), 1)
+                carrito = request.session.get('carrito', {})
+                if menu_id in carrito:
+                    carrito[menu_id]['cantidad'] = cantidad
+                    request.session['carrito'] = carrito
+                    request.session.modified = True
+            return redirect('apl:menu:pedido_create')
+
+        # 3. Eliminar del carrito
+        elif accion == 'eliminar':
+            menu_id = request.POST.get('menu_id')
+            carrito = request.session.get('carrito', {})
+            carrito.pop(menu_id, None)
+            request.session['carrito'] = carrito
+            request.session.modified = True
+            messages.info(request, 'Producto eliminado del carrito')
+            return redirect('apl:menu:pedido_create')
+
+        # 4. Confirmar pedido
+        elif accion == 'confirmar':
+            form = PedidoForm(request.POST)
+            if form.is_valid():
+                carrito = request.session.get('carrito', {})
+                if not carrito:
+                    messages.error(request, 'El carrito está vacío.')
+                    return self._renderizar_pagina(request, form=form)
+                pedido = form.save(commit=False)  # ← Aquí creas el objeto pero NO lo guardas aún
+                pedido.estado = 'pendiente'  # ← ¡¡AQUÍ LE ASIGNAS EL ESTADO!!
+                pedido.save()
+                try:
+                    with transaction.atomic():
+                        pedido = form.save(commit=False)
+                        pedido.save()
+
+                        for menu_id_str, datos in carrito.items():
+                            if not menu_id_str.isdigit():
+                                continue
+                            menu = get_object_or_404(Menu, id=int(menu_id_str))
+                            PedidoItem.objects.create(
+                                pedido=pedido,
+                                menu=menu,
+                                cantidad=datos.get('cantidad', 1),
+                                precio_unitario=menu.get_precio_final(),
+                                descuento_aplicado=menu.descuento or 0,
+                                observaciones=datos.get('observaciones', '')
+                            )
+
+                        pedido.calcular_totales()
+                        request.session['carrito'] = {}
+                        request.session.modified = True
+
+                        messages.success(
+                            request,
+                            f'Pedido #{pedido.numero_pedido} creado exitosamente. Total: ${pedido.total}'
+                        )
+                        return redirect('apl:menu:pedido_detail', pk=pedido.pk)
+
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    messages.error(request, f'Error al crear el pedido: {str(e)}')
+                    return self._renderizar_pagina(request, form=form)
+
+            else:
+                messages.error(request, 'Corrige los errores en los datos del cliente.')
+                return self._renderizar_pagina(request, form=form)
+
+        # ← SIEMPRE devolver algo aunque no haya acción válida
+        return redirect('apl:menu:pedido_create')
+
+    # =============================================
+    # Método auxiliar (nunca devuelve None)
+    # =============================================
+    def _renderizar_pagina(self, request, form=None):
         carrito = request.session.get('carrito', {})
 
-        # Obtener menús disponibles agrupados por categoría
+        # Limpieza automática de claves basura
+        carrito_limpio = {k: v for k, v in carrito.items() if k and str(k).isdigit()}
+        if carrito_limpio != carrito:
+            request.session['carrito'] = carrito_limpio
+            request.session.modified = True
+            carrito = carrito_limpio
+
+        # Menús por categoría
         menus_por_categoria = {}
         for menu in Menu.objects.filter(disponible=True).prefetch_related('menu_productos__producto'):
-            categoria = menu.get_categoria_menu_display()
-            if categoria not in menus_por_categoria:
-                menus_por_categoria[categoria] = []
-            menus_por_categoria[categoria].append(menu)
+            cat = menu.get_categoria_menu_display()
+            menus_por_categoria.setdefault(cat, []).append(menu)
 
-        # Calcular totales del carrito
+        # Cálculo de items del carrito
+        items_carrito = []
         subtotal = Decimal('0.00')
         descuento_total = Decimal('0.00')
-        items_carrito = []
 
-        for menu_id, item_data in carrito.items():
+        for menu_id_str, datos in carrito.items():
+            if not menu_id_str.isdigit():
+                continue
+            menu_id = int(menu_id_str)
             try:
-                menu = Menu.objects.get(id=int(menu_id))
-                cantidad = item_data['cantidad']
-                precio_unitario = menu.get_precio_final()
-                subtotal_item = precio_unitario * cantidad
-
-                items_carrito.append({
-                    'menu': menu,
-                    'cantidad': cantidad,
-                    'precio_unitario': precio_unitario,
-                    'subtotal': subtotal_item,
-                    'observaciones': item_data.get('observaciones', '')
-                })
-
-                subtotal += subtotal_item
-                if menu.descuento > 0:
-                    descuento_total += (menu.precio_base * cantidad) - subtotal_item
+                menu = Menu.objects.get(id=menu_id, disponible=True)
             except Menu.DoesNotExist:
                 continue
 
-        total = subtotal
+            cantidad = datos.get('cantidad', 1)
+            precio_final = menu.get_precio_final()
+            subtotal_item = precio_final * cantidad
+
+            items_carrito.append({
+                'menu': menu,
+                'cantidad': cantidad,
+                'precio_unitario': precio_final,
+                'subtotal': subtotal_item,
+                'observaciones': datos.get('observaciones', '')
+            })
+
+            subtotal += subtotal_item
+            if menu.descuento > 0:
+                descuento_total += (menu.precio_base * cantidad) - subtotal_item
 
         context = {
             'titulo': 'Crear Nuevo Pedido',
@@ -342,123 +416,15 @@ class PedidoCreateView(View):
             'items_carrito': items_carrito,
             'subtotal': subtotal,
             'descuento_total': descuento_total,
-            'total': total,
-            'form': PedidoForm()
+            'total': subtotal,
+            'form': form or PedidoForm(),
         }
 
         return render(request, self.template_name, context)
-
-    def post(self, request):
-        accion = request.POST.get('accion')
-
-        # Agregar al carrito
-        if accion == 'agregar':
-            menu_id = request.POST.get('menu_id')
-            cantidad = int(request.POST.get('cantidad', 1))
-            observaciones = request.POST.get('observaciones', '')
-
-            carrito = request.session.get('carrito', {})
-
-            if menu_id in carrito:
-                carrito[menu_id]['cantidad'] += cantidad
-            else:
-                carrito[menu_id] = {
-                    'cantidad': cantidad,
-                    'observaciones': observaciones
-                }
-
-            request.session['carrito'] = carrito
-            messages.success(request, 'Producto agregado al pedido')
-            return redirect('apl:menu:pedido_create')
-
-        # Actualizar cantidad
-        elif accion == 'actualizar':
-            menu_id = request.POST.get('menu_id')
-            cantidad = int(request.POST.get('cantidad', 1))
-
-            carrito = request.session.get('carrito', {})
-            if menu_id in carrito:
-                carrito[menu_id]['cantidad'] = cantidad
-                request.session['carrito'] = carrito
-
-            return redirect('apl:menu:pedido_create')
-
-        # Eliminar del carrito
-        elif accion == 'eliminar':
-            menu_id = request.POST.get('menu_id')
-            carrito = request.session.get('carrito', {})
-
-            if menu_id in carrito:
-                del carrito[menu_id]
-                request.session['carrito'] = carrito
-                messages.info(request, 'Producto eliminado del pedido')
-
-            return redirect('apl:menu:pedido_create')
-
-        # Confirmar pedido - MODIFICADO PARA INCLUIR DESCUENTO DE INVENTARIO
-        elif accion == 'confirmar':
-            form = PedidoForm(request.POST)
-
-            if form.is_valid():
-                carrito = request.session.get('carrito', {})
-
-                if not carrito:
-                    messages.error(request, 'El carrito está vacío')
-                    return redirect('apl:menu:pedido_create')
-
-                try:
-                    with transaction.atomic():
-                        # Crear pedido
-                        pedido = form.save(commit=False)
-                        pedido.save()
-
-                        # Crear items del pedido
-                        for menu_id, item_data in carrito.items():
-                            menu = Menu.objects.get(id=int(menu_id))
-
-                            PedidoItem.objects.create(
-                                pedido=pedido,
-                                menu=menu,
-                                cantidad=item_data['cantidad'],
-                                precio_unitario=menu.get_precio_final(),
-                                descuento_aplicado=menu.descuento,
-                                observaciones=item_data.get('observaciones', '')
-                            )
-
-                        # Calcular totales
-                        pedido.calcular_totales()
-
-                        # 🔥 DESCONTAR INVENTARIO AUTOMÁTICAMENTE
-                        exito, resultado = descontar_inventario_pedido(pedido)
-
-                        if not exito:
-                            # Si falla el descuento, revertir el pedido
-                            raise Exception(resultado)
-
-                        # Limpiar carrito
-                        request.session['carrito'] = {}
-
-                        # Mensaje de éxito con detalle de productos descontados
-                        mensaje = f'Pedido #{pedido.numero_pedido} creado exitosamente'
-                        if isinstance(resultado, list) and len(resultado) > 0:
-                            mensaje += f'. Se descontaron {len(resultado)} productos del inventario.'
-
-                        messages.success(request, mensaje)
-                        return redirect('apl:menu:pedido_detail', pk=pedido.pk)
-
-                except Exception as e:
-                    messages.error(request, f'Error al crear el pedido: {str(e)}')
-                    return redirect('apl:menu:pedido_create')
-            else:
-                messages.error(request, 'Por favor complete los datos del cliente')
-                return redirect('apl:menu:pedido_create')
-
-        return redirect('apl:menu:pedido_create')
-
 class PedidoDetailView(DetailView):
     """Ver detalle de un pedido"""
     model = Pedido
-    template_name = 'modulos/pedido_detalle.html'
+    template_name = 'forms/pedido_detalle.html'
     context_object_name = 'pedido'
 
     def get_context_data(self, **kwargs):
@@ -511,5 +477,6 @@ class LimpiarCarritoView(View):
 
     def post(self, request):
         request.session['carrito'] = {}
+        request.session.modified = True
         messages.info(request, 'Carrito limpiado')
         return redirect('apl:menu:pedido_create')

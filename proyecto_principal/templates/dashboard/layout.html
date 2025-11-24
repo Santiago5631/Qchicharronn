@@ -7,39 +7,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}Mi Proyecto{% endblock %}</title>
 
-    <!-- Bootstrap y base -->
+    <!-- ============================================ -->
+    <!-- ESTILOS CSS -->
+    <!-- ============================================ -->
+
+    <!-- Bootstrap y SB Admin Base -->
     <link href="{% static 'lib/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
     <link href="{% static 'lib/css/sb-admin-2.min.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'lib/css/custom-sienna.css' %}">
+
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- Tus estilos personalizados (al final para que sobrescriban) -->
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Estilos Personalizados (al final para sobrescribir) -->
     <link href="{% static 'lib/css/custom.css' %}" rel="stylesheet">
     <link href="{% static 'lib/css/custom_sidebar.css' %}" rel="stylesheet">
-
-    <!-- Iconos Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
-    <link rel="stylesheet" href="{% static 'lib/js/theme.js' %}">
 
-
-
+    <!-- Estilos adicionales por página -->
     {% block extra_css %}{% endblock %}
+
 </head>
 <body id="page-top">
 
+<!-- ============================================ -->
+<!-- ESTRUCTURA PRINCIPAL -->
+<!-- ============================================ -->
+
 <div id="wrapper">
+
+    <!-- Sidebar -->
     {% include 'dashboard/aside/sidebar.html' %}
 
+    <!-- Content Wrapper -->
     <div id="content-wrapper" class="d-flex flex-column">
+
         <div id="content">
 
+            <!-- Header/Topbar -->
             {% include 'dashboard/header.html' %}
 
+            <!-- Contenido Principal -->
             <div class="container-fluid">
                 {% block content %}
                 <!-- Aquí se mostrará el contenido de cada vista -->
@@ -47,51 +61,54 @@
             </div>
 
         </div>
+
+        <!-- Footer -->
         {% include "dashboard/footer.html"%}
+
     </div>
+
 </div>
 
-<!-- Scripts necesarios (orden correcto) -->
+<!-- ============================================ -->
+<!-- SCRIPTS JAVASCRIPT -->
+<!-- ============================================ -->
+
+<!-- Librerías Base (jQuery y Bootstrap) -->
 <script src="{% static 'lib/vendor/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'lib/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
-<!-- Select2 JS (AGREGAR AQUÍ) -->
+<!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<!-- DataTables JS -->
 <script src="{% static 'lib/vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'lib/vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-
-<!-- Core de SB Admin -->
-<script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
-
-<!-- Tu script personalizado para aside -->
-<script src="{% static 'lib/js/custom_sidebar.js' %}"></script>
-
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<!-- Validación de formularios -->
-<!--<script src="{#% static 'lib/js/form_validation.js' %#}"></script>-->
+<!-- SB Admin Core -->
+<script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
 
-<!-- SweetAlert2 plantilla -->
+<!-- SweetAlert2 -->
 <script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
-
-<!-- SweetAlert2 script para eliminar -->
 <script src="{% static 'lib/js/sweetalert_delete.js' %}"></script>
 
-<!-- Validación de formularios -->
-<!--<script src="{#% static 'lib/js/form_validation.js' %#}"></script>-->
-
-<!-- JS de Sienna Accessibility -->
+<!-- Scripts Personalizados -->
+<script src="{% static 'lib/js/custom_sidebar.js' %}"></script>
 <script src="{% static 'lib/js/custom.js' %}"></script>
 <script src="{% static 'lib/js/sienna.js' %}"></script>
-<!-- Modo oscuro  -->
 <script src="{% static 'lib/js/theme.js' %}"></script>
-<!-- Inicialización del Widget -->
+
+<!-- Validación de formularios (comentado) -->
+<!--<script src="{% static 'lib/js/form_validation.js' %}"></script>-->
+
+<!-- ============================================ -->
+<!-- INICIALIZACIÓN DE PLUGINS -->
+<!-- ============================================ -->
 
 <script>
 $(document).ready(function() {
-    // DataTables
+
+    // Inicialización de DataTables
     $('#dataTable').DataTable({
         "language": {
             "lengthMenu": "Mostrar _MENU_ registros por página",
@@ -110,13 +127,18 @@ $(document).ready(function() {
         "pageLength": 10
     });
 
-    // Select2
+    // Inicialización de Select2
     $('.select2').select2({
         width: '100%',
         theme: 'default'
     });
+
 });
 </script>
+
+<!-- ============================================ -->
+<!-- MENSAJES DEL SISTEMA (Django Messages) -->
+<!-- ============================================ -->
 
 {% if messages %}
 <script>
@@ -132,5 +154,12 @@ $(document).ready(function() {
     {% endfor %}
 </script>
 {% endif %}
+
+<!-- ============================================ -->
+<!-- SCRIPTS ADICIONALES POR PÁGINA -->
+<!-- ============================================ -->
+
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>
