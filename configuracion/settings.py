@@ -185,10 +185,11 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Redirect después del login
-LOGIN_REDIRECT_URL = reverse_lazy('usuario:usuario_list')
+# Redirección después de login normal y después de login con Google/Facebook
+LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'                  # cambia esto por tu ruta real
+ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'          # muy importante esta también
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
-
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -198,6 +199,28 @@ RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
 #opcionales
 NOCAPTCHA = True    # para reCaptcha v2 "No Captcha"
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name'],
+        'VERSION': 'v13.0',
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET = True   # ← esta línea elimina la página de "Continue"
+
+# Para que los emails se vean en la consola mientras estás en desarrollo
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# En producción cambiarás esto por SMTP (Gmail, SendGrid, etc.)
+# Pero ahora con console te llega todo a la terminal y es perfecto para probar
 
 MESSAGE_TAGS = {
     messages.DEBUG: "info",

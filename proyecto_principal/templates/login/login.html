@@ -1,5 +1,6 @@
 {% load static %}
 {% load widget_tweaks %}
+{% load socialaccount %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -58,13 +59,13 @@
                                     <form method="post" id="loginForm">
                                         {% csrf_token %}
                                         <div class="form-group">
-                                            {{ form.username|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Usuario' }}
+                                            { form.username|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Usuario' }
                                             {% if form.username.errors %}
                                                 <small class="text-danger">{{ form.username.errors.0 }}</small>
                                             {% endif %}
                                         </div>
                                         <div class="form-group">
-                                            {{ form.password|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Contraseña' }}
+                                            { form.password|add_class:'form-control'|attr:'autocomplete:off'|attr:'placeholder:Ingrese su Contraseña' }
                                             {% if form.password.errors %}
                                                 <small class="text-danger">{{ form.password.errors.0 }}</small>
                                             {% endif %}
@@ -92,20 +93,24 @@
                                             Iniciar Sesion
                                         </button>
                                         <hr>
-                                        <a href="{% url 'socialaccount_signup' %}" class="btn btn-google btn-user btn-block">
-                                            <i class="fab fa-google fa-fw"></i> Iniciar Sesion Con Google
-                                        </a>
-                                        <a href="{% url 'socialaccount_signup' %}" class="btn btn-facebook btn-user btn-block">
-                                            <i class="fab fa-facebook-f fa-fw"></i> Iniciar Sesion Con Facebook
-                                        </a>
+                                       <!-- BOTÓN GOOGLE (FUNCIONA 100%) -->
+<hr>
+<div class="text-center">
+    {% load socialaccount %}
+    <a href="{% provider_login_url 'google' %}" class="btn btn-danger btn-user btn-block">
+        <i class="fab fa-google fa-fw"></i> Iniciar sesión con Google
+    </a>
+</div>
+
+
                                     </form>
 
                                     <hr>
                                     <div class="text-center">
-                                        <a class="small" href="#">Olvidaste tu contraseña?</a>
+                                        <a class="small" href="{% url 'account_reset_password' %}">Olvidaste tu contraseña?</a>
                                     </div>
                                     <div class="text-center">
-                                        <a class="small" href="#">Crea una cuenta!</a>
+                                        <a class="small" href="{% url 'account_signup' %}">Crea una cuenta!</a>
                                     </div>
                                 </div>
                             </div>
