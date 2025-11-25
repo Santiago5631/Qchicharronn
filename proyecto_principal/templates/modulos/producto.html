@@ -1,6 +1,14 @@
-{% extends "dashboard/layout.html" %}
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block title %}Listado de Productos{% endblock %}
 
 {% block content %}
+
+<form id="csrf-form" style="display:none;">
+    {% csrf_token %}
+</form>
+
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
@@ -8,8 +16,9 @@
 
     <div class="card-body">
         <div class="table-responsive">
+
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+                <thead class="text-center">
                     <tr>
                         <th>ID Producto</th>
                         <th>Nombre</th>
@@ -20,9 +29,9 @@
                         <th>Unidad</th>
                         <th>Stock</th>
                         <th>Tipo de Uso</th>
-                        <th>
+                        <th style="width: 120px;">
                             <a href="{% url 'apl:producto:crear_producto' %}">
-                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                <button type="button" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
@@ -39,30 +48,129 @@
                         <td>{{ p.categoria }}</td>
                         <td>{{ p.proveedor }}</td>
                         <td>{{ p.fecha }}</td>
-                        <!--<td>{#  #}{ p.unidad }}</td>-->
+                        <td>{{ p.unidad }}</td>
                         <td>{{ p.stock }}</td>
                         <td>{{ p.tipo_uso }}</td>
-                        <td>
+
+                        <td class="text-center">
+
                             <a href="{% url 'apl:producto:editar_producto' p.id %}">
                                 <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-                            <a href="{% url 'apl:producto:eliminar_producto' p.id %}">
-                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
-                            </a>
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm d-inline mb-1 btn-delete"
+                                data-url="{% url 'apl:producto:eliminar_producto' p.id %}"
+                                data-name="{{ p.nombre }}">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+
                         </td>
+
                     </tr>
+
                     {% empty %}
                     <tr>
-                        <td colspan="10">No hay productos registrados.</td>
+                        <td colspan="10" class="text-center">No hay productos registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block js_plugins %}
+<!-- DataTables -->
+
+<link rel="stylesheet" href="{% static 'lib/vendor/datatables/dataTables.bootstrap4.min.css' %}">
+
+<script src="{% static 'lib/vendor/datatables/jquery.dataTables.min.js' %}"></script>
+
+<!-- SweetAlert2 -->
+<script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
+{% endblock %}
+
+{% block js_custom %}
+<script src="{% static 'lib/vendor/sweetalert2/sweetalert2.all.min.js' %}"></script>
+{% endblock %}
+
+{% block js_init %}
+<script>
+$(document).ready(function() {
+
+    // Inicializar DataTable
+    $('#dataTable').DataTable({
+        "language": {
+            "lengthMenu": "Mostrar _MENU_ registros",
+            "zeroRecords": "No hay datos",
+            "info": "Mostrando página _PAGE_ de _PAGES_",
+            "infoEmpty": "Sin registros",
+            "infoFiltered": "(filtrado de _MAX_ total)",
+            "search": "Buscar:",
+            "paginate": {
+                "first": "Primero",
+                "last": "Último",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            }
+        },
+        "pageLength": 10
+    });
+
+    // SweetAlert Delete
+    $(document).on("click", ".btn-delete", function (e) {
+        e.preventDefault();
+
+        let url = $(this).data("url");
+        let name = $(this).data("name");
+
+        Swal.fire({
+            title: "¿Estás seguro?",
+            text: `Se eliminará ${name}`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
+                    },
+                    success: function (response) {
+
+                        if (response.status === "ok") {
+                            Swal.fire(
+                                "Eliminado!",
+                                `${name} fue eliminado correctamente.`,
+                                "success"
+                            ).then(() => {
+                                location.reload();
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("Error", "No se pudo eliminar", "error");
+                    }
+                });
+
+            }
+        });
+    });
+
+});
+</script>
 {% endblock %}

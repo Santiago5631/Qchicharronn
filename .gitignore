@@ -45,3 +45,14 @@ staticfiles/
 .DS_Store
 Thumbs.db
 desktop.ini
+# ====================================
+# node
+#==================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+generar_informe.py
+

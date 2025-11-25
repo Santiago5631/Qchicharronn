@@ -131,52 +131,48 @@ MenuProductoFormSet = inlineformset_factory(
     validate_min=True,
 )
 
-
 class PedidoForm(forms.ModelForm):
-    """Formulario para crear pedidos"""
+    """Formulario para crear pedidos - SOLO datos del cliente"""
 
     class Meta:
         model = Pedido
         fields = [
             'cliente_nombre',
             'mesa_numero',
-            'estado',
             'observaciones',
+            # ← ¡ELIMINADO 'estado' DE AQUÍ!
         ]
         widgets = {
             'cliente_nombre': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Nombre del cliente',
                 'required': True,
+                'autofocus': True,
             }),
             'mesa_numero': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Número de mesa (opcional)',
             }),
-            'estado': forms.Select(attrs={
-                'class': 'form-control',
-            }),
             'observaciones': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': 'Observaciones adicionales...',
+                'placeholder': 'Observaciones adicionales (ej: para llevar, sin picante, etc.)',
                 'rows': 3,
             }),
         }
         labels = {
             'cliente_nombre': 'Nombre del Cliente',
             'mesa_numero': 'Mesa N°',
-            'estado': 'Estado del Pedido',
             'observaciones': 'Observaciones',
         }
 
     def clean_cliente_nombre(self):
         nombre = self.cleaned_data.get('cliente_nombre')
-        if nombre:
-            nombre = nombre.strip()
-            if len(nombre) < 3:
-                raise forms.ValidationError("El nombre debe tener al menos 3 caracteres.")
+        if not nombre:
+            raise forms.ValidationError("El nombre del cliente es obligatorio.")
+        nombre = nombre.strip()
+        if len(nombre) < 3:
+            raise forms.ValidationError("El nombre debe tener al menos 3 caracteres.")
         return nombre
-
 
 class AgregarAlPedidoForm(forms.Form):
     """Formulario simple para agregar un menú al pedido"""

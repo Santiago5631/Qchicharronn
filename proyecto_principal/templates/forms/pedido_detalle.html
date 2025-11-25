@@ -1,0 +1,403 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .pedido-header-detail {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .estado-badge-large {
+        font-size: 1.2rem;
+        padding: 10px 25px;
+        border-radius: 25px;
+    }
+    
+    .item-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid #0d6efd;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .item-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: -28px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6c757d;
+    }
+    
+    .timeline-dot.active {
+        width: 16px;
+        height: 16px;
+        left: -30px;
+        background: #28a745;
+        box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.2);
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .total-box {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .print-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .pedido-header-detail {
+            background: #667eea !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4 no-print">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'apl:menu:pedido_list' %}">Pedidos</a></li>
+            <li class="breadcrumb-item active">Pedido #{{ pedido.numero_pedido }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header del pedido -->
+    <div class="pedido-header-detail">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-3">
+                    <i class="bi bi-receipt me-2"></i>
+                    Pedido #{{ pedido.numero_pedido }}
+                </h1>
+                <p class="lead mb-0">
+                    <i class="bi bi-calendar me-2"></i>
+                    {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="estado-badge-large badge bg-light text-dark">
+                    <i class="bi bi-clock-history me-2"></i>
+                    {{ pedido.get_estado_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show no-print" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Información del Pedido -->
+        <div class="col-lg-8">
+            <!-- Datos del Cliente -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person me-2"></i>
+                        Información del Cliente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-person-circle me-2"></i>Cliente:</strong>
+                            <p class="mb-0">{{ pedido.cliente_nombre }}</p>
+                        </div>
+                        {% if pedido.mesa_numero %}
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="bi bi-grid-3x3 me-2"></i>Mesa:</strong>
+                            <p class="mb-0">
+                                <span class="badge bg-primary fs-6">{{ pedido.mesa_numero }}</span>
+                            </p>
+                        </div>
+                        {% endif %}
+                        {% if pedido.observaciones %}
+                        <div class="col-12">
+                            <strong><i class="bi bi-chat-left-text me-2"></i>Observaciones:</strong>
+                            <p class="mb-0 text-muted">{{ pedido.observaciones }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items del Pedido -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bag me-2"></i>
+                        Items del Pedido
+                        <span class="badge bg-light text-dark ms-2">{{ items.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        {% for item in items %}
+                        <div class="item-card">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <h3 class="text-primary mb-0">{{ forloop.counter }}</h3>
+                                </div>
+                                <div class="col-md-5">
+                                    <h5 class="mb-1">{{ item.menu.nombre }}</h5>
+                                    <small class="text-muted">
+                                        <i class="bi bi-tag me-1"></i>
+                                        {{ item.menu.get_categoria_menu_display }}
+                                    </small>
+                                    {% if item.observaciones %}
+                                    <div class="mt-2">
+                                        <small class="text-info">
+                                            <i class="bi bi-chat-dots me-1"></i>
+                                            {{ item.observaciones }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <small class="text-muted d-block">Cantidad</small>
+                                    <strong class="fs-5">{{ item.cantidad }}</strong>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <small class="text-muted d-block">Precio Unit.</small>
+                                    <strong>${{ item.precio_unitario|floatformat:2 }}</strong>
+                                    {% if item.descuento_aplicado > 0 %}
+                                    <small class="text-danger d-block">
+                                        (-{{ item.descuento_aplicado|floatformat:0 }}%)
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <small class="text-muted d-block">Subtotal</small>
+                                    <h5 class="text-success mb-0">
+                                        ${{ item.get_total|floatformat:2 }}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Resumen de totales -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-8 text-end">
+                                    <h6>Subtotal:</h6>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h6>${{ pedido.subtotal|floatformat:2 }}</h6>
+                                </div>
+                            </div>
+                            {% if pedido.descuento_total > 0 %}
+                            <div class="row text-success">
+                                <div class="col-md-8 text-end">
+                                    <h6>Descuento Total:</h6>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h6>-${{ pedido.descuento_total|floatformat:2 }}</h6>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-8 text-end">
+                                    <h4>Total:</h4>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h3 class="text-success">${{ pedido.total|floatformat:2 }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">No hay items en este pedido</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral -->
+        <div class="col-lg-4">
+            <!-- Total -->
+            <div class="total-box mb-4">
+                <h6 class="mb-2">Total del Pedido</h6>
+                <h1 class="mb-0">${{ pedido.total|floatformat:2 }}</h1>
+                <small>{{ items.count }} item(s)</small>
+            </div>
+
+            <!-- Línea de tiempo del estado -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Estado del Pedido
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if pedido.estado == 'pendiente' or pedido.estado == 'preparando' or pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
+                            <strong>Pendiente</strong>
+                            <p class="text-muted small mb-0">Pedido recibido</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if pedido.estado == 'preparando' or pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
+                            <strong>En Preparación</strong>
+                            <p class="text-muted small mb-0">Cocinando...</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
+                            <strong>Listo</strong>
+                            <p class="text-muted small mb-0">Para recoger</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if pedido.estado == 'entregado' %}active{% endif %}"></div>
+                            <strong>Entregado</strong>
+                            <p class="text-muted small mb-0">Pedido completado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actualizar Estado -->
+            {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
+            <div class="card mb-4 no-print">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pencil me-2"></i>
+                        Actualizar Estado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'apl:menu:pedido_update_estado' pedido.pk %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form_estado.estado.label }}</label>
+                            {{ form_estado.estado }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form_estado.observaciones.label }}</label>
+                            {{ form_estado.observaciones }}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Actualizar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Información adicional -->
+            <div class="info-box">
+                <h6 class="mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Información
+                </h6>
+                <div class="mb-2">
+                    <small class="text-muted">Creado:</small>
+                    <p class="mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Última actualización:</small>
+                    <p class="mb-0">{{ pedido.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div>
+                    <small class="text-muted">Tiempo transcurrido:</small>
+                    <p class="mb-0">{{ pedido.fecha_creacion|timesince }}</p>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-grid gap-2 no-print">
+                <button onclick="window.print()" class="btn btn-info print-button">
+                    <i class="bi bi-printer me-2"></i>
+                    Imprimir Ticket
+                </button>
+                
+                <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Volver a la Lista
+                </a>
+                
+                {% if pedido.estado != 'cancelado' %}
+                <button onclick="cancelarPedido({{ pedido.pk }})" class="btn btn-danger">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancelar Pedido
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cancelarPedido(pedidoId) {
+        if (confirm('¿Está seguro de cancelar este pedido?\n\nEsta acción no se puede deshacer.')) {
+            window.location.href = `/apl/menu/pedidos/cancelar/${pedidoId}/`;
+        }
+    }
+</script>
+{% endblock %}
