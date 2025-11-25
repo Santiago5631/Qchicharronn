@@ -49,10 +49,15 @@
                         (function(){const theme = localStorage.getItem('theme');if(theme === 'dark'){
                         document.documentElement.setAttribute('data-theme', 'dark');}})();
                         </script>
+
                         <!-- Modo oscuro -->
-                         <button id="theme-toggle" class="theme-toggle">
-                           🌙
-                         </button>
+                        <!-- Interruptor de modo oscuro -->
+                        <div class="theme-toggle-container">
+                            <label class="theme-switch">
+                                <input type="checkbox" id="theme-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
 
                         <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
@@ -203,7 +208,13 @@
                         </li>
 
                     </ul>
-
+    <form method="post" action="{% url 'login:logout' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+            Logout
+        </button>
+    </form>
                 </nav>
                 <!-- End of Topbar -->
 

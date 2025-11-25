@@ -35,4 +35,8 @@ urlpatterns = [
     path('proveedor/', include(("proveedor.urls", 'proveedor'), namespace='proveedor')),
     # _________________________ Modulos de Nomina ____________________________________
     path('nomina/', include(("nomina.urls", 'nomina'), namespace='nomina')),
+    #_____________________________ inventario ----------------------------------------
+    path('inventario/', include(("inventario.urls", 'inventario'), namespace='inventario')),
+    #_____________________________Unidad_____________________________________________
+    path('unidad/', include(("unidad.urls", 'unidad'), namespace='unidad')),
 ]

@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     marca = models.ForeignKey('marca.Marca', on_delete=models.CASCADE)
@@ -10,7 +11,6 @@ class Producto(models.Model):
     tipo_uso = models.CharField(max_length=20, choices=[('plato', 'Plato'), ('venta', 'Venta')])
     stock = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, default=0)
 
-    # 👇 Nuevo campo para dividir áreas
     area_preparacion = models.CharField(
         max_length=20,
         choices=[
@@ -19,6 +19,18 @@ class Producto(models.Model):
         ],
         default='cocina'
     )
+
+    # 🔥 NUEVO CAMPO
+    tipo_inventario = models.CharField(
+        max_length=10,
+        choices=[
+            ('peso', 'Por Peso'),
+            ('unidad', 'Por Unidad'),
+        ],
+        default='unidad',
+        help_text='Define cómo se controla el inventario de este producto'
+    )
+
     disponible = models.BooleanField(default=True)
 
     def reducir_stock(self, cantidad):

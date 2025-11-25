@@ -1,0 +1,121 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        max-width: 600px;
+        margin: 50px auto;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .delete-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    .warning-icon {
+        font-size: 5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+    
+    .danger-text {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card delete-card">
+        <!-- Header -->
+        <div class="delete-header">
+            <div class="warning-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h2 class="mt-3 mb-0">{{ titulo }}</h2>
+        </div>
+
+        <!-- Contenido -->
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <h4>¿Está seguro de realizar esta acción?</h4>
+                <p class="text-muted">Esta operación no se puede deshacer</p>
+            </div>
+
+            <!-- Información del objeto -->
+            <div class="danger-text">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle fs-4 me-3 text-warning"></i>
+                    <div>
+                        <strong>Se eliminará:</strong>
+                        <p class="mb-0">{{ object }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertencias específicas -->
+            {% if object.items.exists %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <strong>Atención:</strong> Este pedido tiene {{ object.items.count }} item(s) asociado(s) que también serán eliminados.
+            </div>
+            {% endif %}
+
+            {% if object.menu_productos.exists %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <strong>Atención:</strong> Este menú tiene {{ object.menu_productos.count }} producto(s) asociado(s) que también serán eliminados.
+            </div>
+            {% endif %}
+
+            <!-- Formulario de confirmación -->
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="javascript:history.back()" class="btn btn-secondary w-100 btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            No, Cancelar
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <button type="submit" class="btn btn-danger w-100 btn-lg">
+                            <i class="bi bi-trash me-2"></i>
+                            Sí, Eliminar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Información adicional -->
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Los datos eliminados no podrán ser recuperados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "templates/dashboard/layout.html" %}
+{% load static %}
+
+{% block title %}Crear Pedido{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Menús disponibles -->
+        <div class="col-lg-8">
+            <h2 class="mb-4 text-primary">
+                <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Pedido
+            </h2>
+
+            {% for categoria, menus in menus_por_categoria.items %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">
+                    {{ categoria }}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for menu in menus %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100 d-flex flex-column bg-light">
+                                <h6 class="fw-bold text-dark">{{ menu.nombre }}</h6>
+
+                                {% if menu.descuento > 0 %}
+                                <p class="mb-2">
+                                    <del class="text-muted">${{ menu.precio_base }}</del>
+                                    <strong class="text-success fs-5"> ${{ menu.get_precio_final }}</strong>
+                                    <span class="badge bg-danger">-{{ menu.descuento }}%</span>
+                                </p>
+                                {% else %}
+                                <p class="text-success fw-bold fs-4 mb-2">${{ menu.get_precio_final }}</p>
+                                {% endif %}
+
+                                <form method="post" class="mt-auto">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="agregar">
+                                    <input type="hidden" name="menu_id" value="{{ menu.id }}">
+                                    <div class="input-group">
+                                        <input type="number" name="cantidad" value="1" min="1" class="form-control">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-plus-lg"></i> Agregar
+                                        </button>
+                                    </div>
+                                    <input type="text" name="observaciones" placeholder="Ej: Sin cebolla" class="form-control form-control-sm mt-2">
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info text-center">
+                <i class="bi bi-emoji-frown"></i> No hay menús disponibles.
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Carrito + Formulario Cliente -->
+        <div class="col-lg-4">
+            <div class="card border-primary shadow sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cart4"></i> Carrito
+                        <span class="badge bg-light text-dark">{{ items_carrito|length }}</span>
+                    </h4>
+                </div>
+
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if items_carrito %}
+                        {% for item in items_carrito %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ item.cantidad }}×</strong> {{ item.menu.nombre }}
+                                    {% if item.observaciones %}
+                                    <br><small class="text-muted">{{ item.observaciones }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <strong>${{ item.subtotal|floatformat:2 }}</strong>
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="accion" value="eliminar">
+                                        <input type="hidden" name="menu_id" value="{{ item.menu.id }}">
+                                        <button type="submit" class="btn btn-sm btn-danger ms-2">×</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted my-5">El carrito está vacío</p>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="text-end mb-3">
+                        <h3 class="text-success">Total: ${{ total|floatformat:2 }}</h3>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="confirmar">
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <strong>{{ error }}</strong><br>
+                            {% endfor %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <strong>{{ field.label }}:</strong> {{ error }}<br>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre del Cliente *</label>
+                            {{ form.cliente_nombre }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mesa</label>
+                            {{ form.mesa_numero }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            {{ form.observaciones }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100" {% if not items_carrito %}disabled{% endif %}>
+                            Confirmar Pedido
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

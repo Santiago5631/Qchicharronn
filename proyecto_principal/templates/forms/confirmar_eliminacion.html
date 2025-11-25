@@ -1,22 +1,57 @@
-{% extends "layout.html" %}
-{% load static %}
+{% extends "templates/dashboard/layout.html" %}
+{% comment %}
+Este template solo contiene JS para mostrar SweetAlert2
+Variables esperadas:
+- url_delete: URL para eliminar
+- nombre_objeto: Nombre del objeto a eliminar
+- button_selector: selector del botón que activó la alerta
+{% endcomment %}
 
-{% block content %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            title: "¿Estás seguro?",
+            text: `Se eliminará "{{ nombre_objeto }}"`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-
-            </a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="10">No hay productos registrados.</td>
-    </tr>
-    {% endfor %}
-</tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
-
+                fetch("{{ url_delete }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrf_token,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success){
+                        Swal.fire(
+                            "Eliminado",
+                            `"{{ nombre_objeto }}" ha sido eliminado`,
+                            "success"
+                        );
+                        // Opcional: eliminar fila de tabla si se pasa button_selector
+                        if("{{ button_selector }}"){
+                            const btn = document.querySelector("{{ button_selector }}");
+                            if(btn){
+                                btn.closest("tr").remove();
+                            }
+                        }
+                    } else {
+                        Swal.fire("Error", "No se pudo eliminar", "error");
+                    }
+                })
+                .catch(() => {
+                    Swal.fire("Error", "No se pudo eliminar", "error");
+                });
+            }
+        });
+    });
+</script>
