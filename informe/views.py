@@ -71,54 +71,105 @@ def exportar_excel(request):
     ws = wb.active
     ws.title = "Informes"
 
-    encabezados = ['Titulo', 'Descripcion', 'Tipo', 'Fecha inicio', 'Fecha fin', 'Creado por']
+    # Encabezados exactamente como en la tabla HTML
+    encabezados = [
+        'Título',
+        'Tipo',
+        'Rango de Fechas',
+        'Creado Por',
+        'Fecha de Creación'
+    ]
     ws.append(encabezados)
 
-    informes = Informe.objects.all()
-    for i in informes:
-        ws.append([
-            i.titulo,
-            i.descripcion,
-            i.tipo,
-            i.fecha_inicio.strftime('%d/%m/%Y') if i.fecha_inicio else '',
-            i.fecha_fin.strftime('%d/%m/%Y') if i.fecha_fin else '',
-            i.creado_por.username if i.creado_por else '',
-        ])
+    # Todos los informes
+    informes = Informe.objects.select_related('creado_por').all()
+
+    for informe in informes:
+        rango_fechas = ""
+        if informe.fecha_inicio and informe.fecha_fin:
+            rango_fechas = f"{informe.fecha_inicio.strftime('%d/%m/%Y')} a {informe.fecha_fin.strftime('%d/%m/%Y')}"
+        elif informe.fecha_inicio:
+            rango_fechas = f"Desde {informe.fecha_inicio.strftime('%d/%m/%Y')}"
+        elif informe.fecha_fin:
+            rango_fechas = f"Hasta {informe.fecha_fin.strftime('%d/%m/%Y')}"
+
+        fila = [
+            informe.titulo or '',
+            informe.get_tipo_display(),  # ← Aquí usamos el display del choice
+            rango_fechas,
+            informe.creado_por.username if informe.creado_por else 'N/A',
+            informe.fecha_creacion.strftime('%d/%m/%Y %H:%M') if informe.fecha_creacion else '',
+        ]
+        ws.append(fila)
+
     response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="informes.xlsx"'
     wb.save(response)
     return response
 
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
+
+
 def exportar_pdf(request):
-    response = HttpResponse(content_type='application/pdf')
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=40, bottomMargin=40)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Título
+    elements.append(Paragraph("Listado de Informes", styles['Title']))
+    elements.append(Spacer(1, 20))
+
+    # Datos
+    data = [['Título', 'Tipo', 'Rango de Fechas', 'Creado Por', 'Fecha de Creación']]
+
+    informes = Informe.objects.select_related('creado_por').all()
+
+    for informe in informes:
+        rango = ""
+        if informe.fecha_inicio and informe.fecha_fin:
+            rango = f"{informe.fecha_inicio.strftime('%d/%m/%Y')} a {informe.fecha_fin.strftime('%d/%m/%Y')}"
+        elif informe.fecha_inicio:
+            rango = f"Desde {informe.fecha_inicio.strftime('%d/%m/%Y')}"
+        elif informe.fecha_fin:
+            rango = f"Hasta {informe.fecha_fin.strftime('%d/%m/%Y')}"
+
+        data.append([
+            informe.titulo or '',
+            informe.get_tipo_display(),
+            rango,
+            informe.creado_por.username if informe.creado_por else 'N/A',
+            informe.fecha_creacion.strftime('%d/%m/%Y %H:%M') if informe.fecha_creacion else '',
+        ])
+
+    # Tabla con estilo bonito
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007bff')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="informes.pdf"'
-
-    p = canvas.Canvas(response, pagesize=letter)
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(200, 770, "Informe General")
-    p.setFont("Helvetica", 11)
-
-    y = 740
-    informes = Informe.objects.all()
-    for i in informes:
-        p.drawString(50, y, f"Titulo: {i.titulo}")
-        y -= 15
-        p.drawString(50, y, f"Descripcion: {i.descripcion[:80]}...")
-        y -= 15
-        p.drawString(50, y, f"Tipo: {i.tipo}")
-        y -= 15
-        p.drawString(50, y, f"Fecha inicio: {i.fecha_inicio} | Fecha fin: {i.fecha_fin}")
-        y -= 15
-        p.drawString(50, y, f"Creado por: {i.creado_por.username if i.creado_por else 'N/A'}")
-        y -= 15
-
-        if y < 100:
-            p.showPage()
-            y = 750
-            p.setFont("Helvetica", 11)
-
-    p.save()
     return response
 # Create your views here.
