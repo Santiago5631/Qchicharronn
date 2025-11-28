@@ -22,13 +22,23 @@ class CategoriaForm(forms.ModelForm):
             'descripcion': 'Descripción',
         }
 
+    # forms.py → solo cambia esta línea en clean_nombre()
     def clean_nombre(self):
         nombre = self.cleaned_data.get('nombre')
         if not nombre or not nombre.strip():
             raise forms.ValidationError("El nombre de la categoría es obligatorio.")
-        if Categoria.objects.filter(nombre__iexact=nombre.strip()).exclude(pk=self.instance.pk).exists():
+
+        nombre = nombre.strip().title()
+
+        # Excluimos el objeto actual al editar
+        queryset = Categoria.objects.filter(nombre__iexact=nombre)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
             raise forms.ValidationError(f"La categoría '{nombre}' ya existe.")
-        return nombre.strip().title()
+
+        return nombre
 
     def clean_descripcion(self):
         descripcion = self.cleaned_data.get('descripcion')
