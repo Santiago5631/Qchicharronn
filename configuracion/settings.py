@@ -98,8 +98,10 @@ ROOT_URLCONF = 'configuracion.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR /'proyecto_principal', 'templates']
-        ,
+        'DIRS': [
+            BASE_DIR / 'templates',                    # carpeta raíz (por si la usas después)
+            BASE_DIR / 'proyecto_principal' / 'templates',  # ← agrega esta línea
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -228,6 +230,8 @@ SOCIALACCOUNT_LOGIN_ON_GET = True   # ← esta línea elimina la página de "Con
 
 # Para que los emails se vean en la consola mientras estás en desarrollo
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
+SERVER_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
 
 # En producción cambiarás esto por SMTP (Gmail, SendGrid, etc.)
 # Pero ahora con console te llega todo a la terminal y es perfecto para probar
