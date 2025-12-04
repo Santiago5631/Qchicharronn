@@ -23,6 +23,7 @@
     right: 40px !important;    /* lo mueve a la derecha */
     left: auto !important;     /* quitar posición izquierda */
     z-index: 99999 !important; /* asegurarlo encima */
+    top: 570px;
 }
 
 /* Cambiar tamaño del botón de accesibilidad */
@@ -44,6 +45,6 @@
     right: 20px !important;   /* separarlo del borde derecho */
     left: auto !important;    /* desactivar la posición por defecto */
     bottom: 20px !important;
-    height: 500px !important;
+    height: 480px !important;
     top: 80px !important;
 }

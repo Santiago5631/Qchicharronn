@@ -193,6 +193,8 @@
     z-index: 1000;
 }
 
+/* ====== NO TOCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR ====== */
+
 /* ====== CONTENIDO ====== */
 #content-wrapper {
     margin-left: 120px;
@@ -200,15 +202,36 @@
     transition: 0.3s ease;
 }
 
+#content-wrapper {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+#wrapper,
+body,
+html {
+    background: transparent !important;
+}
+
+#accordionSidebar.toggled:hover ~ #content-wrapper {
+    margin-left: 260px;
+    background: transparent !important;
+}
+
+
 /* Cuando la sidebar se expande por hover */
 #accordionSidebar.toggled:hover ~ #content-wrapper {
     margin-left: 260px;
 }
 
+/* ====== NO TOCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR ====== */
+
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     #content-wrapper {
         margin-left: 0;
+        color: #ffffff;
     }
 
     #accordionSidebar {
