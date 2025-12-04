@@ -115,13 +115,6 @@
     border-radius: 20px !important;
 }
 
-body {
-    padding-left: 150px !important; /* Ajusta si tu sidebar colapsado usa otro tamaño */
-}
-
-body.sidebar-toggled {
-    padding-left: 80px !important;
-}
 #accordionSidebar {
     height: auto !important;
     min-height: auto !important;
@@ -189,4 +182,40 @@ body.sidebar-toggled {
 
 .sidebar .dropdown-item:hover {
     background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ====== SIDEBAR ====== */
+#accordionSidebar {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    height: calc(100vh - 40px);
+    z-index: 1000;
+}
+
+/* ====== CONTENIDO ====== */
+#content-wrapper {
+    margin-left: 120px;
+    padding: 20px;
+    transition: 0.3s ease;
+}
+
+/* Cuando la sidebar se expande por hover */
+#accordionSidebar.toggled:hover ~ #content-wrapper {
+    margin-left: 260px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    #content-wrapper {
+        margin-left: 0;
+    }
+
+    #accordionSidebar {
+        left: -260px;
+    }
+
+    #accordionSidebar.show {
+        left: 10px;
+    }
 }
