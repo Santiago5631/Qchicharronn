@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from .models import *
-
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render
+from .forms import CategoriaForm
 
 
 def listar_categoria(request):
@@ -19,7 +19,7 @@ class CategoriaListView(ListView):
     model = Categoria
     template_name = 'modulos/categoria.html'
     context_object_name = 'categorias'
-    success_url = reverse_lazy('apl:listar_categoria')
+    success_url = reverse_lazy('apl:categoria:listar_categoria')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -30,19 +30,22 @@ class CategoriaListView(ListView):
 
 class CategoriaUpdateView(UpdateView):
     model = Categoria
+    form_class = CategoriaForm          # ← Aquí también
     template_name = 'forms/formulario_actualizacion.html'
-    fields = ['nombre', 'descripcion']
+    success_url = reverse_lazy('apl:listar_categoria')
 
-    def get_success_url(self):
-        return reverse_lazy('apl:listar_categoria')
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Editar Categoría: {self.object.nombre}'
+        context['modulo'] = 'categoria'
+        return context
 
 class CategoriaDeleteView(DeleteView):
     model = Categoria
     template_name = 'forms/confirmar_eliminacion.html'
 
     def get_success_url(self):
-        return reverse_lazy('apl:listar_categoria')
+        return reverse_lazy('apl:categoria:listar_categoria')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,15 +60,13 @@ class CategoriaDeleteView(DeleteView):
 
 class CategoriaCreateView(CreateView):
     model = Categoria
+    form_class = CategoriaForm          # ← Usa TU formulario personalizado
     template_name = 'forms/formulario_crear.html'
-    fields = ['nombre', 'descripcion']
-
-    def get_success_url(self):
-        return reverse_lazy('apl:listar_categoria')
+    success_url = reverse_lazy('apl:categoria:listar_categoria')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Crear nueva Categoría'
-        context['modulo'] = "categoria"
+        context['modulo'] = 'categoria'
         return context
 
