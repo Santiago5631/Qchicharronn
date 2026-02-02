@@ -1,20 +1,35 @@
 /* ============================================================
-   ====== 1. ESTADO COLAPSADO (PANTALLAS GRANDES) ==============
+   ====== REGLAS NECESARIAS PARA EL TOGGLE DE SB ADMIN =======
    ============================================================ */
 
-/* Cuando el aside está colapsado, ocultar textos */
+body.sidebar-toggled #accordionSidebar {
+    width: 6.5rem !important;
+}
+
+body.sidebar-toggled #accordionSidebar .nav-link span,
+body.sidebar-toggled #accordionSidebar .sidebar-heading,
+body.sidebar-toggled #accordionSidebar .sidebar-brand-text {
+    display: none !important;
+}
+
+body.sidebar-toggled #accordionSidebar .sidebar-divider {
+    display: none !important;
+}
+
+/* ============================================================
+   ====== 1. ESTADO COLAPSADO (PANTALLAS GRANDES) =============
+   ============================================================ */
+
 .sidebar.toggled .nav-link span,
 .sidebar.toggled .sidebar-heading,
 .sidebar.toggled .sidebar-brand-text {
     display: none !important;
 }
 
-/* Ancho del aside colapsado */
 .sidebar.toggled {
     width: 6.5rem !important;
 }
 
-/* Centrar iconos */
 .sidebar.toggled .nav-link {
     text-align: center;
     padding: 0.75rem 1rem;
@@ -26,7 +41,6 @@
     margin-right: 0 !important;
 }
 
-/* Ajustar logo */
 .sidebar.toggled .sidebar-brand {
     padding: 0.5rem;
 }
@@ -36,18 +50,15 @@
     height: 90px !important;
 }
 
-/* Ocultar dividers */
 .sidebar.toggled .sidebar-divider {
     display: none !important;
 }
 
-/* Evitar mostrar submenús colapsados */
 .sidebar.toggled .collapse,
 .sidebar.toggled .dropdown-submenu {
     display: none !important;
 }
 
-/* Transiciones suaves */
 .sidebar {
     transition: width 0.3s ease, left 0.35s ease;
 }
@@ -62,7 +73,7 @@
     opacity: 0;
 }
 
-/* EXPANDIR AL PASAR EL MOUSE */
+/* Expandir al pasar el mouse */
 .sidebar.toggled:hover {
     width: 14rem !important;
 }
@@ -74,12 +85,10 @@
     opacity: 1 !important;
 }
 
-/* Dividers visibles expandido */
 .sidebar.toggled:hover .sidebar-divider {
     display: block !important;
 }
 
-/* Submenús funcionales al expandir */
 .sidebar.toggled:hover .collapse {
     display: none;
 }
@@ -89,42 +98,39 @@
 }
 
 /* ============================================================
-   ====== 2. SIDEBAR FLOTANTE (PC – ≥ 900PX) ==================
+   ====== 2. SIDEBAR FLOTANTE SOLO EN PC (≥901px) =============
    ============================================================ */
 
-#accordionSidebar {
-    position: fixed;
-    top: 20px;
-    bottom: 20px;
-    left: 20px;
-    height: calc(100vh - 40px) !important;
-    border-radius: 20px;
-    overflow-y: auto;
-    z-index: 999;
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.2);
-    transition: width 0.3s ease, left 0.35s ease;
+@media (min-width: 901px) {
+    #accordionSidebar {
+        position: fixed;
+        top: 20px;
+        bottom: 20px;
+        left: 20px;
+        height: calc(100vh - 40px) !important;
+        border-radius: 20px;
+        overflow-y: auto;
+        z-index: 999;
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.2);
+        transition: width 0.3s ease, left 0.35s ease;
+    }
+
+    #content-wrapper {
+        margin-left: 120px;
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+        background: transparent !important;
+    }
+
+    #accordionSidebar.toggled:hover ~ #content-wrapper {
+        margin-left: 260px;
+    }
 }
 
 /* ============================================================
-   ====== 3. AJUSTE DEL CONTENIDO (PC) =========================
+   ====== 3. SUBMENÚ DESPLEGABLE CON ANIMACIONES ==============
    ============================================================ */
 
-#content-wrapper {
-    margin-left: 120px;
-    padding: 20px;
-    transition: margin-left 0.3s ease;
-    background: transparent !important;
-}
-
-#accordionSidebar.toggled:hover ~ #content-wrapper {
-    margin-left: 260px;
-}
-
-/* ============================================================
-   ====== 4. SUBMENÚ DESPLEGABLE CON ANIMACIONES ==============
-   ============================================================ */
-
-/* Estilos base del dropdown */
 .sidebar .dropdown-menu {
     position: static !important;
     float: none !important;
@@ -136,7 +142,6 @@
     box-shadow: none !important;
 }
 
-/* Animación del submenú */
 .sidebar .dropdown-submenu {
     overflow: hidden;
     max-height: 0;
@@ -144,14 +149,12 @@
     transition: max-height 0.25s ease, opacity 0.25s ease;
 }
 
-/* Mostrar submenú al hacer hover en el nav-item */
 .sidebar .nav-item.dropdown:hover .dropdown-submenu {
     max-height: 200px;
     opacity: 1;
     display: block !important;
 }
 
-/* Estilos de los items del submenú */
 .sidebar .dropdown-item {
     padding-left: 2.5rem !important;
     padding-top: 0.5rem;
@@ -165,7 +168,6 @@
     background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Submenú dentro del sidebar colapsado con hover */
 .sidebar.toggled:hover .nav-item.dropdown:hover .dropdown-submenu {
     display: block !important;
     max-height: 200px;
@@ -173,20 +175,18 @@
 }
 
 /* ============================================================
-   ====== 5. RESPONSIVE – OFFCANVAS PARA MÓVILES <900PX ========
+   ====== 4. RESPONSIVE – OFFCANVAS PARA MÓVILES <900PX =======
    ============================================================ */
 
 @media (max-width: 900px) {
 
-    /* Ocultar sidebar fuera de pantalla */
     #accordionSidebar {
         position: fixed;
-        top: 20px !important;           /* ← Separación arriba */
-        bottom: auto !important;        /* ← CORREGIDO: quita el pegado inferior */
-        left: -260px;                   /* OCULTA */
+        top: 20px !important;
+        left: -260px;              /* Oculta */
         width: 240px !important;
-        height: calc(100vh - 40px) !important;  /* ← Alto con espacio arriba y abajo */
-        border-radius: 12px;            /* Bordes redondeados en móvil también */
+        height: calc(100vh - 40px) !important;
+        border-radius: 12px;
         box-shadow: 6px 0 20px rgba(0,0,0,0.25);
         background-color: #2d2d2d !important;
         transition: left 0.35s ease-in-out;
@@ -195,20 +195,15 @@
 
     /* Cuando el botón hamburguesa agrega .show */
     #accordionSidebar.show {
-        left: 20px;                     /* ← SE DESLIZA con separación del borde */
+        left: 20px;               /* Se desliza */
     }
 
-    /* Contenido ocupa todo el ancho */
     #content-wrapper {
         margin-left: 0 !important;
         padding: 15px;
     }
 
-    /* Hover deshabilitado en móvil - sidebar siempre expandida */
-    .sidebar.toggled:hover {
-        width: 240px !important;
-    }
-
+    /* En móvil siempre expandida */
     .sidebar.toggled .nav-link span,
     .sidebar.toggled .sidebar-heading,
     .sidebar.toggled .sidebar-brand-text {
@@ -216,7 +211,6 @@
         opacity: 1 !important;
     }
 
-    /* Submenús funcionan en móvil */
     .sidebar .nav-item.dropdown:hover .dropdown-submenu {
         display: block !important;
         max-height: 200px;
