@@ -14,6 +14,9 @@ from decimal import Decimal
 
 # ==================== VISTAS DE MENÚ ====================
 
+from django.db.models import Count
+
+
 class MenuListView(ListView):
     """Lista de menús disponibles"""
     model = Menu
@@ -27,8 +30,26 @@ class MenuListView(ListView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Lista de Menús'
         context['menu'] = 'menu'
-        return context
 
+        menus = self.get_queryset()
+
+        # Esto ya lo tenías protegido → está bien
+        categorias_con_menus = set(
+            menus.values_list('categoria_menu', flat=True).distinct()
+        ) if menus is not None else set()
+
+        # ← Aquí está el fix
+        field = Menu._meta.get_field('categoria_menu')
+        choices = field.choices if field.choices is not None else []
+
+        categorias_disponibles = [
+            {'value': choice[0], 'display': choice[1]}
+            for choice in choices
+            if choice[0] in categorias_con_menus
+        ]
+
+        context['categorias'] = categorias_disponibles
+        return context
 
 class MenuCreateView(CreateView):
     """Crear nuevo menú"""
@@ -377,7 +398,7 @@ class PedidoCreateView(View):
         # Menús por categoría
         menus_por_categoria = {}
         for menu in Menu.objects.filter(disponible=True).prefetch_related('menu_productos__producto'):
-            cat = menu.get_categoria_menu_display()
+            cat = menu.categoria_menu.nombre if menu.categoria_menu else "Sin categoría"
             menus_por_categoria.setdefault(cat, []).append(menu)
 
         # Cálculo de items del carrito
