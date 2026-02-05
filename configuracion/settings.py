@@ -98,8 +98,10 @@ ROOT_URLCONF = 'configuracion.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR /'proyecto_principal', 'templates']
-        ,
+        'DIRS': [
+            BASE_DIR / 'templates',                    # carpeta raíz (por si la usas después)
+            BASE_DIR / 'proyecto_principal' / 'templates',  # ← agrega esta línea
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,12 +157,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'es'
 
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
 
@@ -203,7 +203,15 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
+# === CONFIGURACIÓN PARA LOGIN CON GOOGLE 100% FUNCIONAL ===
+ACCOUNT_AUTHENTICATION_METHOD = 'email'        # Se autentica solo por email
+ACCOUNT_UNIQUE_EMAIL = True                    # Evita emails duplicados
 
+# ESTA ES LA CLAVE para que el "Olvidé mi contraseña" funcione con cuentas de Google
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+
+# Permite recuperar contraseña incluso si el usuario nunca puso una (solo Google)
+ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = True
 # Keys reCAPTCHA (obténlas en https://www.google.com/recaptcha/admin)
 RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
@@ -214,20 +222,18 @@ SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
-    },
-    'facebook': {
-        'METHOD': 'oauth2',
-        'SCOPE': ['email', 'public_profile'],
-        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name'],
-        'VERSION': 'v13.0',
+        'FETCH_USERINFO': True,   # ← trae nombre completo
     }
 }
 
 SOCIALACCOUNT_LOGIN_ON_GET = True   # ← esta línea elimina la página de "Continue"
+# Esto evita que aparezca la pantalla de confirmación después de Google
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 
 # Para que los emails se vean en la consola mientras estás en desarrollo
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
+SERVER_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
 
 # En producción cambiarás esto por SMTP (Gmail, SendGrid, etc.)
 # Pero ahora con console te llega todo a la terminal y es perfecto para probar

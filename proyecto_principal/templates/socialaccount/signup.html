@@ -2,12 +2,13 @@
 {% load static %}
 {% load widget_tweaks %}
 
-Recuperar contraseña
+{% block title %}Completar registro{% endblock %}
+
 {% block content %}
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Mi Proyecto</title>
+    <title>{% block title %}Mi Proyecto{% endblock %}</title>
     <link href="{% static 'lib/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
     <link href="{% static 'lib/css/sb-admin-2.min.css' %}" rel="stylesheet">
     <link href="{% static 'lib/css/custom.css' %}" rel="stylesheet">
@@ -19,7 +20,6 @@ Recuperar contraseña
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
-
 <body class="bg-gradient-primary">
 
     <div class="container">
@@ -28,13 +28,14 @@ Recuperar contraseña
                 <div class="card o-hidden border-0 shadow-lg my-5">
                     <div class="card-body p-0">
                         <div class="row">
-                            <div class="col-lg-6 d-none d-lg-block bg-password-image"></div>
+                            <div class="col-lg-6 d-none d-lg-block bg-register-image"></div>
                             <div class="col-lg-6">
                                 <div class="p-5">
                                     <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">¿Olvidaste tu contraseña?</h1>
-                                        <p class="mb-4 text-muted">
-                                            Ingresa tu correo electrónico y te enviaremos un enlace para recuperarla.
+                                        <h1 class="h4 text-gray-900 mb-4">¡Bienvenido!</h1>
+                                        <p class="mb-4">
+                                            Ya tienes acceso con tu cuenta de Google.<br>
+                                            Solo confirma tu correo para terminar.
                                         </p>
                                     </div>
 
@@ -42,20 +43,24 @@ Recuperar contraseña
                                         {% csrf_token %}
 
                                         <div class="form-group">
-                                            {{ form.email|add_class:"form-control form-control-user"|attr:"placeholder:Correo electrónico"|attr:"autocomplete:off" }}
-                                            {% if form.email.errors %}
-                                                <small class="text-danger">{{ form.email.errors.0 }}</small>
-                                            {% endif %}
+                                            {{ form.email|add_class:"form-control form-control-user"|attr:"readonly:readonly" }}
+                                            <small class="text-muted">Este es el correo que usaste con Google</small>
                                         </div>
 
-                                        <button type="submit" class="btn btn-primary btn-user btn-block">
-                                            Enviar enlace de recuperación
+                                        {% if form.errors %}
+                                            <div class="alert alert-danger">
+                                                {{ form.errors }}
+                                            </div>
+                                        {% endif %}
+
+                                        <button type="submit" class="btn btn-success btn-user btn-block">
+                                            Completar registro
                                         </button>
                                     </form>
 
                                     <hr>
                                     <div class="text-center">
-                                        <a class="small" href="/login/">← Volver al inicio de sesión</a>
+                                        <a class="small" href="/login/">Volver al inicio de sesión</a>
                                     </div>
                                 </div>
                             </div>

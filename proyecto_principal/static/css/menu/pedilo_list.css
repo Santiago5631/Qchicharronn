@@ -1,0 +1,53 @@
+
+    .pedido-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .pedido-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .pedido-header {
+        padding: 20px;
+        border-radius: 15px 15px 0 0;
+        color: white;
+    }
+
+    .estado-pendiente { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .estado-preparando { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .estado-listo { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .estado-entregado { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .estado-cancelado { background: linear-gradient(135deg, #868f96 0%, #596164 100%); }
+
+    .stats-badge {
+        background: white;
+        color: #333;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .filter-tabs .btn {
+        border-radius: 25px;
+        margin: 5px;
+        padding: 8px 20px;
+    }
+
+    .pedido-numero {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }

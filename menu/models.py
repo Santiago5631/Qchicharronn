@@ -9,17 +9,14 @@ class Menu(models.Model):
     """Modelo simplificado del Menú - Solo productos"""
     nombre = models.CharField(max_length=100, verbose_name='Nombre del Menú')
     descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
-    categoria_menu = models.CharField(
-        max_length=50,
-        choices=[
-            ('entrada', 'Entrada'),
-            ('plato_principal', 'Plato Principal'),
-            ('postre', 'Postre'),
-            ('bebida', 'Bebida'),
-            ('combo', 'Combo')
-        ],
-        default='plato_principal',
-        verbose_name='Categoría'
+
+    categoria_menu = models.ForeignKey(
+        "categoria.Categoria",
+        on_delete=models.PROTECT,
+        related_name='menus',
+        verbose_name='Categoría',
+        null=True,
+        blank=True
     )
     precio_base = models.DecimalField(
         max_digits=10,

@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     </style>
     <div class="asw-widget">
-        <div class="asw-menu-btn" title="Open Accessibility Menu" role="button" aria-expanded="false">
+        <div class="asw-menu-btn" title="Accesibilidad" role="button" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" style="width:34px;height:34px;min-height:34px;min-width:34px;max-width:34px;max-height:34px;" viewBox="0 0 24 24" width="34px" height="34px">
                 <path d="M0 0h24v24H0V0z" fill="none"/>
                 <path d="M20.5 6c-2.61.7-5.67 1-8.5 1s-5.89-.3-8.5-1L3 8c1.86.5 4 .83 6 1v13h2v-6h2v6h2V9c2-.17 4.14-.5 6-1l-.5-2zM12 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>

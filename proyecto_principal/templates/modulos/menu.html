@@ -1,80 +1,7 @@
-{% extends "templates/dashboard/layout.html" %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
-
 {% block extra_css %}
-<style>
-    .menu-card {
-        transition: all 0.3s ease;
-        border: none;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .menu-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-
-    .menu-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .menu-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1;
-    }
-
-    .discount-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1;
-        background: #ff4757;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-weight: bold;
-    }
-
-    .precio-original {
-        text-decoration: line-through;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-
-    .precio-final {
-        color: #28a745;
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    .stats-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .filter-btn {
-        border-radius: 20px;
-        margin-right: 10px;
-        margin-bottom: 10px;
-    }
-
-    .productos-list {
-        font-size: 0.85rem;
-        color: #6c757d;
-    }
-
-    .modal-overlay { display: none; }
-</style>
+<link rel="stylesheet" href="{% static 'css/menu/menu.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -161,18 +88,31 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex flex-wrap align-items-center">
-                <span class="me-3 fw-bold">Filtrar por categoría:</span>
-                <button class="btn btn-outline-primary filter-btn active" data-filter="all">Todos</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="entrada">Entradas</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="plato_principal">Platos Principales</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="postre">Postres</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="bebida">Bebidas</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="combo">Combos</button>
-            </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center">
+            <span class="me-3 fw-bold">
+                <i class="bi bi-funnel me-1"></i>Filtrar por categoría:
+            </span>
+
+            <!-- Botón "Todos" -->
+            <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                Todos
+            </button>
+
+            <!-- Categorías dinámicas -->
+            {% for categoria in categorias %}
+            <button class="btn btn-outline-primary filter-btn"
+                    data-filter="{{ categoria.value }}">
+                {{ categoria.display }}
+            </button>
+            {% empty %}
+            <span class="text-muted small">
+                No hay categorías disponibles
+            </span>
+            {% endfor %}
         </div>
     </div>
+</div>
 
     <div class="row" id="menus-grid">
 
