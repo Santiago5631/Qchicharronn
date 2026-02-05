@@ -1,34 +1,22 @@
+# usuario/forms.py
+from allauth.account.forms import SignupForm
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Usuario
 
-# Formulario para crear un usuario
-class UsuarioCreationForm(UserCreationForm):
-    class Meta:
-        model = Usuario
-        fields = ['username', 'first_name', 'last_name', 'email', 'telefono', 'direccion', 'tipo']
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo': forms.Select(attrs={'class': 'form-control'}),
-        }
+class CustomSignupForm(SignupForm):
+    """
+    Formulario de registro que elimina cualquier referencia a 'username'
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Forzamos la eliminación de username (aunque ya no exista en el modelo)
+        self.fields.pop('username', None)
 
-# Formulario para editar un usuario existente
-class UsuarioChangeForm(UserChangeForm):
-    class Meta:
-        model = Usuario
-        fields = ['username', 'first_name', 'last_name', 'email', 'telefono', 'direccion', 'tipo', 'is_active']
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo': forms.Select(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
+    def signup(self, request, user):
+        # Guardamos campos adicionales si los tienes en el formulario
+        # (puedes agregar más si quieres: cedula, cargo, etc.)
+        user.nombre = self.cleaned_data.get('nombre', '')
+        user.cedula = self.cleaned_data.get('cedula', '')
+        user.cargo = self.cleaned_data.get('cargo', 'operador')
+        user.numero_celular = self.cleaned_data.get('numero_celular', '')
+        user.estado = self.cleaned_data.get('estado', 'activo')
+        user.save()

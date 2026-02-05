@@ -209,7 +209,10 @@ ACCOUNT_UNIQUE_EMAIL = True                    # Evita emails duplicados
 
 # ESTA ES LA CLAVE para que el "Olvidé mi contraseña" funcione con cuentas de Google
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
-
+ACCOUNT_FORMS = {
+    #para que use el formulario que le cree en usuarios
+    'signup': 'usuario.forms.CustomSignupForm',
+}
 # Permite recuperar contraseña incluso si el usuario nunca puso una (solo Google)
 ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = True
 # Keys reCAPTCHA (obténlas en https://www.google.com/recaptcha/admin)
@@ -231,12 +234,16 @@ SOCIALACCOUNT_LOGIN_ON_GET = True   # ← esta línea elimina la página de "Con
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 
 # Para que los emails se vean en la consola mientras estás en desarrollo
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
-SERVER_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
-
-# En producción cambiarás esto por SMTP (Gmail, SendGrid, etc.)
-# Pero ahora con console te llega todo a la terminal y es perfecto para probar
+# Configuración para enviar correos reales con Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'qchicharron32@gmail.com'          # ← tu Gmail real
+EMAIL_HOST_PASSWORD = 'zqni cgkh qafi unzm'    # ← la contraseña de aplicación de 16 dígitos
+DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <qchicharron32@gmail.com>'
+SERVER_EMAIL = 'qchicharron32@gmail.com'
+AUTH_USER_MODEL = 'usuario.Usuario'
 
 MESSAGE_TAGS = {
     messages.DEBUG: "info",
