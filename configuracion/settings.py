@@ -196,7 +196,7 @@ AUTHENTICATION_BACKENDS = [
 
 # Redirect después del login
 # Redirección después de login normal y después de login con Google/Facebook
-LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'                  # cambia esto por tu ruta real
+LOGIN_REDIRECT_URL = '/apps/ventas/'                  # cambia esto por tu ruta real
 ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'          # muy importante esta también
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
