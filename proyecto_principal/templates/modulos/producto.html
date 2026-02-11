@@ -31,7 +31,7 @@
                         <th>Tipo de Uso</th>
                         <th style="width: 120px;">
                             <a href="{% url 'apl:producto:crear_producto' %}">
-                                <button type="button" class="btn btn-success btn-sm">
+                                <button type="button" class="btn btn-success btn-sm" title="Crear producto">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
@@ -55,7 +55,7 @@
                         <td class="text-center">
 
                             <a href="{% url 'apl:producto:editar_producto' p.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1" title="Editar">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
@@ -65,7 +65,7 @@
                                 class="btn btn-danger btn-sm d-inline mb-1 btn-delete"
                                 data-url="{% url 'apl:producto:eliminar_producto' p.id %}"
                                 data-name="{{ p.nombre }}">
-                                <i class="bi bi-trash3-fill"></i>
+                                <i class="bi bi-trash3-fill" title="Eliminar"></i>
                             </button>
 
                         </td>

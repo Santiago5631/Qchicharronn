@@ -93,3 +93,129 @@
     display: block !important;
 }
 
+/* ===== Sidebar Flotante ===== */
+#accordionSidebar {
+    position: fixed;          /* Para que flote */
+    top: 20px !important;     /* Separación arriba */
+    bottom: 20px !important;  /* Separación abajo */
+    left: 20px !important;    /* Separación del borde izquierdo */
+    height: auto !important;  /* Quita el alto 100% */
+    max-height: calc(100vh - 40px); /* Ajuste automático */
+    border-radius: 20px;      /* Bordes redondeados para efecto flotante */
+    overflow-y: auto;         /* Scroll si es necesario */
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.2); /* Sombrado flotante */
+    z-index: 999;             /* Que quede encima del contenido */
+}
+
+/* Cuando está colapsado también debe flotar correctamente */
+#accordionSidebar.toggled {
+    top: 20px !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    border-radius: 20px !important;
+}
+
+#accordionSidebar {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+/* ===== Submenú que se despliega hacia abajo ===== */
+
+.sidebar .dropdown-menu {
+    position: static !important;
+    float: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.3rem 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Mostrar submenú cuando se pasa el mouse */
+.sidebar .nav-item.dropdown:hover .dropdown-submenu {
+    display: block !important;
+}
+
+/* Estilo de los items internos */
+.sidebar .dropdown-submenu .dropdown-item {
+    padding-left: 2.5rem; /* sangría como un submenú */
+    background-color: rgba(255,255,255,0.05); /* opcional */
+    border-radius: 0;
+}
+
+/* Hover en los hijos */
+.sidebar .dropdown-submenu .dropdown-item:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+/* ===== Animación suave del submenú ===== */
+
+.sidebar .dropdown-submenu {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.25s ease, opacity 0.25s ease;
+}
+
+/* Mostrar con animación */
+.sidebar .nav-item.dropdown:hover .dropdown-submenu {
+    max-height: 200px;  /* ajusta según cantidad de items */
+    opacity: 1;
+}
+
+/* Estilos internos opcionales */
+.sidebar .dropdown-submenu .dropdown-item {
+    padding-left: 2.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar .dropdown-item {
+    padding-left: 2.3rem !important;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    color: #fff !important;
+    background-color: transparent !important;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ====== SIDEBAR ====== */
+#accordionSidebar {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    height: calc(100vh - 40px);
+    z-index: 1000;
+}
+
+/* ====== CONTENIDO ====== */
+#content-wrapper {
+    margin-left: 120px;
+    padding: 20px;
+    transition: 0.3s ease;
+}
+
+/* Cuando la sidebar se expande por hover */
+#accordionSidebar.toggled:hover ~ #content-wrapper {
+    margin-left: 260px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    #content-wrapper {
+        margin-left: 0;
+    }
+
+    #accordionSidebar {
+        left: -260px;
+    }
+
+    #accordionSidebar.show {
+        left: 10px;
+    }
+}

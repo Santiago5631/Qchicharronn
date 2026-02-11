@@ -2,40 +2,29 @@
  <!-- En tu template base o donde incluyes el CSS -->
 
  <!-- aside/body.html -->
-  <body>
- <div id="wrapper">
+ <body>
 
-    <!-- Sidebar -->
-    {% include "dashboard/aside/sidebar.html" %}
+<div id="wrapper">
 
-    <!-- Content Wrapper -->
-    <div id="content-wrapper" class="d-flex flex-column">
+    <!-- SIDEBAR -->
+    <ul id="accordionSidebar" class="navbar-nav sidebar sidebar-dark toggled">
+        ...
+    </ul>
 
-      <!-- Main Content -->
-      <div id="content">
+    <!-- CONTENIDO -->
+    <div id="content-wrapper">
 
-        <!-- Topbar -->
-        {% include "dashboard/header.html" %}
+        <div id="content">
+            {% include "dashboard/header.html" %}
 
-        <!-- Contenido principal -->
-        <div class="container-fluid">
-          {% block content %}{% endblock %}
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
         </div>
 
-      </div>
-      <!-- End of Main Content -->
-
-      <!-- Footer -->
-      {% include "dashboard/footer.html" %}
-
+        {% include "dashboard/footer.html" %}
     </div>
-<link href="{% static 'lib/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
-<link href="{% static 'lib/css/sb-admin-2.min.css' %}" rel="stylesheet">
-<script src="{% static 'lib/vendor/jquery/jquery.min.js' %}"></script>
-<script src="{% static 'lib/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'lib/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
-<script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
 
+</div>
 
-
-  </body>
+</body>

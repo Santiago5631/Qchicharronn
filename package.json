@@ -7,7 +7,7 @@
     "build-static": "powershell -NoProfile -Command \"Copy-Item node_modules/bootstrap/dist/css/bootstrap.min.css proyecto_principal/static/css/ -Force; Copy-Item node_modules/bootstrap/dist/js/bootstrap.bundle.min.js proyecto_principal/static/js/ -Force; Copy-Item node_modules/sweetalert2/dist/sweetalert2.min.css proyecto_principal/static/css/ -Force; Copy-Item node_modules/sweetalert2/dist/sweetalert2.all.min.js proyecto_principal/static/js/ -Force\""
   },
   "dependencies": {
-    "bootstrap": "^5.3.3",
-    "sweetalert2": "^11.7.20"
+    "bootstrap": "^5.3.8",
+    "sweetalert2": "^11.26.3"
   }
 }

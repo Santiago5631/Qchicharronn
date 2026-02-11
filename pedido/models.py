@@ -4,7 +4,6 @@ from producto.models import Producto  # Importa el producto para conocer el áre
 from menu.models import Menu  # O plato si así lo tienes
 from django.core.validators import MinValueValidator
 
-
 # -----------------------------
 # MODELO PEDIDO
 # -----------------------------
