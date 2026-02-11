@@ -7,6 +7,7 @@ from menu.models import Menu
 from django.utils import timezone
 import datetime
 
+
 def informe_list(request):
     tipo = request.GET.get('tipo', 'ventas')
     fecha_inicio_str = request.GET.get('fecha_inicio')
@@ -48,8 +49,10 @@ def informe_list(request):
                     ).select_related('pedido', 'admin').order_by('-fecha')
                     contexto['resultados'] = qs
                     contexto['cantidad'] = qs.count()
-                    contexto['total'] = qs.aggregate(total=Sum('total'))['total__sum'] or 0
-                    contexto['mensaje'] = f"Se encontraron {contexto['cantidad']} ventas - Total: ${contexto['total']:,.2f}"
+                    total_sum = qs.aggregate(total_sum=Sum('total'))['total_sum']
+                    contexto['total'] = total_sum if total_sum is not None else 0
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} ventas - Total: ${contexto['total']:,.2f}"
 
                 elif tipo == 'compras':
                     qs = Compra.objects.filter(
@@ -64,7 +67,28 @@ def informe_list(request):
                     contexto['resultados'] = qs
                     contexto['cantidad'] = qs.count()
                     contexto['total'] = sum(compra.subtotal for compra in qs)
-                    contexto['mensaje'] = f"Se encontraron {contexto['cantidad']} compras - Total: ${contexto['total']:,.2f}"
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} compras - Total: ${contexto['total']:,.2f}"
+
+                elif tipo == 'pedidos':
+                    from pedido.models import Pedido
+                    qs = Pedido.objects.filter(
+                        fecha__gte=fecha_inicio,
+                        fecha__lte=fecha_fin
+                    ).prefetch_related('detalles').order_by('-fecha')
+
+                    # Calcular el total de cada pedido
+                    for pedido in qs:
+                        total = 0
+                        for detalle in pedido.detalles.all():
+                            total += detalle.menu.precio * detalle.cantidad
+                        pedido.total_calculado = total
+
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    contexto['total'] = sum(p.total_calculado for p in qs)
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} pedidos - Total: ${contexto['total']:,.2f}"
 
                 elif tipo == 'inventario':
                     qs = InventarioDiario.objects.filter(
@@ -75,13 +99,15 @@ def informe_list(request):
                     contexto['cantidad'] = qs.count()
                     contexto['abiertos'] = qs.filter(estado='abierto').count()
                     contexto['cerrados'] = qs.filter(estado='cerrado').count()
-                    contexto['mensaje'] = f"{contexto['cantidad']} registros diarios encontrados ({contexto['abiertos']} abiertos, {contexto['cerrados']} cerrados)"
+                    contexto[
+                        'mensaje'] = f"{contexto['cantidad']} registros diarios encontrados ({contexto['abiertos']} abiertos, {contexto['cerrados']} cerrados)"
 
                 elif tipo == 'menu':
                     qs = Menu.objects.all().order_by('nombre')
                     contexto['resultados'] = qs
                     contexto['cantidad'] = qs.count()
-                    contexto['mensaje'] = f"Mostrando {contexto['cantidad']} productos del menú actual (sin filtro por fecha)"
+                    contexto[
+                        'mensaje'] = f"Mostrando {contexto['cantidad']} productos del menú actual (sin filtro por fecha)"
 
                 else:
                     contexto['mensaje'] = "Tipo de reporte no reconocido."

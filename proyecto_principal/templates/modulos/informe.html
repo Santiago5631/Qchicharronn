@@ -14,9 +14,7 @@
             <div class="mb-5">
                 <label class="form-label fw-bold d-block mb-3 text-center fs-5">¿Qué deseas consultar?</label>
 
-                <form method="get" id="tipo-form" class="d-flex flex-wrap justify-content-center gap-4">
-                    <input type="hidden" name="tipo" id="tipo-seleccionado" value="{{ tipo_actual|default:'ventas' }}">
-
+                <div class="d-flex flex-wrap justify-content-center gap-4">
                     <button type="button" class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}" data-tipo="ventas">
                         <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i> Ventas
                     </button>
@@ -32,12 +30,12 @@
                     <button type="button" class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}" data-tipo="inventario">
                         <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i> Inventario
                     </button>
-                </form>
+                </div>
             </div>
 
             <!-- Fechas -->
             <form method="get" class="row g-3 align-items-end mb-4" id="filtro-form">
-                <input type="hidden" name="tipo" value="{{ tipo_actual|default:'ventas' }}">
+                <input type="hidden" name="tipo" id="tipo-hidden" value="{{ tipo_actual|default:'ventas' }}">
 
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Fecha de inicio</label>
@@ -141,6 +139,44 @@
             </div>
             {% endif %}
 
+            <!-- Pedidos -->
+            {% if tipo_actual == 'pedidos' and resultados %}
+            <div class="table-responsive mt-4">
+                <h5>Pedidos encontrados ({{ cantidad }})</h5>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-info">
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Mesa</th>
+                            <th class="text-end">Total</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in resultados %}
+                        <tr>
+                            <td>#{{ p.id }}</td>
+                            <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>{{ p.mesa }}</td>
+                            <td class="text-end">${{ p.total_calculado|floatformat:2 }}</td>
+                            <td>{{ p.get_estado_display }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center">No hay pedidos en este rango</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active fw-bold">
+                        <tr>
+                            <td colspan="3">TOTAL</td>
+                            <td class="text-end">${{ total|floatformat:2 }}</td>
+                            <td>{{ cantidad }} pedidos</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% endif %}
+
             <!-- Inventario -->
             {% if tipo_actual == 'inventario' and resultados %}
             <div class="table-responsive mt-4">
@@ -194,15 +230,22 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const botones = document.querySelectorAll('.tipo-btn');
-    const inputTipo = document.getElementById('tipo-seleccionado');
+    const inputTipoHidden = document.getElementById('tipo-hidden');
     const formFiltro = document.getElementById('filtro-form');
 
     botones.forEach(boton => {
         boton.addEventListener('click', () => {
+            // Remover clase active de todos los botones
             botones.forEach(b => b.classList.remove('active'));
-            boton.classList.add('active');
-            inputTipo.value = boton.dataset.tipo;
 
+            // Agregar clase active al botón clickeado
+            boton.classList.add('active');
+
+            // Actualizar el valor del campo oculto
+            const tipoSeleccionado = boton.dataset.tipo;
+            inputTipoHidden.value = tipoSeleccionado;
+
+            // Si hay fechas seleccionadas, enviar el formulario
             const fi = document.querySelector('[name="fecha_inicio"]').value;
             const ff = document.querySelector('[name="fecha_fin"]').value;
             if (fi && ff) {
