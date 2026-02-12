@@ -10,9 +10,14 @@ from django.views.decorators.http import require_POST
 from .forms import *
 from .models import Menu, MenuProducto, Pedido, PedidoItem
 from decimal import Decimal
+from venta.services import crear_venta_desde_pedido,actualizar_venta_desde_pedido
+from django.urls import reverse
 
 
 # ==================== VISTAS DE MENÚ ====================
+
+from django.db.models import Count
+
 
 class MenuListView(ListView):
     """Lista de menús disponibles"""
@@ -27,8 +32,26 @@ class MenuListView(ListView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Lista de Menús'
         context['menu'] = 'menu'
-        return context
 
+        menus = self.get_queryset()
+
+        # Esto ya lo tenías protegido → está bien
+        categorias_con_menus = set(
+            menus.values_list('categoria_menu', flat=True).distinct()
+        ) if menus is not None else set()
+
+        # ← Aquí está el fix
+        field = Menu._meta.get_field('categoria_menu')
+        choices = field.choices if field.choices is not None else []
+
+        categorias_disponibles = [
+            {'value': choice[0], 'display': choice[1]}
+            for choice in choices
+            if choice[0] in categorias_con_menus
+        ]
+
+        context['categorias'] = categorias_disponibles
+        return context
 
 class MenuCreateView(CreateView):
     """Crear nuevo menú"""
@@ -255,6 +278,7 @@ class PedidoListView( ListView):
             'cancelado': Pedido.objects.filter(estado='cancelado').count(),
         }
 
+
         return context
 
 class PedidoCreateView(View):
@@ -277,15 +301,57 @@ class PedidoCreateView(View):
             observaciones = request.POST.get('observaciones', '').strip()
 
             carrito = request.session.get('carrito', {})
+            pedido_id = request.session.get('pedido_editando')
+
+            # 🚫 BLOQUEAR EDICIÓN SI YA ESTÁ ENTREGADO O CANCELADO
+            if pedido_id:
+                pedido = get_object_or_404(Pedido, id=pedido_id)
+
+                if pedido.estado in ['entregado', 'cancelado']:
+                    messages.error(
+                        request,
+                        'Este pedido ya fue entregado y no puede modificarse.'
+                    )
+                    return redirect('apl:menu:pedido_detail', pk=pedido.id)
+
             if menu_id in carrito:
                 carrito[menu_id]['cantidad'] += cantidad
             else:
-                carrito[menu_id] = {'cantidad': cantidad, 'observaciones': observaciones}
+                carrito[menu_id] = {'tipo': 'menu','cantidad': cantidad, 'observaciones': observaciones}
 
             request.session['carrito'] = carrito
             request.session.modified = True
             messages.success(request, 'Producto agregado al carrito')
             return redirect('apl:menu:pedido_create')
+
+        # 🟡 AGREGAR PRODUCTO TEMPORAL
+        elif accion == 'agregar_temporal':
+            nombre = request.POST.get('nombre')
+            precio = request.POST.get('precio')
+            cantidad = int(request.POST.get('cantidad', 1))
+
+            if not nombre or not precio:
+                messages.error(request, 'Datos del producto temporal inválidos.')
+                return redirect('apl:menu:pedido_create')
+
+            carrito = request.session.get('carrito', {})
+
+            # Usamos un ID ficticio único
+            temp_id = f"temp_{len(carrito) + 1}"
+
+            carrito[temp_id] = {
+                'tipo': 'temporal',
+                'nombre': nombre,
+                'precio': precio,
+                'cantidad': cantidad
+            }
+
+            request.session['carrito'] = carrito
+            request.session.modified = True
+
+            messages.success(request, 'Producto temporal agregado al carrito')
+            return redirect('apl:menu:pedido_create')
+
 
         # 2. Actualizar cantidad
         elif accion == 'actualizar':
@@ -297,69 +363,91 @@ class PedidoCreateView(View):
                     carrito[menu_id]['cantidad'] = cantidad
                     request.session['carrito'] = carrito
                     request.session.modified = True
-            return redirect('apl:menu:pedido_create')
+            return redirect('menu:pedido_create')
 
         # 3. Eliminar del carrito
         elif accion == 'eliminar':
-            menu_id = request.POST.get('menu_id')
+            key = request.POST.get('key')
+
             carrito = request.session.get('carrito', {})
-            carrito.pop(menu_id, None)
-            request.session['carrito'] = carrito
-            request.session.modified = True
-            messages.info(request, 'Producto eliminado del carrito')
-            return redirect('apl:menu:pedido_create')
+
+            if key in carrito:
+                del carrito[key]
+                request.session['carrito'] = carrito
+                request.session.modified = True
+            return redirect("apl:menu:pedido_create")
+
 
         # 4. Confirmar pedido
         elif accion == 'confirmar':
             form = PedidoForm(request.POST)
-            if form.is_valid():
-                carrito = request.session.get('carrito', {})
-                if not carrito:
-                    messages.error(request, 'El carrito está vacío.')
-                    return self._renderizar_pagina(request, form=form)
-                pedido = form.save(commit=False)  # ← Aquí creas el objeto pero NO lo guardas aún
-                pedido.estado = 'pendiente'  # ← ¡¡AQUÍ LE ASIGNAS EL ESTADO!!
-                pedido.save()
-                try:
-                    with transaction.atomic():
-                        pedido = form.save(commit=False)
-                        pedido.save()
+            carrito = request.session.get('carrito', {})
 
-                        for menu_id_str, datos in carrito.items():
-                            if not menu_id_str.isdigit():
-                                continue
-                            menu = get_object_or_404(Menu, id=int(menu_id_str))
-                            PedidoItem.objects.create(
-                                pedido=pedido,
-                                menu=menu,
-                                cantidad=datos.get('cantidad', 1),
-                                precio_unitario=menu.get_precio_final(),
-                                descuento_aplicado=menu.descuento or 0,
-                                observaciones=datos.get('observaciones', '')
-                            )
-
-                        pedido.calcular_totales()
-                        request.session['carrito'] = {}
-                        request.session.modified = True
-
-                        messages.success(
-                            request,
-                            f'Pedido #{pedido.numero_pedido} creado exitosamente. Total: ${pedido.total}'
-                        )
-                        return redirect('apl:menu:pedido_detail', pk=pedido.pk)
-
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
-                    messages.error(request, f'Error al crear el pedido: {str(e)}')
-                    return self._renderizar_pagina(request, form=form)
-
-            else:
-                messages.error(request, 'Corrige los errores en los datos del cliente.')
+            if not carrito:
+                messages.error(request, 'El carrito está vacío.')
                 return self._renderizar_pagina(request, form=form)
 
-        # ← SIEMPRE devolver algo aunque no haya acción válida
-        return redirect('apl:menu:pedido_create')
+            if not form.is_valid():
+                messages.error(request, 'Corrige los errores del formulario.')
+                return self._renderizar_pagina(request, form=form)
+
+            pedido_id = request.session.get('pedido_editando')
+
+            try:
+                with transaction.atomic():
+
+                    # 🔁 EDITAR PEDIDO
+                    if pedido_id:
+                        pedido = get_object_or_404(Pedido, id=pedido_id)
+                        pedido.items.all().delete()
+                        pedido.cliente_nombre = form.cleaned_data['cliente_nombre']
+                        pedido.mesa_numero = form.cleaned_data['mesa']
+                        pedido.observaciones = form.cleaned_data['observaciones']
+                    else:
+                        pedido = form.save(commit=False)
+
+                    pedido.estado = 'pendiente'
+                    pedido.save()
+                    if not pedido_id:
+                        crear_venta_desde_pedido(pedido)
+
+                    for key, datos in carrito.items():
+                        if not key.isdigit():
+                            continue
+
+                        menu = get_object_or_404(Menu, id=int(key))
+
+                        PedidoItem.objects.create(
+                            pedido=pedido,
+                            menu=menu,
+                            cantidad=datos['cantidad'],
+                            precio_unitario=menu.get_precio_final(),
+                            descuento_aplicado=menu.descuento or 0,
+                            observaciones=datos.get('observaciones', '')
+                        )
+
+                    pedido.calcular_totales()
+                    actualizar_venta_desde_pedido(pedido)
+
+                    request.session.pop('carrito', None)
+                    request.session.pop('pedido_editando', None)
+
+                    messages.success(
+                        request,
+                        f'Pedido #{pedido.numero_pedido} actualizado correctamente'
+                    )
+
+                    origen = request.session.pop('origen_edicion', None)
+
+                    if origen == 'venta' and hasattr(pedido, 'venta'):
+                        return redirect('apl:venta:venta_detail', pk=pedido.venta.pk)
+
+                    return redirect('apl:menu:pedido_detail', pk=pedido.pk) 
+
+
+            except Exception as e:
+                messages.error(request, f'Error al guardar pedido: {e}')
+                return self._renderizar_pagina(request, form=form)
 
     # =============================================
     # Método auxiliar (nunca devuelve None)
@@ -367,48 +455,83 @@ class PedidoCreateView(View):
     def _renderizar_pagina(self, request, form=None):
         carrito = request.session.get('carrito', {})
 
-        # Limpieza automática de claves basura
-        carrito_limpio = {k: v for k, v in carrito.items() if k and str(k).isdigit()}
-        if carrito_limpio != carrito:
-            request.session['carrito'] = carrito_limpio
-            request.session.modified = True
-            carrito = carrito_limpio
-
+        # =============================
         # Menús por categoría
+        # =============================
         menus_por_categoria = {}
         for menu in Menu.objects.filter(disponible=True).prefetch_related('menu_productos__producto'):
-            cat = menu.get_categoria_menu_display()
-            menus_por_categoria.setdefault(cat, []).append(menu)
+            categoria = menu.categoria_menu.nombre if menu.categoria_menu else "Sin categoría"
+            menus_por_categoria.setdefault(categoria, []).append(menu)
 
-        # Cálculo de items del carrito
+        # =============================
+        # Cálculo del carrito (mixto)
+        # =============================
         items_carrito = []
         subtotal = Decimal('0.00')
         descuento_total = Decimal('0.00')
 
-        for menu_id_str, datos in carrito.items():
-            if not menu_id_str.isdigit():
+        for key, datos in carrito.items():
+            tipo = datos.get('tipo')
+
+            # 🟢 MENÚ
+            if tipo == 'menu':
+                try:
+                    menu = Menu.objects.get(id=int(key), disponible=True)
+                except (Menu.DoesNotExist, ValueError):
+                    continue
+
+                cantidad = datos.get('cantidad', 1)
+                precio_final = menu.get_precio_final()
+                subtotal_item = precio_final * cantidad
+
+                items_carrito.append({
+                    'key': key,
+                    'tipo': 'menu',
+                    'menu': menu,
+                    'cantidad': cantidad,
+                    'precio_unitario': precio_final,
+                    'subtotal': subtotal_item,
+                    'observaciones': datos.get('observaciones', '')
+                })
+
+                subtotal += subtotal_item
+
+                if menu.descuento > 0:
+                    descuento_total += (menu.precio_base * cantidad) - subtotal_item
+
+            # 🟡 PRODUCTO TEMPORAL
+            elif tipo == 'temporal':
+                cantidad = datos.get('cantidad', 1)
+                precio = Decimal(str(datos.get('precio')))
+                subtotal_item = precio * cantidad
+
+                items_carrito.append({
+                    'key': key,
+                    'tipo': 'temporal',
+                    'nombre': datos.get('nombre'),
+                    'cantidad': cantidad,
+                    'precio_unitario': precio,
+                    'subtotal': subtotal_item
+                })
+
+                subtotal += subtotal_item
+
+            # ⚠️ Datos corruptos o desconocidos
+            else:
                 continue
-            menu_id = int(menu_id_str)
-            try:
-                menu = Menu.objects.get(id=menu_id, disponible=True)
-            except Menu.DoesNotExist:
-                continue
 
-            cantidad = datos.get('cantidad', 1)
-            precio_final = menu.get_precio_final()
-            subtotal_item = precio_final * cantidad
+        # =============================
+        # Contexto
+        # =============================
+        pedido_id = request.session.get('pedido_editando')
 
-            items_carrito.append({
-                'menu': menu,
-                'cantidad': cantidad,
-                'precio_unitario': precio_final,
-                'subtotal': subtotal_item,
-                'observaciones': datos.get('observaciones', '')
-            })
-
-            subtotal += subtotal_item
-            if menu.descuento > 0:
-                descuento_total += (menu.precio_base * cantidad) - subtotal_item
+        if form:
+            form_pedido = form
+        elif pedido_id:
+            pedido = get_object_or_404(Pedido, id=pedido_id)
+            form_pedido = PedidoForm(instance=pedido)
+        else:
+            form_pedido = PedidoForm()
 
         context = {
             'titulo': 'Crear Nuevo Pedido',
@@ -417,10 +540,14 @@ class PedidoCreateView(View):
             'subtotal': subtotal,
             'descuento_total': descuento_total,
             'total': subtotal,
-            'form': form or PedidoForm(),
+            'form': form_pedido,
+            'editando': bool(pedido_id),
         }
 
+
         return render(request, self.template_name, context)
+
+
 class PedidoDetailView(DetailView):
     """Ver detalle de un pedido"""
     model = Pedido
@@ -436,19 +563,51 @@ class PedidoDetailView(DetailView):
 
 
 class PedidoUpdateEstadoView(View):
-    """Actualizar el estado de un pedido"""
-
     def post(self, request, pk):
         pedido = get_object_or_404(Pedido, pk=pk)
+        estado_anterior = pedido.estado
+
         form = ActualizarEstadoPedidoForm(request.POST, instance=pedido)
 
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Estado del pedido actualizado a: {pedido.get_estado_display()}')
-        else:
+        if not form.is_valid():
             messages.error(request, 'Error al actualizar el estado')
+            return redirect('apl:menu:pedido_detail', pk=pk)
+
+        pedido = form.save(commit=False)
+
+        # 🔒 Si ya está entregado, no permitir cambios
+        if estado_anterior == 'entregado':
+            messages.warning(
+                request,
+                'Este pedido ya fue entregado y no puede modificarse.'
+            )
+            return redirect('apl:menu:pedido_detail', pk=pk)
+
+        pedido.save()
+
+        # 🧾 DISPARAR VENTA SOLO UNA VEZ
+        if pedido.estado == 'entregado' and estado_anterior != 'entregado':
+            venta = pedido.venta
+            if hasattr(pedido, 'venta'):
+                venta = pedido.venta
+                venta.estado = 'pagado'
+                venta.save()
+
+            venta.estado = 'pagado'
+            venta.save()
+
+            messages.success(
+                request,
+                f'Pedido #{pedido.numero_pedido} entregado y facturado correctamente.'
+            )
+        else:
+            messages.success(
+                request,
+                f'Estado del pedido actualizado a: {pedido.get_estado_display()}'
+            )
 
         return redirect('apl:menu:pedido_detail', pk=pk)
+
 
 
 class PedidoDeleteView(DeleteView):
@@ -479,4 +638,41 @@ class LimpiarCarritoView(View):
         request.session['carrito'] = {}
         request.session.modified = True
         messages.info(request, 'Carrito limpiado')
+        return redirect('apl:menu:pedido_create')
+
+from django.urls import reverse
+
+class PedidoUpdate(View):
+
+    def get(self, request, pk):
+        pedido = get_object_or_404(Pedido, pk=pk)
+
+        origen = request.GET.get('from')  # 👈 capturamos de dónde viene
+
+        if pedido.estado in ['entregado', 'cancelado']:
+            messages.warning(
+                request,
+                f'El pedido #{pedido.numero_pedido} ya fue {pedido.get_estado_display()} y no puede editarse.'
+            )
+
+            if origen == 'venta' and hasattr(pedido, 'venta'):
+                return redirect('apl:venta:venta_detail', pk=pedido.venta.pk)
+
+            return redirect('apl:menu:pedido_detail', pk=pedido.pk)
+
+        carrito = {}
+
+        for item in pedido.items.all():
+            key = str(item.menu_id)
+            carrito[key] = {
+                'tipo': 'menu',
+                'cantidad': item.cantidad,
+                'observaciones': item.observaciones or ''
+            }
+
+        request.session['carrito'] = carrito
+        request.session['pedido_editando'] = pedido.id
+        request.session['origen_edicion'] = origen  # 👈 guardamos origen
+        request.session.modified = True
+
         return redirect('apl:menu:pedido_create')

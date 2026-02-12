@@ -88,18 +88,31 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex flex-wrap align-items-center">
-                <span class="me-3 fw-bold">Filtrar por categoría:</span>
-                <button class="btn btn-outline-primary filter-btn active" data-filter="all">Todos</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="entrada">Entradas</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="plato_principal">Platos Principales</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="postre">Postres</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="bebida">Bebidas</button>
-                <button class="btn btn-outline-primary filter-btn" data-filter="combo">Combos</button>
-            </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center">
+            <span class="me-3 fw-bold">
+                <i class="bi bi-funnel me-1"></i>Filtrar por categoría:
+            </span>
+
+            <!-- Botón "Todos" -->
+            <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                Todos
+            </button>
+
+            <!-- Categorías dinámicas -->
+            {% for categoria in categorias %}
+            <button class="btn btn-outline-primary filter-btn"
+                    data-filter="{{ categoria.value }}">
+                {{ categoria.display }}
+            </button>
+            {% empty %}
+            <span class="text-muted small">
+                No hay categorías disponibles
+            </span>
+            {% endfor %}
         </div>
     </div>
+</div>
 
     <div class="row" id="menus-grid">
 
