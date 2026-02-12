@@ -10,8 +10,8 @@ from django.views.decorators.http import require_POST
 from .forms import *
 from .models import Menu, MenuProducto, Pedido, PedidoItem
 from decimal import Decimal
-from venta.services import crear_venta_desde_pedido
-
+from venta.services import crear_venta_desde_pedido,actualizar_venta_desde_pedido
+from django.urls import reverse
 
 
 # ==================== VISTAS DE MENÚ ====================
@@ -427,6 +427,7 @@ class PedidoCreateView(View):
                         )
 
                     pedido.calcular_totales()
+                    actualizar_venta_desde_pedido(pedido)
 
                     request.session.pop('carrito', None)
                     request.session.pop('pedido_editando', None)
@@ -436,7 +437,13 @@ class PedidoCreateView(View):
                         f'Pedido #{pedido.numero_pedido} actualizado correctamente'
                     )
 
-                    return redirect('apl:menu:pedido_detail', pk=pedido.pk)
+                    origen = request.session.pop('origen_edicion', None)
+
+                    if origen == 'venta' and hasattr(pedido, 'venta'):
+                        return redirect('apl:venta:venta_detail', pk=pedido.venta.pk)
+
+                    return redirect('apl:menu:pedido_detail', pk=pedido.pk) 
+
 
             except Exception as e:
                 messages.error(request, f'Error al guardar pedido: {e}')
@@ -581,6 +588,11 @@ class PedidoUpdateEstadoView(View):
         # 🧾 DISPARAR VENTA SOLO UNA VEZ
         if pedido.estado == 'entregado' and estado_anterior != 'entregado':
             venta = pedido.venta
+            if hasattr(pedido, 'venta'):
+                venta = pedido.venta
+                venta.estado = 'pagado'
+                venta.save()
+
             venta.estado = 'pagado'
             venta.save()
 
@@ -628,20 +640,26 @@ class LimpiarCarritoView(View):
         messages.info(request, 'Carrito limpiado')
         return redirect('apl:menu:pedido_create')
 
+from django.urls import reverse
+
 class PedidoUpdate(View):
 
     def get(self, request, pk):
         pedido = get_object_or_404(Pedido, pk=pk)
 
-        # 🚫 Bloquear edición según estado
+        origen = request.GET.get('from')  # 👈 capturamos de dónde viene
+
         if pedido.estado in ['entregado', 'cancelado']:
             messages.warning(
                 request,
                 f'El pedido #{pedido.numero_pedido} ya fue {pedido.get_estado_display()} y no puede editarse.'
             )
+
+            if origen == 'venta' and hasattr(pedido, 'venta'):
+                return redirect('apl:venta:venta_detail', pk=pedido.venta.pk)
+
             return redirect('apl:menu:pedido_detail', pk=pedido.pk)
 
-        # ✅ Estados permitidos para editar
         carrito = {}
 
         for item in pedido.items.all():
@@ -654,6 +672,7 @@ class PedidoUpdate(View):
 
         request.session['carrito'] = carrito
         request.session['pedido_editando'] = pedido.id
+        request.session['origen_edicion'] = origen  # 👈 guardamos origen
         request.session.modified = True
 
         return redirect('apl:menu:pedido_create')

@@ -3,6 +3,23 @@ from menu.models import Pedido
 from decimal import Decimal
 
 class Venta(models.Model):
+    ESTADO_CHOICES = (
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+    )
+    METODO_PAGO_CHOICES = (
+        ('efectivo', 'Efectivo'),
+        ('tarjeta', 'Tarjeta'),
+        ('transferencia', 'Transferencia'),
+    )
+
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=METODO_PAGO_CHOICES,
+        null=True,
+        blank=True
+    )
+
     pedido = models.OneToOneField(
         Pedido,
         on_delete=models.PROTECT,
@@ -26,8 +43,15 @@ class Venta(models.Model):
 
     fecha_venta = models.DateTimeField(auto_now_add=True)
 
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADO_CHOICES,
+        default='pendiente'
+    )
+
     class Meta:
         ordering = ['-fecha_venta']
+
 
     def save(self, *args, **kwargs):
         if not self.numero_factura:
