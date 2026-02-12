@@ -67,11 +67,14 @@
 
         <div class="bottom-content">
             <li>
-                <a href="#">
-                    <i class='bx bx-log-out icon'></i>
-                    <span class="text nav-text">Logout</span>
-                </a>
-            </li>
+    <form method="post" action="{% url 'login:logout' %}" id="logout-form">
+        {% csrf_token %}
+        <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">
+            <i class='bx bx-log-out icon'></i>
+            <span class="text nav-text">Logout</span>
+        </a>
+    </form>
+</li>
 
             <li class="mode">
                 <div class="moon-sun">
