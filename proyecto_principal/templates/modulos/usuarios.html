@@ -7,26 +7,27 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
+
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>id</th>
-                        <th>nombre</th>
-                        <th>cedula</th>
-                        <th>cargo</th>
-                        <th>correo_electronico</th>
-                        <th>numero_celular</th>
-                        <th>estado</th>
-                        <th>contraseña</th>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Cédula</th>
+                        <th>Cargo</th>
+                        <th>Email</th>
+                        <th>Número Celular</th>
+                        <th>Estado</th>
                         <th>
                             <a href="{% url 'apl:usuario:crear_usuario' %}">
-                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                <button type="button" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
                         </th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for u in usuarios %}
                     <tr>
@@ -34,31 +35,107 @@
                         <td>{{ u.nombre }}</td>
                         <td>{{ u.cedula }}</td>
                         <td>{{ u.cargo }}</td>
-                        <td>{{ u.correo_electronico }}</td>
+                        <td>{{ u.email }}</td>
                         <td>{{ u.numero_celular }}</td>
                         <td>{{ u.estado }}</td>
-                        <td>{{ u.contraseña }}</td>
                         <td>
+                            <!-- Editar -->
                             <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-warning btn-sm mb-1">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-                            <a href="{% url 'apl:usuario:eliminar_usuario' u.id %}">
-                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
-                            </a>
+
+                            <!-- Eliminar -->
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm mb-1 btn-delete"
+                                data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
+                                data-nombre="{{ u.nombre }}">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
                         </td>
                     </tr>
+
                     {% empty %}
                     <tr>
-                        <td colspan="9">No hay usuarios registrados.</td>
+                        <td colspan="8">No hay usuarios registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
         </div>
     </div>
 </div>
+
+<!-- CSRF oculto para AJAX -->
+<form style="display:none;">
+    {% csrf_token %}
+</form>
+
+<!-- SweetAlert2 Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".btn-delete").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const url = this.dataset.url;
+            const nombre = this.dataset.nombre;
+            const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            Swal.fire({
+                title: "¿Estás seguro?",
+                text: `Se eliminará "${nombre}"`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "Cancelar"
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrf_token,
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: "Eliminado",
+                                text: `"${nombre}" fue eliminado correctamente`,
+                                icon: "success",
+                                timer: 1200,
+                                showConfirmButton: false
+                            });
+
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1200);
+                        }
+
+                    })
+                    .catch(() => {
+                        Swal.fire("Error", "No se pudo eliminar", "error");
+                    });
+
+                }
+            });
+
+        });
+
+    });
+
+});
+</script>
+
 {% endblock %}
