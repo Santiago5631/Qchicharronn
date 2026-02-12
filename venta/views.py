@@ -42,8 +42,16 @@ class VentaDetailView(DetailView):
 
 class VentaFacturaView(DetailView):
     model = Venta
-    template_name = 'ventas/factura.html'
+    template_name = 'forms/factura.html'
     context_object_name = 'venta'
+
+    def get_queryset(self):
+        return Venta.objects.select_related(
+            'pedido',
+            'mesa'
+        ).prefetch_related(
+            'items'
+        )
 
     def get_object(self, queryset=None):
         venta = super().get_object(queryset)
@@ -53,7 +61,15 @@ class VentaFacturaView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = f'Factura {self.object.numero_factura}'
+
+        venta = self.object
+        items = venta.items.all()
+
+        context['titulo'] = f'Factura {venta.numero_factura}'
+        context['items'] = items
+        context['fecha'] = venta.fecha_venta
+        context['metodo_pago'] = venta.get_metodo_pago_display()
+
         return context
 
 
