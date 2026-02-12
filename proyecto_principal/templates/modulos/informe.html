@@ -1,5 +1,4 @@
 {% extends "dashboard/layout.html" %}
-
 {% block content %}
 
 <div class="container mt-4">
@@ -139,121 +138,74 @@
             </div>
             {% endif %}
 
-            <!-- Pedidos -->
-            {% if tipo_actual == 'pedidos' and resultados %}
-            <div class="table-responsive mt-4">
-                <h5>Pedidos encontrados ({{ cantidad }})</h5>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-info">
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Mesa</th>
-                            <th class="text-end">Total</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in resultados %}
-                        <tr>
-                            <td>#{{ p.id }}</td>
-                            <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
-                            <td>{{ p.mesa }}</td>
-                            <td class="text-end">${{ p.total_calculado|floatformat:2 }}</td>
-                            <td>{{ p.get_estado_display }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="text-center">No hay pedidos en este rango</td></tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="table-active fw-bold">
-                        <tr>
-                            <td colspan="3">TOTAL</td>
-                            <td class="text-end">${{ total|floatformat:2 }}</td>
-                            <td>{{ cantidad }} pedidos</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            {% endif %}
-
-            <!-- Inventario -->
-            {% if tipo_actual == 'inventario' and resultados %}
-            <div class="table-responsive mt-4">
-                <h5>Registros diarios ({{ cantidad }})</h5>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-warning">
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Apertura</th>
-                            <th>Cierre</th>
-                            <th>Estado</th>
-                            <th>Observaciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for i in resultados %}
-                        <tr>
-                            <td>{{ i.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ i.fecha_apertura|date:"d/m/Y H:i"|default:"—" }}</td>
-                            <td>{{ i.fecha_cierre|date:"d/m/Y H:i"|default:"—" }}</td>
-                            <td>{{ i.get_estado_display }}</td>
-                            <td>{{ i.observaciones|default:"—"|truncatewords:10 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="text-center">No hay registros diarios en este rango</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-
-            <!-- Menú -->
-            {% if tipo_actual == 'menu' %}
-            <div class="mt-4">
-                <h5>Productos del menú actual ({{ cantidad }})</h5>
-                <ul class="list-group">
-                    {% for m in resultados %}
-                    <li class="list-group-item">
-                        <strong>{{ m.nombre }}</strong>
-                        {% if m.descripcion %}<br><small class="text-muted">{{ m.descripcion|truncatewords:20 }}</small>{% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-
-        </div>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Rango de Fechas</th>
+                    <th>Creado Por</th>
+                    <th>Fecha de Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in informe %}
+                <tr>
+                    <td>{{ i.titulo }}</td>
+                    <td>{{ i.get_tipo_display }}</td>
+                    <td>{{ i.fecha_inicio }} a {{ i.fecha_fin }}</td>
+                    <td>{{ i.creado_por }}</td>
+                    <td>{{ i.fecha_creacion }}</td>
+                    <td>
+                        <a href="{% url 'apl:informe_editar' i.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pen-fill"></i>
+                        </a>
+                        <button type="button" onclick="eliminarInforme({{ i.pk }})" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">No hay informes registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const botones = document.querySelectorAll('.tipo-btn');
-    const inputTipoHidden = document.getElementById('tipo-hidden');
-    const formFiltro = document.getElementById('filtro-form');
+function eliminarInforme(pk) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const url = "{% url 'apl:informe:eliminar_informe' 0 %}".replace("0", pk);
 
-    botones.forEach(boton => {
-        boton.addEventListener('click', () => {
-            // Remover clase active de todos los botones
-            botones.forEach(b => b.classList.remove('active'));
-
-            // Agregar clase active al botón clickeado
-            boton.classList.add('active');
-
-            // Actualizar el valor del campo oculto
-            const tipoSeleccionado = boton.dataset.tipo;
-            inputTipoHidden.value = tipoSeleccionado;
-
-            // Si hay fechas seleccionadas, enviar el formulario
-            const fi = document.querySelector('[name="fecha_inicio"]').value;
-            const ff = document.querySelector('[name="fecha_fin"]').value;
-            if (fi && ff) {
-                formFiltro.submit();
-            }
-        });
+            fetch(url, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    Swal.fire('Eliminado!', 'El informe fue eliminado correctamente.', 'success')
+                        .then(() => { location.reload(); });
+                }
+            });
+        }
     });
-});
+}
 </script>
 
 {% endblock %}

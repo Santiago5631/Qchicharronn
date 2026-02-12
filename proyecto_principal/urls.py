@@ -5,6 +5,8 @@ app_name = 'apl'
 
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
+    # _________________________ Modulos de Usuario __________________________
+    path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),
     #-------------- Mesa ----------------------
     path('mesas/', include('mesa.urls', namespace='mesa')),
     #---------------- Menus ---------------------------
@@ -13,8 +15,6 @@ urlpatterns = [
     path('categorias/', include('categoria.urls', namespace='categoria')),
     #------------------ Marca ------------------------------
     path('marcas/', include('marca.urls', namespace='marca')),
-    # _________________________ Modulos de Usuario __________________________
-    path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),
     # _________________________ Modulos de Plato __________________________
     path('platos/', include(("plato.urls", 'plato'), namespace='plato')),
     # _________________________ Modulos de Pedido __________________________
