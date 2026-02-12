@@ -1,91 +1,90 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.shortcuts import render
-from .models import *
-from .forms import VentaForm
-
-
-def listar_ventas(request):
-    data = {
-        "titulo": "Listado de Ventas",
-        "ventas": Venta.objects.all()
-    }
-    return render(request, 'modulos/venta.html', data)
-
+from django.views.generic import ListView
+from .models import Venta
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.views import View
+from django.views.generic import DetailView
 
 class VentaListView(ListView):
     model = Venta
     template_name = 'modulos/venta.html'
     context_object_name = 'ventas'
+    ordering = ['-fecha_venta']  # más recientes primero
+
+    def get_queryset(self):
+        # optimización (no rompe nada)
+        return Venta.objects.select_related('pedido').all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # 🔹 Separar ventas
+        context['ventas_pendientes'] = self.object_list.filter(estado='pendiente')
+        context['ventas_pagadas'] = self.object_list.filter(estado='pagado')
+
         context['titulo'] = 'Listado de Ventas'
         return context
 
 
-class VentaCreateView(CreateView):
+class VentaDetailView(DetailView):
     model = Venta
-    template_name = 'forms/formulario_crear.html'
-    form_class = VentaForm
-    success_url = '/apps/ventas/listar/'
-
-    def form_valid(self, form):
-        return super().form_valid(form)
+    template_name = 'forms/venta_detalle.html'
+    context_object_name = 'venta'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Crear Venta'
-        context['modulo'] = "ventas "
+        context['items'] = self.object.items.all()
+        context['titulo'] = f'Detalle de Venta #{self.object.numero_factura}'
         return context
 
 
-class VentaUpdateView(UpdateView):
+
+class VentaFacturaView(DetailView):
     model = Venta
-    template_name = 'forms/formulario_actualizacion.html'
-    form_class = VentaForm
-    success_url = '/apps/ventas/listar/'
+    template_name = 'ventas/factura.html'
+    context_object_name = 'venta'
 
-    def form_valid(self, form):
-        return super().form_valid(form)
-
-
-class VentaDeleteView(DeleteView):
-    model = Venta
-    template_name = 'forms/confirmar_eliminacion.html'
-    success_url = '/apps/ventas/listar/'
+    def get_object(self, queryset=None):
+        venta = super().get_object(queryset)
+        if venta.estado != 'pagado':
+            raise Http404("La venta aún no está pagada")
+        return venta
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Eliminar Venta'
+        context['titulo'] = f'Factura {self.object.numero_factura}'
         return context
 
-# venta/views.py
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.urls import reverse
 
-def crear_venta_desde_pedido(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id)
+class VentaFinalizarView(View):
+    def post(self, request, pk):
+        venta = get_object_or_404(Venta, pk=pk)
 
-    # Evitar duplicados: si ya existe una venta pagada para este pedido
-    if Venta.objects.filter(pedido=pedido, estado="pagado").exists():
-        messages.error(request, f"El pedido {pedido.id} ya fue facturado.")
-        return redirect('apl:pedido:detalle_pedido', pedido_id=pedido.id)  # ajusta esta url si es diferente
+        if venta.estado == 'pagado':
+            messages.warning(request, 'Esta venta ya está finalizada.')
+            return redirect('apl:venta:venta_list')
 
-    # Si ya existe una venta en borrador o pendiente, la reutilizamos
-    venta_existente = Venta.objects.filter(pedido=pedido).first()
-    if venta_existente:
-        messages.info(request, f"Ya existe una venta para este pedido. Redirigiendo...")
-        return redirect('apl:venta:editar_venta', pk=venta_existente.pk)
+        # 🔹 Obtener método de pago
+        metodo_pago = request.POST.get('metodo_pago')
 
-    # Crear la venta automáticamente
-    venta = Venta.objects.create(
-        pedido=pedido,
-        total=pedido.total,                    # asumiendo que Pedido tiene campo total
-        metodo_pago="efectivo",                # puedes cambiar o luego editar
-        estado="pendiente",
-        admin=request.user.administrador if hasattr(request.user, 'administrador') else None
-    )
+        if not metodo_pago:
+            messages.error(request, 'Debe seleccionar un método de pago.')
+            return redirect('apl:venta:venta_detail', pk=venta.pk)
 
-    messages.success(request, f"Venta #{venta.id} creada correctamente desde el pedido {pedido.id}")
-    return redirect('apl:venta:editar_venta', pk=venta.pk)
+        # 🔹 Guardar datos
+        venta.metodo_pago = metodo_pago
+        venta.estado = 'pagado'
+        venta.save()
+
+        # 🔄 Marcar pedido como entregado
+        if venta.pedido:
+            venta.pedido.estado = 'entregado'
+            venta.pedido.save()
+
+        messages.success(
+            request,
+            f'Venta #{venta.numero_factura} finalizada correctamente.'
+        )
+
+        return redirect('apl:venta:venta_detail', pk=venta.pk)

@@ -18,4 +18,7 @@ urlpatterns = [
     path('pedidos/actualizar-estado/<int:pk>/', PedidoUpdateEstadoView.as_view(), name='pedido_update_estado'),
     path('pedidos/cancelar/<int:pk>/', PedidoDeleteView.as_view(), name='pedido_delete'),
     path('pedidos/limpiar-carrito/', LimpiarCarritoView.as_view(), name='limpiar_carrito'),
+    path('pedidos/<int:pk>/editar/', PedidoUpdate.as_view(), name='pedido_editar'),
+
+
 ]
