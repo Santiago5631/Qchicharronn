@@ -97,8 +97,6 @@ WSGI_APPLICATION = 'configuracion.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -116,8 +114,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -135,8 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'es'
 
 USE_I18N = True
@@ -145,8 +139,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [ BASE_DIR / "static"]
@@ -162,62 +154,53 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 horas
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#AUTH_USER_MODEL = 'usuario.Usuario'
-
+AUTH_USER_MODEL = 'usuario.Usuario'
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',        # login normal
+    'django.contrib.auth.backends.ModelBackend',  # login normal
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 ]
 
 # Redirect después del login
-# Redirección después de login normal y después de login con Google/Facebook
-LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'                  # cambia esto por tu ruta real
-ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'          # muy importante esta también
-LOGOUT_REDIRECT_URL = '/accounts/login/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
+LOGOUT_REDIRECT_URL = '/login/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
+
+# === CONFIGURACIÓN MÍNIMA Y SEGURA PARA LOGIN ===
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
-# === CONFIGURACIÓN PARA LOGIN CON GOOGLE 100% FUNCIONAL ===
-ACCOUNT_AUTHENTICATION_METHOD = 'email'        # Se autentica solo por email
-ACCOUNT_UNIQUE_EMAIL = True                    # Evita emails duplicados
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
 
-# ESTA ES LA CLAVE para que el "Olvidé mi contraseña" funcione con cuentas de Google
+# DESACTIVAR REGISTRO PÚBLICO Y SOCIAL LOGINS
+ACCOUNT_ALLOW_REGISTRATION = False
+ACCOUNT_SIGNUP_FORM_CLASS = None
+SOCIALACCOUNT_PROVIDERS = {}  # Desactiva Google, Facebook, etc.
+
+# Recuperación de contraseña
+ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = True
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 
-# Permite recuperar contraseña incluso si el usuario nunca puso una (solo Google)
-ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = True
-# Keys reCAPTCHA (obténlas en https://www.google.com/recaptcha/admin)
+# reCAPTCHA
 RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
-#opcionales
-NOCAPTCHA = True    # para reCaptcha v2 "No Captcha"
+NOCAPTCHA = True
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-        'FETCH_USERINFO': True,   # ← trae nombre completo
-    }
-}
+# Email - Gmail real
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'qchicharron32@gmail.com'
+EMAIL_HOST_PASSWORD = 'zqni cgkh qafi unzm'
+DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <qchicharron32@gmail.com>'
+SERVER_EMAIL = 'qchicharron32@gmail.com'
 
-SOCIALACCOUNT_LOGIN_ON_GET = True   # ← esta línea elimina la página de "Continue"
-# Esto evita que aparezca la pantalla de confirmación después de Google
-SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
-
-# Para que los emails se vean en la consola mientras estás en desarrollo
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
-SERVER_EMAIL = 'Q\'chicharron Local <no-reply@qchicharron.local>'
-
-# En producción cambiarás esto por SMTP (Gmail, SendGrid, etc.)
-# Pero ahora con console te llega todo a la terminal y es perfecto para probar
-
+# Mensajes
 MESSAGE_TAGS = {
     messages.DEBUG: "info",
     messages.INFO: "info",
@@ -225,3 +208,7 @@ MESSAGE_TAGS = {
     messages.WARNING: "warning",
     messages.ERROR: "error",
 }
+ACCOUNT_FORMS = {
+    'reset_password': 'usuario.forms.CustomPasswordResetForm',
+}
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
