@@ -1,5 +1,4 @@
-{% extends "templates/dashboard/layout.html" %}
-{% load static %}
+{% extends "dashboard/layout.html" %}
 {% block content %}
 
 <!-- ✅ INCLUIR CSS -->
@@ -23,7 +22,6 @@
         </a>
     </div>
 </div>
-
 <div class="card-body">
     <div class="table-responsive">
         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -45,7 +43,7 @@
                     <td>{{ c.id_factura }}</td>
                     <td>{{ c.producto.nombre }}</td>
                     <td>{{ c.fecha }}</td>
-                    <td>S/. {{ c.precio }}</td>
+                    <td>{{ c.precio }}</td>
                     <td>{{ c.proveedor }}</td>
                     <td>{{ c.cantidad }}</td>
                     <td>{{ c.unidad }}</td>
