@@ -16,11 +16,10 @@
 
     <div class="card-body">
         <div class="table-responsive">
-
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead class="text-center">
                     <tr>
-                        <th>ID Producto</th>
+                        <th>ID</th>
                         <th>Nombre</th>
                         <th>Marca</th>
                         <th>Categoría</th>
@@ -42,24 +41,21 @@
                 <tbody>
                     {% for p in productos %}
                     <tr>
-                        <td>{{ p.id }}</td>
+                        <td class="text-center">{{ p.id }}</td>
                         <td>{{ p.nombre }}</td>
                         <td>{{ p.marca }}</td>
                         <td>{{ p.categoria }}</td>
                         <td>{{ p.proveedor }}</td>
                         <td>{{ p.fecha }}</td>
                         <td>{{ p.unidad }}</td>
-                        <td>{{ p.stock }}</td>
+                        <td class="text-center">{{ p.stock }}</td>
                         <td>{{ p.tipo_uso }}</td>
-
                         <td class="text-center">
-
                             <a href="{% url 'apl:producto:editar_producto' p.id %}">
                                 <button type="button" class="btn btn-warning btn-sm d-inline mb-1" title="Editar">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-
                             <button
                                 type="button"
                                 class="btn btn-danger btn-sm d-inline mb-1 btn-delete"
@@ -67,11 +63,8 @@
                                 data-name="{{ p.nombre }}">
                                 <i class="bi bi-trash3-fill" title="Eliminar"></i>
                             </button>
-
                         </td>
-
                     </tr>
-
                     {% empty %}
                     <tr>
                         <td colspan="10" class="text-center">No hay productos registrados.</td>
@@ -79,7 +72,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
         </div>
     </div>
 </div>
@@ -87,32 +79,28 @@
 {% endblock %}
 
 {% block js_plugins %}
-<!-- DataTables -->
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
-<link rel="stylesheet" href="{% static 'lib/vendor/datatables/dataTables.bootstrap4.min.css' %}">
-
-<script src="{% static 'lib/vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <!-- SweetAlert2 -->
-<script src="{% static 'lib/libp/sweetalert2/sweetalert2.all.min.js' %}"></script>
-{% endblock %}
-
-{% block js_custom %}
-<script src="{% static 'lib/vendor/sweetalert2/sweetalert2.all.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock %}
 
 {% block js_init %}
 <script>
 $(document).ready(function() {
-
     // Inicializar DataTable
     $('#dataTable').DataTable({
         "language": {
-            "lengthMenu": "Mostrar _MENU_ registros",
-            "zeroRecords": "No hay datos",
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "zeroRecords": "No se encontraron resultados",
             "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Sin registros",
-            "infoFiltered": "(filtrado de _MAX_ total)",
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)",
             "search": "Buscar:",
             "paginate": {
                 "first": "Primero",
@@ -121,7 +109,9 @@ $(document).ready(function() {
                 "previous": "Anterior"
             }
         },
-        "pageLength": 10
+        "pageLength": 10,
+        "responsive": true,
+        "autoWidth": false
     });
 
     // SweetAlert Delete
@@ -133,17 +123,15 @@ $(document).ready(function() {
 
         Swal.fire({
             title: "¿Estás seguro?",
-            text: `Se eliminará ${name}`,
+            text: `Se eliminará "${name}"`,
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
+            confirmButtonColor: "#e74a3b",
+            cancelButtonColor: "#858796",
             confirmButtonText: "Sí, eliminar",
             cancelButtonText: "Cancelar"
         }).then((result) => {
-
             if (result.isConfirmed) {
-
                 $.ajax({
                     url: url,
                     type: "POST",
@@ -151,26 +139,29 @@ $(document).ready(function() {
                         csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
                     },
                     success: function (response) {
-
                         if (response.status === "ok") {
-                            Swal.fire(
-                                "Eliminado!",
-                                `${name} fue eliminado correctamente.`,
-                                "success"
-                            ).then(() => {
+                            Swal.fire({
+                                title: "¡Eliminado!",
+                                text: `"${name}" fue eliminado correctamente.`,
+                                icon: "success",
+                                confirmButtonColor: "#1cc88a"
+                            }).then(() => {
                                 location.reload();
                             });
                         }
                     },
                     error: function () {
-                        Swal.fire("Error", "No se pudo eliminar", "error");
+                        Swal.fire({
+                            title: "Error",
+                            text: "No se pudo eliminar el producto",
+                            icon: "error",
+                            confirmButtonColor: "#e74a3b"
+                        });
                     }
                 });
-
             }
         });
     });
-
 });
 </script>
 {% endblock %}
