@@ -125,7 +125,24 @@ class Pedido(models.Model):
 
     numero_pedido = models.CharField(max_length=20, unique=True, editable=False)
     cliente_nombre = models.CharField(max_length=200, verbose_name='Nombre del Cliente')
-    mesa_numero = models.CharField(max_length=20, blank=True, null=True, verbose_name='Número de Mesa')
+    TIPO_PEDIDO_CHOICES = (
+        ('mesa', 'En mesa'),
+        ('llevar', 'Para llevar'),
+    )
+
+    tipo_pedido = models.CharField(
+        max_length=10,
+        choices=TIPO_PEDIDO_CHOICES,
+        default='mesa'
+    )
+
+    mesa = models.ForeignKey(
+        'mesa.Mesa',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
     estado = models.CharField(
         max_length=20,
         choices=ESTADO_CHOICES,
@@ -171,35 +188,44 @@ class Pedido(models.Model):
 
 
 class PedidoItem(models.Model):
-    """Items individuales de cada pedido"""
     pedido = models.ForeignKey(
         Pedido,
         on_delete=models.CASCADE,
-        related_name='items',
-        verbose_name='Pedido'
+        related_name='items'
     )
+
     menu = models.ForeignKey(
         Menu,
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         verbose_name='Menú'
     )
-    cantidad = models.PositiveIntegerField(
-        default=1,
-        validators=[MinValueValidator(1)],
-        verbose_name='Cantidad'
+
+    nombre_temporal = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='Nombre personalizado'
     )
+
+    cantidad = models.PositiveIntegerField(default=1)
+
     precio_unitario = models.DecimalField(
         max_digits=10,
-        decimal_places=2,
-        verbose_name='Precio Unitario'
+        decimal_places=2
     )
+
     descuento_aplicado = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0.00,
-        verbose_name='Descuento (%)'
+        default=0.00
     )
-    observaciones = models.TextField(blank=True, null=True, verbose_name='Observaciones')
+
+    observaciones = models.TextField(blank=True, null=True)
+
+
+
 
     class Meta:
         verbose_name = "Item del Pedido"

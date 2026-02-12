@@ -1,175 +1,118 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render
-from .models import *
-from .forms import InformeForm
-import openpyxl
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from django.db.models import Sum
+from venta.models import Venta
+from compra.models import Compra
+from inventario.models import InventarioDiario  # ajusta la app si es diferente
+from menu.models import Menu
+from django.utils import timezone
+import datetime
 
 
-def listar_informes(request):
-    data = {
-        "titulo": "Listado de Informes",
-        "informes": Informe.objects.all()
+def informe_list(request):
+    tipo = request.GET.get('tipo', 'ventas')
+    fecha_inicio_str = request.GET.get('fecha_inicio')
+    fecha_fin_str = request.GET.get('fecha_fin')
+
+    contexto = {
+        'titulo': 'Consulta de Reportes',
+        'tipo_actual': tipo,
+        'fecha_inicio': fecha_inicio_str,
+        'fecha_fin': fecha_fin_str,
+        'mensaje': "Selecciona un tipo y un rango de fechas para consultar.",
+        'resultados': None,
+        'total': 0,
+        'cantidad': 0,
     }
-    return render(request, 'modulos/informe.html', data)
 
+    fecha_inicio = None
+    fecha_fin = None
+    if fecha_inicio_str:
+        try:
+            fecha_inicio = datetime.datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+        except:
+            contexto['mensaje'] = "Formato de fecha de inicio inválido."
+    if fecha_fin_str:
+        try:
+            fecha_fin = datetime.datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
+        except:
+            contexto['mensaje'] = "Formato de fecha de fin inválido."
 
-class InformeListView(ListView):
-    model = Informe
-    template_name = 'modulos/informe.html'
-    context_object_name = 'informes'
+    if fecha_inicio and fecha_fin:
+        if fecha_inicio > fecha_fin:
+            contexto['mensaje'] = "La fecha de inicio no puede ser mayor que la fecha final."
+        else:
+            try:
+                if tipo == 'ventas':
+                    qs = Venta.objects.filter(
+                        fecha__gte=fecha_inicio,
+                        fecha__lte=fecha_fin
+                    ).select_related('pedido', 'admin').order_by('-fecha')
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    total_sum = qs.aggregate(total_sum=Sum('total'))['total_sum']
+                    contexto['total'] = total_sum if total_sum is not None else 0
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} ventas - Total: ${contexto['total']:,.2f}"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Listado de Informes'
-        return context
+                elif tipo == 'compras':
+                    qs = Compra.objects.filter(
+                        fecha__gte=fecha_inicio,
+                        fecha__lte=fecha_fin
+                    ).select_related('producto', 'proveedor').order_by('-fecha')
 
+                    # Calculamos subtotal en cada objeto
+                    for compra in qs:
+                        compra.subtotal = compra.precio * compra.cantidad
 
-class InformeCreateView(CreateView):
-    model = Informe
-    template_name = 'forms/formulario_crear.html'
-    fields = ['titulo', 'descripcion', 'tipo', 'fecha_inicio', 'fecha_fin', 'creado_por']
-    success_url = '/apps/informes/listar/'
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    contexto['total'] = sum(compra.subtotal for compra in qs)
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} compras - Total: ${contexto['total']:,.2f}"
 
-    def form_valid(self, form):
-        return super().form_valid(form)
+                elif tipo == 'pedidos':
+                    from pedido.models import Pedido
+                    qs = Pedido.objects.filter(
+                        fecha__gte=fecha_inicio,
+                        fecha__lte=fecha_fin
+                    ).prefetch_related('detalles').order_by('-fecha')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Crear Informe'
-        context['modulo'] = "informe"
-        return context
+                    # Calcular el total de cada pedido
+                    for pedido in qs:
+                        total = 0
+                        for detalle in pedido.detalles.all():
+                            total += detalle.menu.precio * detalle.cantidad
+                        pedido.total_calculado = total
 
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    contexto['total'] = sum(p.total_calculado for p in qs)
+                    contexto[
+                        'mensaje'] = f"Se encontraron {contexto['cantidad']} pedidos - Total: ${contexto['total']:,.2f}"
 
-class InformeUpdateView(UpdateView):
-    model = Informe
-    template_name = 'forms/formulario_actualizacion.html'
-    fields = ['titulo', 'descripcion', 'tipo', 'fecha_inicio', 'fecha_fin', 'creado_por']
-    success_url = '/apps/informes/listar/'
+                elif tipo == 'inventario':
+                    qs = InventarioDiario.objects.filter(
+                        fecha__gte=fecha_inicio,
+                        fecha__lte=fecha_fin
+                    ).order_by('-fecha')
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    contexto['abiertos'] = qs.filter(estado='abierto').count()
+                    contexto['cerrados'] = qs.filter(estado='cerrado').count()
+                    contexto[
+                        'mensaje'] = f"{contexto['cantidad']} registros diarios encontrados ({contexto['abiertos']} abiertos, {contexto['cerrados']} cerrados)"
 
-    def form_valid(self, form):
-        return super().form_valid(form)
+                elif tipo == 'menu':
+                    qs = Menu.objects.all().order_by('nombre')
+                    contexto['resultados'] = qs
+                    contexto['cantidad'] = qs.count()
+                    contexto[
+                        'mensaje'] = f"Mostrando {contexto['cantidad']} productos del menú actual (sin filtro por fecha)"
 
+                else:
+                    contexto['mensaje'] = "Tipo de reporte no reconocido."
 
-class InformeDeleteView(DeleteView):
-    model = Informe
-    template_name = 'forms/confirmar_eliminacion.html'
-    success_url = '/apps/informes/listar/'
+            except Exception as e:
+                contexto['mensaje'] = f"Error al consultar: {str(e)}"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Eliminar Informe'
-        return context
-
-
-from django.shortcuts import render
-
-def exportar_excel(request):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Informes"
-
-    # Encabezados exactamente como en la tabla HTML
-    encabezados = [
-        'Título',
-        'Tipo',
-        'Rango de Fechas',
-        'Creado Por',
-        'Fecha de Creación'
-    ]
-    ws.append(encabezados)
-
-    # Todos los informes
-    informes = Informe.objects.select_related('creado_por').all()
-
-    for informe in informes:
-        rango_fechas = ""
-        if informe.fecha_inicio and informe.fecha_fin:
-            rango_fechas = f"{informe.fecha_inicio.strftime('%d/%m/%Y')} a {informe.fecha_fin.strftime('%d/%m/%Y')}"
-        elif informe.fecha_inicio:
-            rango_fechas = f"Desde {informe.fecha_inicio.strftime('%d/%m/%Y')}"
-        elif informe.fecha_fin:
-            rango_fechas = f"Hasta {informe.fecha_fin.strftime('%d/%m/%Y')}"
-
-        fila = [
-            informe.titulo or '',
-            informe.get_tipo_display(),  # ← Aquí usamos el display del choice
-            rango_fechas,
-            informe.creado_por.username if informe.creado_por else 'N/A',
-            informe.fecha_creacion.strftime('%d/%m/%Y %H:%M') if informe.fecha_creacion else '',
-        ]
-        ws.append(fila)
-
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename="informes.xlsx"'
-    wb.save(response)
-    return response
-
-
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from io import BytesIO
-
-
-def exportar_pdf(request):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=40, bottomMargin=40)
-    elements = []
-    styles = getSampleStyleSheet()
-
-    # Título
-    elements.append(Paragraph("Listado de Informes", styles['Title']))
-    elements.append(Spacer(1, 20))
-
-    # Datos
-    data = [['Título', 'Tipo', 'Rango de Fechas', 'Creado Por', 'Fecha de Creación']]
-
-    informes = Informe.objects.select_related('creado_por').all()
-
-    for informe in informes:
-        rango = ""
-        if informe.fecha_inicio and informe.fecha_fin:
-            rango = f"{informe.fecha_inicio.strftime('%d/%m/%Y')} a {informe.fecha_fin.strftime('%d/%m/%Y')}"
-        elif informe.fecha_inicio:
-            rango = f"Desde {informe.fecha_inicio.strftime('%d/%m/%Y')}"
-        elif informe.fecha_fin:
-            rango = f"Hasta {informe.fecha_fin.strftime('%d/%m/%Y')}"
-
-        data.append([
-            informe.titulo or '',
-            informe.get_tipo_display(),
-            rango,
-            informe.creado_por.username if informe.creado_por else 'N/A',
-            informe.fecha_creacion.strftime('%d/%m/%Y %H:%M') if informe.fecha_creacion else '',
-        ])
-
-    # Tabla con estilo bonito
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007bff')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-    ]))
-
-    elements.append(table)
-    doc.build(elements)
-
-    buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="informes.pdf"'
-    return response
-# Create your views here.
+    return render(request, 'modulos/informe.html', contexto)

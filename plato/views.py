@@ -68,7 +68,22 @@ class PlatoCreateView(SuccessMessageMixinCustom, CreateView):
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         productos_json = request.POST.get("productos_json", "[]")
-        productos_data = json.loads(productos_json)
+
+        # Validar que productos_json no esté vacío o sea solo espacios
+        if not productos_json or productos_json.strip() == "":
+            productos_json = "[]"
+
+        try:
+            productos_data = json.loads(productos_json)
+        except json.JSONDecodeError:
+            messages.error(request, "Error al procesar los productos. Por favor, intenta nuevamente.")
+            return render(request, self.template_name, {
+                'form': form,
+                'titulo': 'Crear Plato',
+                'entidad': 'Plato',
+                'productos': Producto.objects.all(),
+                'unidades': Unidad.objects.all(),
+            })
 
         if form.is_valid():
             plato = form.save()
