@@ -8,6 +8,13 @@ from django.utils import timezone
 from openpyxl import Workbook
 from xhtml2pdf import pisa
 import io
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import inch
 
 
 def listar_compras(request):
@@ -73,54 +80,116 @@ def exportar_compras_excel(request):
     wb = Workbook()
     ws = wb.active
     ws.title = "Compras"
-    ws.append(["ID", "Producto", "Fecha", "Precio", "Proveedor", "Cantidad", "Unidad"])
 
-    for c in Compra.objects.all().order_by('-fecha'):
+    # Encabezados exactamente como en la tabla HTML
+    encabezados = ['ID', 'Producto', 'Fecha', 'Precio', 'Proveedor', 'Cantidad', 'Unidad']
+    ws.append(encabezados)
+
+    # Estilo de encabezado
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="007bff", end_color="007bff", fill_type="solid")
+    align_center = Alignment(horizontal="center", vertical="center")
+
+    for col in range(1, len(encabezados) + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = align_center
+
+    # Datos
+    compras = Compra.objects.select_related('producto', 'proveedor').all().order_by('-fecha')
+    total_precio = 0
+
+    for c in compras:
+        precio = c.precio or 0
+        total_precio += precio
+
         ws.append([
-            c.id_factura,
-            c.producto.nombre if hasattr(c.producto, 'nombre') else str(c.producto),
-            c.fecha.strftime('%Y-%m-%d'),
-            c.precio,
-            str(c.proveedor),
-            c.cantidad,
-            str(c.unidad)
+            c.id_factura or '',
+            c.producto.nombre if c.producto else 'Sin producto',
+            c.fecha.strftime('%d/%m/%Y') if c.fecha else '',
+            f"${precio:,.2f}",
+            str(c.proveedor) if c.proveedor else 'Sin proveedor',
+            c.cantidad or 0,
+            str(c.unidad) if c.unidad else '',
         ])
 
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="compras_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    # Total final
+    ws.append([])
+    ws.append(['', '', '', f'Total General:', f"${total_precio:,.2f}", '', ''])
+
+    # Ajustar ancho de columnas
+    for i in range(1, 8):
+        ws.column_dimensions[get_column_letter(i)].width = 15
+    ws.column_dimensions[get_column_letter(2)].width = 30  # Producto más ancho
+
+    # Nombre con fecha
+    filename = f"compras_{timezone.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
 
-
 # -------------------- EXPORTAR A PDF --------------------
 def exportar_compras_pdf(request):
-    compras = Compra.objects.all().order_by('-fecha')
-    html = render_to_string('modulos/compra_pdf.html', {
-        'compras': compras,
-        'titulo': 'Listado de Compras',
-        'fecha_actual': timezone.now()  # Agrega esta línea
-    })
-    result = io.BytesIO()
-    pisa_status = pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=result)
-    if pisa_status.err:
-        return HttpResponse("Error al generar el PDF", status=500)
-    response = HttpResponse(result.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="compras_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-    return response
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=40)
+    elements = []
+    styles = getSampleStyleSheet()
 
+    # Título
+    titulo = Paragraph(f"Listado de Compras<br/><small>Generado el {timezone.now().strftime('%d/%m/%Y %H:%M')}</small>",
+                       styles['Title'])
+    elements.append(titulo)
+    elements.append(Spacer(1, 20))
 
-# -------------------- FACTURA INDIVIDUAL --------------------
-def generar_factura_pdf(request, pk):
-    compra = get_object_or_404(Compra, pk=pk)
-    html = render_to_string('modulos/factura_compra.html', {
-        'compra': compra,
-        'fecha_actual': timezone.now()
-    })
-    result = io.BytesIO()
-    pisa_status = pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=result)
-    if pisa_status.err:
-        return HttpResponse("Error al generar la factura", status=500)
-    response = HttpResponse(result.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="factura_compra_{compra.id_factura}.pdf"'
+    # Datos
+    data = [['ID', 'Producto', 'Fecha', 'Precio', 'Proveedor', 'Cantidad', 'Unidad']]
+
+    compras = Compra.objects.select_related('producto', 'proveedor').all().order_by('-fecha')
+    total_precio = 0
+
+    for c in compras:
+        precio = c.precio or 0
+        total_precio += precio
+        data.append([
+            c.id_factura or '-',
+            c.producto.nombre if c.producto else 'Sin producto',
+            c.fecha.strftime('%d/%m/%Y') if c.fecha else '-',
+            f"${precio:,.2f}",
+            str(c.proveedor) if c.proveedor else 'Sin proveedor',
+            str(c.cantidad or ''),
+            str(c.unidad or ''),
+        ])
+
+    # Fila de total
+    data.append(['', '', 'TOTAL:', f"${total_precio:,.2f}", '', '', ''])
+
+    # Tabla con estilo
+    table = Table(data, colWidths=[50, 120, 70, 70, 100, 60, 60])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007bff')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.HexColor('#f8f9fa')),
+        ('BACKGROUND', (-1, -1), (-1, -1), colors.HexColor('#e9ecef')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    filename = f"compras_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
-# Create your views here.

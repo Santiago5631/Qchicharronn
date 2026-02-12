@@ -1,0 +1,113 @@
+{% extends "dashboard/layout.html" %}
+{% block content %}
+
+<div class="card shadow mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0 font-weight-bold text-primary">
+            Factura {{ venta.numero_factura }}
+        </h5>
+
+        {% if venta.estado == 'pendiente' %}
+            <span class="badge bg-warning">Pendiente</span>
+        {% else %}
+            <span class="badge bg-success">Pagado</span>
+        {% endif %}
+    </div>
+
+    <div class="card-body">
+
+        <!-- Datos del cliente -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <strong>Cliente:</strong> {{ venta.cliente_nombre }}<br>
+                <strong>Tipo pedido:</strong> {{ venta.tipo_pedido }}<br>
+                {% if venta.mesa %}
+                    <strong>Mesa:</strong> {{ venta.mesa }}
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 text-end">
+                <strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}<br>
+                <strong>Pedido:</strong> #{{ venta.pedido.numero_pedido }}
+            </div>
+        </div>
+
+        <!-- Tabla productos -->
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in venta.items.all %}
+
+                    <tr>
+                        <td>{{ item.nombre }}</td>
+                        <td class="text-center">{{ item.cantidad }}</td>
+                        <td class="text-end">$ {{ item.precio_unitario }}</td>
+                        <td class="text-end">$ {{ item.subtotal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totales -->
+        <div class="row justify-content-end mt-4">
+            <div class="col-md-4">
+                <p><strong>Subtotal:</strong> $ {{ venta.subtotal }}</p>
+                <p><strong>Descuento:</strong> $ {{ venta.descuento_total }}</p>
+                <h5><strong>Total:</strong> $ {{ venta.total }}</h5>
+            </div>
+        </div>
+
+        {% if venta.estado == 'pendiente' %}
+        <!-- Finalizar -->
+        <form method="post" action="{% url 'apl:venta:venta_finalizar' venta.pk %}">
+            {% csrf_token %}
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <label>Método de Pago</label>
+                    <select name="metodo_pago" class="form-control" required>
+                        <option value="">Seleccione...</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="tarjeta">Tarjeta</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'apl:menu:pedido_editar' venta.pedido.pk %}?from=venta"
+   class="btn btn-warning">
+    Editar Pedido
+</a>
+
+                <button class="btn btn-success">
+                    Finalizar Venta
+                </button>
+
+                <a href="{% url 'apl:venta:venta_list' %}"
+                   class="btn btn-secondary">
+                    Volver
+                </a>
+            </div>
+        </form>
+        {% else %}
+            <a href="{% url 'apl:venta:factura' venta.pk %}"
+               class="btn btn-dark mt-3">
+                Ver Factura
+            </a>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

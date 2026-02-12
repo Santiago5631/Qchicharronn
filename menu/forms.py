@@ -132,15 +132,15 @@ MenuProductoFormSet = inlineformset_factory(
 )
 
 class PedidoForm(forms.ModelForm):
-    """Formulario para crear pedidos - SOLO datos del cliente"""
+    """Formulario para crear pedidos"""
 
     class Meta:
         model = Pedido
         fields = [
             'cliente_nombre',
-            'mesa_numero',
+            'tipo_pedido',
+            'mesa',
             'observaciones',
-            # ← ¡ELIMINADO 'estado' DE AQUÍ!
         ]
         widgets = {
             'cliente_nombre': forms.TextInput(attrs={
@@ -149,19 +149,22 @@ class PedidoForm(forms.ModelForm):
                 'required': True,
                 'autofocus': True,
             }),
-            'mesa_numero': forms.TextInput(attrs={
+            'tipo_pedido': forms.Select(attrs={
                 'class': 'form-control',
-                'placeholder': 'Número de mesa (opcional)',
+            }),
+            'mesa': forms.Select(attrs={
+                'class': 'form-control',
             }),
             'observaciones': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': 'Observaciones adicionales (ej: para llevar, sin picante, etc.)',
+                'placeholder': 'Observaciones (opcional)',
                 'rows': 3,
             }),
         }
         labels = {
             'cliente_nombre': 'Nombre del Cliente',
-            'mesa_numero': 'Mesa N°',
+            'tipo_pedido': 'Tipo de Pedido',
+            'mesa': 'Mesa',
             'observaciones': 'Observaciones',
         }
 
@@ -173,6 +176,20 @@ class PedidoForm(forms.ModelForm):
         if len(nombre) < 3:
             raise forms.ValidationError("El nombre debe tener al menos 3 caracteres.")
         return nombre
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo = cleaned_data.get('tipo_pedido')
+        mesa = cleaned_data.get('mesa')
+
+        if tipo == 'mesa' and not mesa:
+            raise forms.ValidationError('Debe seleccionar una mesa.')
+
+        if tipo == 'llevar':
+            cleaned_data['mesa'] = None
+
+        return cleaned_data
+
 
 class AgregarAlPedidoForm(forms.Form):
     """Formulario simple para agregar un menú al pedido"""

@@ -1,4 +1,4 @@
-{% extends "templates/dashboard/layout.html" %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 
 {% block extra_css %}
@@ -275,10 +275,20 @@
 
             <!-- Botones de Acción -->
             <div class="d-grid gap-2 no-print">
-                <button onclick="window.print()" class="btn btn-info print-button">
-                    <i class="bi bi-printer me-2"></i>
-                    Imprimir Ticket
-                </button>
+                {% if pedido.estado not in 'entregado cancelado' %}
+    <a href="{% url 'apl:menu:pedido_editar' pedido.id %}"
+       class="btn btn-warning">
+        ✏️ Editar Pedido
+    </a>
+{% endif %}
+
+                {% if pedido.estado == 'entregado' %}
+    <button onclick="window.print()" class="btn btn-info print-button">
+        <i class="bi bi-printer me-2"></i>
+        Imprimir Ticket
+    </button>
+{% endif %}
+
                 
                 <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left me-2"></i>

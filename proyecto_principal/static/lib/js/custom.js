@@ -1,22 +1,7 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const buttonLabels = {
-        "Readable Font": "Fuente Legible",
-        "Highlight Links": "Resaltar Enlaces",
-        "Highlight Title": "Resaltar Título",
-        "Monochrome": "Monocromo",
-        "Low Saturation": "Baja Saturación",
-        "High Saturation": "Alta Saturación",
-        "High Contrast": "Alto Contraste",
-        "Light Contrast": "Bajo Contraste",
-        "Big Cursor": "Cursor Grande",
-        "Stop Animations": "Detener Animaciones",
-        "Reading Guide": "Guía de Lectura"
-    };
+// Custom sidebar functionality
+// Este archivo se carga para evitar errores 404 en el template
 
-    document.querySelectorAll('.asw-btn').forEach(button => {
-        const key = button.querySelector('.material-icons').nextSibling.nodeValue.trim();
-        if (buttonLabels[key]) {
-            button.querySelector('.material-icons').nextSibling.nodeValue = buttonLabels[key];
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidad personalizada del sidebar si es necesaria
+    console.log('Custom sidebar loaded');
 });

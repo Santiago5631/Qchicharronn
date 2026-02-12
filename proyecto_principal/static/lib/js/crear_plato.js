@@ -1,19 +1,3 @@
-function abrirModal() {
-    document.getElementById('modalProducto').style.display = 'block';
-}
-
-function cerrarModal() {
-    document.getElementById('modalProducto').style.display = 'none';
-}
-
-document.getElementById('btnAgregarProducto').addEventListener('click', abrirModal);
-
-window.onclick = function(event) {
-    const modal = document.getElementById('modalProducto');
-    if (event.target === modal) {
-        cerrarModal();
-    }
-
 $(document).ready(function () {
     const tablaBody = $("#tablaProductos tbody");
     let productos = [];
@@ -74,6 +58,7 @@ $(document).ready(function () {
         productos.splice(index, 1);
         actualizarTabla();
     });
-});
 
-}
+    // Inicializar el campo oculto con array vacío
+    $("#productos_json").val("[]");
+});

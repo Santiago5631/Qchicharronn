@@ -1,4 +1,4 @@
-{% extends "templates/dashboard/layout.html" %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 
 {% block title %}Crear Pedido{% endblock %}
@@ -16,7 +16,7 @@
             {% for categoria, menus in menus_por_categoria.items %}
             <div class="card mb-4 shadow-sm">
                 <div class="card-header bg-primary text-white fw-bold">
-                    {{ categoria }}
+                    Productos
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -71,31 +71,85 @@
                 </div>
 
                 <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    {% if items_carrito %}
-                        {% for item in items_carrito %}
-                        <div class="border-bottom pb-2 mb-2">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <strong>{{ item.cantidad }}×</strong> {{ item.menu.nombre }}
-                                    {% if item.observaciones %}
-                                    <br><small class="text-muted">{{ item.observaciones }}</small>
-                                    {% endif %}
-                                </div>
-                                <div class="text-end">
-                                    <strong>${{ item.subtotal|floatformat:2 }}</strong>
-                                    <form method="post" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="accion" value="eliminar">
-                                        <input type="hidden" name="menu_id" value="{{ item.menu.id }}">
-                                        <button type="submit" class="btn btn-sm btn-danger ms-2">×</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-center text-muted my-5">El carrito está vacío</p>
-                    {% endif %}
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+
+    <!-- 🔸 PRODUCTO TEMPORAL (AQUÍ VA) -->
+    <div class="mb-3">
+        <h6 class="text-muted">Producto temporal</h6>
+
+        <form method="post" class="border p-2 rounded bg-light">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="agregar_temporal">
+
+            <input type="text" name="nombre"
+                   class="form-control mb-2"
+                   placeholder="Ej: Adicional de pollo" required>
+
+            <input type="number" name="precio" step="0.01"
+                   class="form-control mb-2"
+                   placeholder="Precio" required>
+
+            <input type="number" name="cantidad" value="1"
+                   class="form-control mb-2" min="1">
+
+            <button class="btn btn-warning w-100">
+                + Agregar producto temporal
+            </button>
+        </form>
+    </div>
+                        {% if items_carrito %}
+    {% for item in items_carrito %}
+
+        {% if item.tipo == 'menu' %}
+            <div class="border-bottom pb-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ item.cantidad }}×</strong> {{ item.menu.nombre }}
+
+                        {% if item.observaciones %}
+                            <br><small class="text-muted">{{ item.observaciones }}</small>
+                        {% endif %}
+                    </div>
+                            <form method="post" class="mt-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="eliminar">
+                        <input type="hidden" name="key" value="{{ item.key }}">
+                        <button class="btn btn-sm btn-outline-danger">
+                            ✖
+                        </button>
+                    </form>
+
+
+                    <div class="text-end">
+                        <strong>${{ item.subtotal|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="border-bottom pb-2 mb-2 bg-light rounded p-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ item.cantidad }}×</strong> {{ item.nombre }}
+                        <br><small class="text-muted">Producto temporal</small>
+                    </div>
+                         <form method="post" class="mt-1">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="eliminar">
+    <input type="hidden" name="key" value="{{ item.key }}">
+    <button class="btn btn-sm btn-outline-danger">✖</button>
+</form>
+
+
+                    <div class="text-end">
+                        <strong>${{ item.subtotal|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <p class="text-center text-muted my-5">El carrito está vacío</p>
+{% endif %}
                 </div>
 
                 <div class="card-footer bg-light">
@@ -125,17 +179,36 @@
                             {{ form.cliente_nombre }}
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Mesa</label>
-                            {{ form.mesa_numero }}
-                        </div>
+    <label class="form-label fw-bold">Tipo de pedido</label>
+    {{ form.tipo_pedido }}
+</div>
+
+<div class="mb-3" id="mesa-container">
+    <label class="form-label fw-bold">Mesa</label>
+    {{ form.mesa }}
+    <small class="text-muted">
+        Solo mesas disponibles
+    </small>
+</div>
+
                         <div class="mb-3">
                             <label class="form-label">Observaciones</label>
                             {{ form.observaciones }}
                         </div>
 
-                        <button type="submit" class="btn btn-success btn-lg w-100" {% if not items_carrito %}disabled{% endif %}>
-                            Confirmar Pedido
-                        </button>
+                        {% if editando %}
+    <button type="submit"
+            class="btn btn-warning btn-lg w-100"
+            {% if not items_carrito %}disabled{% endif %}>
+        🔄 Actualizar Pedido
+    </button>
+{% else %}
+    <button type="submit"
+            class="btn btn-success btn-lg w-100"
+            {% if not items_carrito %}disabled{% endif %}>
+        ✅ Confirmar Pedido
+    </button>
+{% endif %}
                     </form>
                 </div>
             </div>
@@ -143,4 +216,30 @@
 
     </div>
 </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tipoPedido = document.getElementById('id_tipo_pedido');
+    const mesaContainer = document.getElementById('mesa-container');
+
+    function toggleMesa() {
+        if (!tipoPedido) return;
+
+        if (tipoPedido.value === 'llevar') {
+            mesaContainer.style.display = 'none';
+        } else {
+            mesaContainer.style.display = 'block';
+        }
+    }
+
+    toggleMesa();
+    tipoPedido.addEventListener('change', toggleMesa);
+});
+</script>
+
+
+
+
 {% endblock %}
+
