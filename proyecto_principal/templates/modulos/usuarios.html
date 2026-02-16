@@ -20,7 +20,7 @@
                         <th>Estado</th>
                         <th>
                             <a href="{% url 'apl:usuario:crear_usuario' %}">
-                                <button type="button" class="btn btn-success btn-sm">
+                                <button type="button" class="btn btn-success btn-sm" title="Crear Usuario">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
@@ -41,7 +41,7 @@
                         <td>
                             <!-- Editar -->
                             <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
-                                <button type="button" class="btn btn-warning btn-sm mb-1">
+                                <button type="button" class="btn btn-warning btn-sm mb-1" title="Editar Usuario">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
@@ -51,7 +51,7 @@
                                 type="button"
                                 class="btn btn-danger btn-sm mb-1 btn-delete"
                                 data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
-                                data-nombre="{{ u.nombre }}">
+                                data-nombre="{{ u.nombre }}" title="Eliminar Usuario">
                                 <i class="bi bi-trash3-fill"></i>
                             </button>
                         </td>

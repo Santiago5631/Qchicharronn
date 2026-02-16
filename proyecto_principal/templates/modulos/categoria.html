@@ -15,7 +15,7 @@
                             <th>Descripción</th>
                             <th>
                                 <a href="{% url 'apl:categoria:crear_categoria' %}" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle"></i> Agregar Categoría
+                                    <i class="bi bi-plus-circle" title="Crear Categoria"></i> Agregar Categoría
                                 </a>
                             </th>
                         </tr>
@@ -27,9 +27,9 @@
 <td>{{ categoria.descripcion|default:"Sin descripción" }}</td>
 <td class="text-end">
     <a href="{% url 'apl:categoria:editar_categoria' categoria.id %}" class="btn btn-warning btn-sm">
-        <i class="bi bi-pen-fill"></i>
+        <i class="bi bi-pen-fill" title="Editar"></i>
     </a>
-    <a href="{% url 'apl:categoria:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm ms-1">
+    <a href="{% url 'apl:categoria:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm ms-1" title="Eliminar">
         <i class="bi bi-trash3-fill"></i>
     </a>
 </td>

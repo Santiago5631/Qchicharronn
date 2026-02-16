@@ -1,13 +1,13 @@
 {% extends "dashboard/layout.html" %}
 {% block content %}
 <div class="mb-3">
-    <button id="btnPendientes" class="btn btn-warning btn-sm">
+    <button id="btnPendientes" class="btn btn-warning btn-sm" title="Pendientes">
         Pendientes
     </button>
-    <button id="btnPagadas" class="btn btn-success btn-sm">
+    <button id="btnPagadas" class="btn btn-success btn-sm" title="Finalizadas">
         Finalizadas
     </button>
-    <button id="btnTodas" class="btn btn-secondary btn-sm">
+    <button id="btnTodas" class="btn btn-secondary btn-sm" title="Todas">
         Todas
     </button>
 </div>
@@ -56,20 +56,20 @@
                 {% if v.estado == 'pendiente' %}
                 <form method="post" action="{% url 'apl:venta:venta_finalizar' v.pk %}" style="display:inline;">
                     {% csrf_token %}
-                    <button class="btn btn-success btn-sm">
+                    <button class="btn btn-success btn-sm" title="Finalizar">
                         Finalizar
                     </button>
                 </form>
                 {% endif %}
 
                 <a href="{% url 'apl:venta:venta_detail' v.pk %}"
-                   class="btn btn-outline-primary btn-sm">
+                   class="btn btn-outline-primary btn-sm" title="Ver Venta">
                     Ver
                 </a>
 
                 {% if v.estado == 'pagado' %}
                 <a href="{% url 'apl:venta:factura' v.pk %}"
-                   class="btn btn-outline-dark btn-sm">
+                   class="btn btn-outline-dark btn-sm" title="Factura">
                     Factura
                 </a>
                 {% endif %}

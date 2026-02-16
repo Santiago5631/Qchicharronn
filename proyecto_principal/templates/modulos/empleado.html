@@ -16,7 +16,7 @@
                         <th>usuario_id</th>
                         <th>
                             <a href="{% url 'apl:empleado:crear_empleado' %}">
-                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                <button type="button" class="btn btn-block btn-success btn-lg" title="Crear Empleado">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
@@ -32,12 +32,12 @@
                         <td>{{ e.usuario_id }}</td>
                         <td>
                             <a href="{% url 'apl:empleado:editar_empleado' e.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1" title="Editar Empleado">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
                             <a href="{% url 'apl:empleado:eliminar_empleado' e.id %}">
-                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1" title="Eliminar Empleado">
                                     <i class="bi bi-trash3-fill"></i>
                                 </button>
                             </a>

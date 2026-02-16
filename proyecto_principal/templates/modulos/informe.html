@@ -14,19 +14,19 @@
                 <label class="form-label fw-bold d-block mb-3 text-center fs-5">¿Qué deseas consultar?</label>
 
                 <div class="d-flex flex-wrap justify-content-center gap-4">
-                    <button type="button" class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}" data-tipo="ventas">
+                    <button type="button" class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}" data-tipo="ventas" title="Venta">
                         <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i> Ventas
                     </button>
 
-                    <button type="button" class="btn btn-outline-success btn-lg tipo-btn shadow-sm {% if tipo_actual == 'compras' %}active{% endif %}" data-tipo="compras">
+                    <button type="button" class="btn btn-outline-success btn-lg tipo-btn shadow-sm {% if tipo_actual == 'compras' %}active{% endif %}" data-tipo="compras" title="Compra">
                         <i class="bi bi-bag-fill fs-1 d-block mb-2"></i> Compras
                     </button>
 
-                    <button type="button" class="btn btn-outline-info btn-lg tipo-btn shadow-sm {% if tipo_actual == 'pedidos' %}active{% endif %}" data-tipo="pedidos">
+                    <button type="button" class="btn btn-outline-info btn-lg tipo-btn shadow-sm {% if tipo_actual == 'pedidos' %}active{% endif %}" data-tipo="pedidos" title="Pedido">
                         <i class="bi bi-list-check fs-1 d-block mb-2"></i> Pedidos
                     </button>
 
-                    <button type="button" class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}" data-tipo="inventario">
+                    <button type="button" class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}" data-tipo="inventario" title="Inventario">
                         <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i> Inventario
                     </button>
                 </div>
@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100 mt-4">
+                    <button type="submit" class="btn btn-primary w-100 mt-4" title="Buscar">
                         <i class="bi bi-search"></i> Consultar
                     </button>
                 </div>
