@@ -138,6 +138,72 @@
             </div>
             {% endif %}
 
+            <!-- Pedidos -->
+            {% if tipo_actual == 'pedidos' and resultados %}
+            <div class="table-responsive mt-4">
+                <h5>Pedidos encontrados ({{ cantidad }})</h5>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-info">
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Mesa</th>
+                            <th>Menús/Platos</th>
+                            <th class="text-end">Total</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in resultados %}
+                        <tr>
+                            <td>#{{ p.id }}</td>
+                            <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>{{ p.mesa }}</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    {% for detalle in p.detalles_list %}
+                                    <li class="mb-1">
+                                        <strong>{{ detalle.menu }}</strong>
+                                        <span class="text-muted">x{{ detalle.cantidad }}</span>
+                                        <span class="text-success">(${{ detalle.precio|floatformat:2 }} c/u = ${{ detalle.subtotal|floatformat:2 }})</span>
+                                    </li>
+                                    {% empty %}
+                                    <li class="text-muted">Sin detalles</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td class="text-end fw-bold">${{ p.total_calculado|floatformat:2 }}</td>
+                            <td>
+                                {% if p.estado == 'pendiente' %}
+                                    <span class="badge bg-warning text-dark">{{ p.get_estado_display }}</span>
+                                {% elif p.estado == 'en_preparacion' %}
+                                    <span class="badge bg-info">{{ p.get_estado_display }}</span>
+                                {% elif p.estado == 'listo' %}
+                                    <span class="badge bg-primary">{{ p.get_estado_display }}</span>
+                                {% elif p.estado == 'entregado' %}
+                                    <span class="badge bg-success">{{ p.get_estado_display }}</span>
+                                {% elif p.estado == 'cancelado' %}
+                                    <span class="badge bg-danger">{{ p.get_estado_display }}</span>
+                                {% else %}
+                                    {{ p.get_estado_display }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center">No hay pedidos en este rango</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active fw-bold">
+                        <tr>
+                            <td colspan="4">TOTAL</td>
+                            <td class="text-end">${{ total|floatformat:2 }}</td>
+                            <td>{{ cantidad }} pedidos</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% endif %}
+
 <div class="card-body">
     <div class="table-responsive">
         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -206,6 +272,34 @@ function eliminarInforme(pk) {
         }
     });
 }
+
+// Script para manejar los botones de tipo de reporte
+document.addEventListener('DOMContentLoaded', () => {
+    const botones = document.querySelectorAll('.tipo-btn');
+    const inputTipoHidden = document.getElementById('tipo-hidden');
+    const formFiltro = document.getElementById('filtro-form');
+
+    botones.forEach(boton => {
+        boton.addEventListener('click', () => {
+            // Remover clase active de todos los botones
+            botones.forEach(b => b.classList.remove('active'));
+
+            // Agregar clase active al botón clickeado
+            boton.classList.add('active');
+
+            // Actualizar el valor del campo oculto
+            const tipoSeleccionado = boton.dataset.tipo;
+            inputTipoHidden.value = tipoSeleccionado;
+
+            // Si hay fechas seleccionadas, enviar el formulario
+            const fi = document.querySelector('[name="fecha_inicio"]').value;
+            const ff = document.querySelector('[name="fecha_fin"]').value;
+            if (fi && ff) {
+                formFiltro.submit();
+            }
+        });
+    });
+});
 </script>
 
 {% endblock %}

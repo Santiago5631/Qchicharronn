@@ -1,58 +1,229 @@
 {% extends "dashboard/layout.html" %}
+{% load static %}
 
 {% block content %}
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+        <a href="{% url 'apl:nomina:crear_nomina' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Nómina
+        </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Empleado</th>
-                        <th>Nombre</th>
-                        <th>Valor por Hora</th>
-                        <th>Pago</th>
-                        <th>Administrador</th>
-                        <th>
-                            <a href="{% url 'apl:crear_nomina' %}">
-                                <button type="button" class="btn btn-block btn-success btn-lg">
-                                    <i class="bi bi-plus-circle-fill"></i>
+
+    <!-- Tarjetas de resumen -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total General</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_general|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cash-stack fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pendiente</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_pendiente|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock-history fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pagado</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_pagado|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    {{ filtro_form.fecha_inicio.label_tag }}
+                    {{ filtro_form.fecha_inicio }}
+                </div>
+                <div class="col-md-3">
+                    {{ filtro_form.fecha_fin.label_tag }}
+                    {{ filtro_form.fecha_fin }}
+                </div>
+                <div class="col-md-3">
+                    {{ filtro_form.empleado.label_tag }}
+                    {{ filtro_form.empleado }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtro_form.estado.label_tag }}
+                    {{ filtro_form.estado }}
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="mt-3">
+                <a href="{% url 'apl:nomina:nomina_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger" target="_blank">
+                    <i class="bi bi-file-pdf"></i> Generar PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de nóminas -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Nóminas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Cédula</th>
+                            <th>Tipo Pago</th>
+                            <th>Valor Unit.</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Período</th>
+                            <th>Fecha Pago</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nomina in nominas %}
+                        <tr>
+                            <td>{{ nomina.get_nombre_empleado }}</td>
+                            <td>{{ nomina.get_cedula_empleado }}</td>
+                            <td>
+                                {% if nomina.tipo_pago == 'hora' %}
+                                    <span class="badge bg-info">Por Hora</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Por Día</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">${{ nomina.valor_unitario|floatformat:2 }}</td>
+                            <td class="text-end">{{ nomina.cantidad }}</td>
+                            <td class="text-end fw-bold">${{ nomina.total|floatformat:2 }}</td>
+                            <td>{{ nomina.fecha_inicio|date:"d/m/Y" }} - {{ nomina.fecha_fin|date:"d/m/Y" }}</td>
+                            <td>{{ nomina.fecha_pago|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if nomina.estado == 'pendiente' %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% elif nomina.estado == 'pagado' %}
+                                    <span class="badge bg-success">Pagado</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Cancelado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'apl:nomina:editar_nomina' nomina.pk %}" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" onclick="eliminarNomina({{ nomina.pk }})" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
                                 </button>
-                            </a>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for n in nominas %}
-                    <tr>
-                        <td>{{ n.empleado }}</td>
-                        <td>{{ n.nombre }}</td>
-                        <td>${{ n.valor_hora }}</td>
-                        <td>${{ n.pago }}</td>
-                        <td>{{ n.admin }}</td>
-                        <td>
-                            <a href="{% url 'apl:editar_nomina' n.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
-                                    <i class="bi bi-pen-fill"></i>
-                                </button>
-                            </a>
-                            <a href="{% url 'apl:eliminar_nomina' n.id %}">
-                                <button type="button" class="btn btn-danger btn-sm d-inline mb-1">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6">No hay registros de nómina.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center">No hay nóminas registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function eliminarNomina(pk) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const url = "{% url 'apl:nomina:eliminar_nomina' 0 %}".replace("0", pk);
+
+            fetch(url, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    Swal.fire('Eliminado!', 'La nómina fue eliminada correctamente.', 'success')
+                        .then(() => { location.reload(); });
+                }
+            });
+        }
+    });
+}
+</script>
+
 {% endblock %}

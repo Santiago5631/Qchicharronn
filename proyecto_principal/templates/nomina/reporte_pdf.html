@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Nóminas</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 18pt;
+            margin-bottom: 5px;
+        }
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 9pt;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+            font-size: 9pt;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #e8f5e9 !important;
+            font-size: 10pt;
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge-primary {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Nóminas</h1>
+    <div class="info">
+        {% if fecha_inicio and fecha_fin %}
+        <p>Período: {{ fecha_inicio }} - {{ fecha_fin }}</p>
+        {% endif %}
+        <p>Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Empleado</th>
+                <th>Cédula</th>
+                <th>Tipo Pago</th>
+                <th class="text-right">Valor Unit.</th>
+                <th class="text-right">Cantidad</th>
+                <th class="text-right">Total</th>
+                <th>Período</th>
+                <th>Fecha Pago</th>
+                <th class="text-center">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nomina in nominas %}
+            <tr>
+                <td>{{ nomina.get_nombre_empleado }}</td>
+                <td>{{ nomina.get_cedula_empleado }}</td>
+                <td>
+                    {% if nomina.tipo_pago == 'hora' %}
+                        <span class="badge badge-info">Por Hora</span>
+                    {% else %}
+                        <span class="badge badge-primary">Por Día</span>
+                    {% endif %}
+                </td>
+                <td class="text-right">${{ nomina.valor_unitario|floatformat:2 }}</td>
+                <td class="text-right">{{ nomina.cantidad }}</td>
+                <td class="text-right">${{ nomina.total|floatformat:2 }}</td>
+                <td>{{ nomina.fecha_inicio|date:"d/m/Y" }} - {{ nomina.fecha_fin|date:"d/m/Y" }}</td>
+                <td>{{ nomina.fecha_pago|date:"d/m/Y" }}</td>
+                <td class="text-center">
+                    {% if nomina.estado == 'pendiente' %}
+                        <span class="badge badge-warning">Pendiente</span>
+                    {% elif nomina.estado == 'pagado' %}
+                        <span class="badge badge-success">Pagado</span>
+                    {% else %}
+                        <span class="badge badge-danger">Cancelado</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center">No hay nóminas en el período seleccionado</td>
+            </tr>
+            {% endfor %}
+
+            {% if nominas %}
+            <tr class="total-row">
+                <td colspan="5" class="text-right">TOTAL GENERAL:</td>
+                <td class="text-right">${{ total_general|floatformat:2 }}</td>
+                <td colspan="3"></td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Q'Chicharrón - Sistema de Gestión</p>
+    </div>
+</body>
+</html>
