@@ -1,13 +1,12 @@
-<!--- formulario_crear_producto.html-->
 {% extends 'dashboard/layout.html' %}
 {% load static %}
 
-{% block content %}
+{% block css_plugins %}
+<!-- Ya no necesitas cargar Select2 aquí, está en el layout -->
 <link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
-<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
-<!-- Select2 CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+{% endblock %}
 
+{% block content %}
 <div class="form-container">
     {{ titulo }}
     
@@ -81,8 +80,6 @@
 
         {% if formset %}
         {{ formset.management_form }}
-        {% endif %}
-
         <div class="formset-container">
             {% for form in formset %}
                 <div class="formset-form">
@@ -90,10 +87,9 @@
                 </div>
             {% endfor %}
         </div>
+        {% endif %}
         
         <button type="submit">Crear Producto</button>
-
-        {% block extra %}{% endblock %}
     </form>
     
     <div class="back-link">
@@ -105,7 +101,7 @@
 <div id="modalMarca" class="simple-modal">
     <div class="modal-content">
         <h3>Crear Nueva Marca</h3>
-        <form method="post" action="">
+        <form id="formMarca">
             {% csrf_token %}
             
             <label for="nombreMarca">Nombre: *</label>
@@ -119,7 +115,7 @@
             
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalMarca')">Cancelar</button>
-                <button type="submit" name="crear_marca" class="btn-save">Guardar</button>
+                <button type="submit" class="btn-save">Guardar</button>
             </div>
         </form>
     </div>
@@ -128,7 +124,7 @@
 <div id="modalCategoria" class="simple-modal">
     <div class="modal-content">
         <h3>Crear Nueva Categoría</h3>
-        <form method="post" action="">
+        <form id="formCategoria">
             {% csrf_token %}
             
             <label for="nombreCategoria">Nombre: *</label>
@@ -139,7 +135,7 @@
             
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalCategoria')">Cancelar</button>
-                <button type="submit" name="crear_categoria" class="btn-save">Guardar</button>
+                <button type="submit" class="btn-save">Guardar</button>
             </div>
         </form>
     </div>
@@ -148,7 +144,7 @@
 <div id="modalProveedor" class="simple-modal">
     <div class="modal-content">
         <h3>Crear Nuevo Proveedor</h3>
-        <form method="post" action="">
+        <form id="formProveedor">
             {% csrf_token %}
             
             <label for="nombreProveedor">Nombre: *</label>
@@ -159,7 +155,7 @@
             
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalProveedor')">Cancelar</button>
-                <button type="submit" name="crear_proveedor" class="btn-save">Guardar</button>
+                <button type="submit" class="btn-save">Guardar</button>
             </div>
         </form>
     </div>
@@ -168,7 +164,7 @@
 <div id="modalUnidad" class="simple-modal">
     <div class="modal-content">
         <h3>Crear Nueva Unidad</h3>
-        <form method="post" action="">
+        <form id="formUnidad">
             {% csrf_token %}
             
             <label for="nombreUnidad">Nombre: *</label>
@@ -179,26 +175,26 @@
             
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalUnidad')">Cancelar</button>
-                <button type="submit" name="crear_unidad" class="btn-save">Guardar</button>
+                <button type="submit" class="btn-save">Guardar</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ===== JAVASCRIPT ===== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+{% endblock %}
 
+{% block js_init %}
 <script>
 $(document).ready(function() {
-    // Inicializar Select2
-    $('#id_marca, #id_categoria, #id_proveedor, #id_unidad').select2({
+    // Inicializar Select2 en los campos específicos
+    $('#id_marca, #id_categoria, #id_proveedor, #id_unidad, #id_tipo_uso').select2({
         width: '100%',
         allowClear: true,
-        placeholder: 'Seleccione una opción'
+        placeholder: 'Seleccione una opción',
+        language: "es"
     });
 
-    // --- AJAX para cada modal ---
+    // --- FUNCIÓN GENÉRICA PARA AJAX ---
     function enviarAjax(formSelector, url, selectSelector, modalId) {
         $(formSelector).on('submit', function(e) {
             e.preventDefault();
@@ -213,7 +209,7 @@ $(document).ready(function() {
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(formData),
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
                 success: function(response) {
                     if (response.success) {
                         // Agregar nueva opción al select y seleccionarla
@@ -222,11 +218,15 @@ $(document).ready(function() {
 
                         mostrarMensaje('success', 'Registro creado exitosamente');
                         cerrarModal(modalId);
+                        
+                        // Limpiar formulario
+                        $(formSelector)[0].reset();
                     } else {
                         mostrarMensaje('error', response.error || 'Error desconocido');
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', error);
                     mostrarMensaje('error', 'Error de conexión con el servidor');
                 }
             });
@@ -234,32 +234,10 @@ $(document).ready(function() {
     }
 
     // Inicializar AJAX para cada formulario de modal
-    enviarAjax('#modalMarca form', '{% url "apl:producto:crear_marca_ajax" %}', '#id_marca', 'modalMarca');
-    enviarAjax('#modalCategoria form', '{% url "apl:producto:crear_marca_ajax" %}', '#id_categoria', 'modalCategoria');
-    enviarAjax('#modalProveedor form', '{% url "apl:producto:crear_proveedor_ajax" %}', '#id_proveedor', 'modalProveedor');
-    enviarAjax('#modalunidad form', '{% url 'apl:producto:crear_unidad_ajax' %} ', '#id_unidad', 'modalunidad');
-
-    // --- Función para mostrar mensajes dinámicos ---
-    function mostrarMensaje(tipo, texto) {
-        const msgDiv = $(`<div class="message ${tipo}">${texto}</div>`);
-        $('#messages-container').append(msgDiv);
-        setTimeout(() => msgDiv.fadeOut(500, () => msgDiv.remove()), 3000);
-    }
-
-    // --- Funciones de modal ---
-    window.abrirModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.style.display = 'block';
-        modal.offsetHeight;
-        modal.style.opacity = '1';
-    };
-
-    window.cerrarModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.style.opacity = '0';
-        setTimeout(() => { modal.style.display = 'none'; }, 300);
-    };
+    enviarAjax('#formMarca', '{% url "apl:producto:crear_marca_ajax" %}', '#id_marca', 'modalMarca');
+    enviarAjax('#formCategoria', '{% url "apl:producto:crear_categoria_ajax" %}', '#id_categoria', 'modalCategoria');
+    enviarAjax('#formProveedor', '{% url "apl:producto:crear_proveedor_ajax" %}', '#id_proveedor', 'modalProveedor');
+    enviarAjax('#formUnidad', '{% url "apl:producto:crear_unidad_ajax" %}', '#id_unidad', 'modalUnidad');
 });
 </script>
 {% endblock %}
-<!--- hasta aqui formulario_crear_producto.html -->
