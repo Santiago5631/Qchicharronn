@@ -164,8 +164,8 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Redirect después del login
-LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
-ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
+LOGIN_REDIRECT_URL = '/apps/dashboard/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
 
