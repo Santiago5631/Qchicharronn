@@ -98,26 +98,41 @@ $(document).ready(function() {
                 previous: "Anterior"
             }
         },
-        order: [[4, "desc"]], // ordenar por fecha ahora
+        order: [[4, "desc"]],
         pageLength: 10
     });
 
-    // Mostrar solo pendientes por defecto
-    table.column(6).search('Pendiente').draw();
+    // Filtro personalizado por estado usando data-estado
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+
+        var filtroActivo = $('#tablaVentas').data('filtro') || 'pendiente';
+        var estado = table.row(dataIndex).node().querySelector('td[data-estado]').getAttribute('data-estado');
+
+        if (filtroActivo === 'todas') return true;
+        return estado === filtroActivo;
+    });
+
+    // Filtro por defecto: pendientes
+    $('#tablaVentas').data('filtro', 'pendiente');
+    table.draw();
 
     $('#btnPendientes').on('click', function() {
-        table.column(6).search('Pendiente').draw();
+        $('#tablaVentas').data('filtro', 'pendiente');
+        table.draw();
     });
 
     $('#btnPagadas').on('click', function() {
-        table.column(6).search('Pagado').draw();
+        $('#tablaVentas').data('filtro', 'pagado');
+        table.draw();
     });
 
     $('#btnTodas').on('click', function() {
-        table.column(6).search('').draw();
+        $('#tablaVentas').data('filtro', 'todas');
+        table.draw();
     });
 
 });
+
 </script>
 
 {% endblock %}

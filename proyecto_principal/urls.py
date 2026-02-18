@@ -39,4 +39,6 @@ urlpatterns = [
     path('inventario/', include(("inventario.urls", 'inventario'), namespace='inventario')),
     #_____________________________Unidad_____________________________________________
     path('unidad/', include(("unidad.urls", 'unidad'), namespace='unidad')),
+    path("clientes/", include("clientes.urls",'clientes'), name="clientes"),
+
 ]

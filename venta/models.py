@@ -1,6 +1,7 @@
 from django.db import models
 from menu.models import Pedido
 from decimal import Decimal
+from clientes.models import Cliente
 
 class Venta(models.Model):
     ESTADO_CHOICES = (
@@ -11,6 +12,19 @@ class Venta(models.Model):
         ('efectivo', 'Efectivo'),
         ('tarjeta', 'Tarjeta'),
         ('transferencia', 'Transferencia'),
+    )
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True
+    )
+    cliente_factura = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ventas_facturadas'
     )
 
     metodo_pago = models.CharField(
@@ -52,12 +66,18 @@ class Venta(models.Model):
     class Meta:
         ordering = ['-fecha_venta']
 
-
     def save(self, *args, **kwargs):
+
         if not self.numero_factura:
             ultima = Venta.objects.order_by('-id').first()
             numero = 1 if not ultima else ultima.id + 1
             self.numero_factura = f"FAC-{numero:06d}"
+
+        if self.cliente_factura and not self.cliente_nombre:
+            self.cliente_nombre = self.cliente_factura.nombre
+            if self.cliente_factura.numero_documento:
+                self.cliente_nombre += f" - {self.cliente_factura.numero_documento}"
+
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -9,6 +9,7 @@ def crear_venta_desde_pedido(pedido):
     venta = Venta.objects.create(
         pedido=pedido,
         cliente_nombre=pedido.cliente_nombre,
+        cliente_factura=None,
         tipo_pedido=pedido.tipo_pedido,
         mesa=pedido.mesa if pedido.tipo_pedido == 'mesa' else None,
         subtotal=pedido.subtotal,

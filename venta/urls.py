@@ -9,6 +9,7 @@ urlpatterns = [
     path('detalle/<int:pk>/', VentaDetailView.as_view(), name='venta_detail'),
     path('factura/<int:pk>/', VentaFacturaView.as_view(), name='factura'),
     path('finalizar/<int:pk>/', VentaFinalizarView.as_view(), name='venta_finalizar'),
+    path('venta/<int:pk>/cambiar-cliente/',VentaCambiarClienteView.as_view(), name='venta_cambiar_cliente')
 
     ]
 

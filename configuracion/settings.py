@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'usuario.apps.UsuarioConfig',
     'venta.apps.VentaConfig',
     "inventario.apps.InventarioConfig",
+    "clientes.apps.ClientesConfig",
     #aplicaciones extras
     "login",
     "widget_tweaks",

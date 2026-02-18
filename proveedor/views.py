@@ -20,7 +20,7 @@ class ProveedorCreateView(CreateView):
     fields = ['nit', 'nombre']
 
     def get_success_url(self):
-        return reverse_lazy('apl:proveedor_list')
+        return reverse_lazy('apl:proveedor:proveedor_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -35,7 +35,7 @@ class ProveedorUpdateView(UpdateView):
     fields = ['nit', 'nombre']
 
     def get_success_url(self):
-        return reverse_lazy('apl:proveedor_list')
+        return reverse_lazy('apl:proveedor:proveedor_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -48,7 +48,7 @@ class ProveedorDeleteView(DeleteView):
     template_name = 'forms/confirmar_eliminacion.html'
 
     def get_success_url(self):
-        return reverse_lazy('apl:proveedor_list')
+        return reverse_lazy('apl:proveedor:proveedor_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
