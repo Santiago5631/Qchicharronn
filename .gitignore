@@ -14,9 +14,8 @@ env/
 # ========================================
 # DJANGO
 # ========================================
-# secrets/
-secrets
-
+secrets/
+*.json
 # Archivos generados
 media/
 staticfiles/
@@ -56,3 +55,4 @@ yarn-error.log*
 
 generar_informe.py
 
+secrets/

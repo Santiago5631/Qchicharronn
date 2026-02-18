@@ -147,8 +147,9 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Redirects
+# Redirect después del login
 LOGIN_REDIRECT_URL = '/apps/dashboard/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # === CONFIGURACIÓN DE ALLAUTH ===
