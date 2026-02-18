@@ -172,7 +172,13 @@
             
             <label for="descripcionUnidad">Descripción:</label>
             <input type="text" id="descripcionUnidad" name="descripcion" placeholder="Descripción opcional">
-            
+
+            <label for="tipoUnidad">Tipo: *</label>
+            <select id="tipoUnidad" name="tipo" required>
+                <option value="unidad">Por Unidad (piezas, cajas...)</option>
+                <option value="peso">Por Peso (kg, g, L, ml...)</option>
+            </select>
+
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalUnidad')">Cancelar</button>
                 <button type="submit" class="btn-save">Guardar</button>

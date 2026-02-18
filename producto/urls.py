@@ -14,5 +14,5 @@ urlpatterns = [
     path('ajax/crear_marca/', views.crear_marca_ajax, name='crear_marca_ajax'),
     path('ajax/crear_categoria/', views.crear_categoria_ajax, name='crear_categoria_ajax'),
     path('ajax/crear_proveedor/', views.crear_proveedor_ajax, name='crear_proveedor_ajax'),
-    path('ajax/crear_proveedor/', views.crear_unidad_ajax, name='crear_unidad_ajax'),
+    path('ajax/crear_unidad/', views.crear_unidad_ajax, name='crear_unidad_ajax'),
 ]
