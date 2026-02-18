@@ -14,8 +14,8 @@ env/
 # ========================================
 # DJANGO
 # ========================================
-# Base de datos local
-db.sqlite3
+# secrets/
+secrets
 
 # Archivos generados
 media/
