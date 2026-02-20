@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from unidad.models import Unidad
+from unidad.forms import UnidadForm  # <-- agregar este import
 
 class UnidadListView(ListView):
     model = Unidad
@@ -17,7 +18,7 @@ class UnidadListView(ListView):
 class UnidadCreateView(CreateView):
     model = Unidad
     template_name = 'forms/formulario_crear.html'
-    fields = ['nombre', 'descripcion']
+    form_class = UnidadForm  # <-- reemplaza fields = ['nombre', 'descripcion']
 
     def get_success_url(self):
         return reverse_lazy('apl:unidad:unidad_list')
@@ -32,7 +33,7 @@ class UnidadCreateView(CreateView):
 class UnidadUpdateView(UpdateView):
     model = Unidad
     template_name = 'forms/formulario_actualizacion.html'
-    fields = ['nombre', 'descripcion']
+    form_class = UnidadForm  # <-- reemplaza fields = ['nombre', 'descripcion']
 
     def get_success_url(self):
         return reverse_lazy('apl:unidad:unidad_list')
@@ -48,15 +49,10 @@ class UnidadDeleteView(DeleteView):
     template_name = 'forms/confirmar_eliminacion.html'
 
     def post(self, request, *args, **kwargs):
-        """ Manejar AJAX sin recargar la página """
         self.object = self.get_object()
         self.object.delete()
-
-        # Si es AJAX → devolver JSON
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'ok'})
-
-        # Si no es AJAX → comportamiento normal
         return super().post(request, *args, **kwargs)
 
     def get_success_url(self):

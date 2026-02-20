@@ -18,6 +18,7 @@
                         <th>ID Unidad</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
+                        <th>Tipo</th>
                         <th>
                             <a href="{% url 'apl:unidad:unidad_create' %}">
                                 <button type="button" class="btn btn-block btn-success btn-lg" title="Crear Unidad">
@@ -33,6 +34,7 @@
                         <td>{{ u.id }}</td>
                         <td>{{ u.nombre }}</td>
                         <td>{{ u.descripcion }}</td>
+                        <td>{{ u.get_tipo_display }}</td>
                         <td>
                             <a href="{% url 'apl:unidad:unidad_edit' u.id %}">
                                 <button type="button" class="btn btn-warning btn-sm d-inline mb-1" title="Editar Unidad">
