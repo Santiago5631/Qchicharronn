@@ -1,44 +1,85 @@
 {% extends "dashboard/layout.html" %}
 
 {% block content %}
-<div class="card-body">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Lista de Categorías</h6>
+
+<div class="card shadow mb-4">
+
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            Lista de Categorías
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered datatable" width="100%" cellspacing="0">
+
+                <thead class="text-center">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th style="width:140px;">
+                            <a href="{% url 'apl:categoria:crear_categoria' %}"
+                               class="btn btn-success btn-sm">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar Categoría
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for categoria in categorias %}
+                    <tr>
+
+                        <td>{{ categoria.nombre }}</td>
+
+                        <td>
+                            {{ categoria.descripcion|default:"Sin descripción" }}
+                        </td>
+
+                        <td class="text-center">
+
+                            <a href="{% url 'apl:categoria:editar_categoria' categoria.id %}"
+                               class="btn btn-warning btn-sm"
+                               title="Editar">
+
+                                <i class="bi bi-pen-fill"></i>
+
+                            </a>
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm btn-delete ms-1"
+                                data-url="{% url 'apl:categoria:eliminar_categoria' categoria.id %}"
+                                data-name="{{ categoria.nombre }}"
+                                title="Eliminar">
+
+                                <i class="bi bi-trash3-fill"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">
+                            No hay categorías registradas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>
-                                <a href="{% url 'apl:categoria:crear_categoria' %}" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle" title="Crear Categoria"></i> Agregar Categoría
-                                </a>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for categoria in categorias %}
-                        <tr>
-                            <td>{{ categoria.nombre }}</td>
-<td>{{ categoria.descripcion|default:"Sin descripción" }}</td>
-<td class="text-end">
-    <a href="{% url 'apl:categoria:editar_categoria' categoria.id %}" class="btn btn-warning btn-sm">
-        <i class="bi bi-pen-fill" title="Editar"></i>
-    </a>
-    <a href="{% url 'apl:categoria:eliminar_categoria' categoria.id %}" class="btn btn-danger btn-sm ms-1" title="Eliminar">
-        <i class="bi bi-trash3-fill"></i>
-    </a>
-</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+
     </div>
 </div>
+
 {% endblock %}
