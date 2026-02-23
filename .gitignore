@@ -55,4 +55,6 @@ yarn-error.log*
 
 generar_informe.py
 
-secrets/
+google_drive_creds.json
+oauth_credentials.json
+token_drive.pkl
