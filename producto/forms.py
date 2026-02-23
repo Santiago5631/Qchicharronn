@@ -74,5 +74,8 @@ class ProveedorModalForm(forms.ModelForm):
 
 class UnidadModalForm(forms.ModelForm):
     class Meta:
-        modal = Unidad
-        fields = ['nombre', 'descripcion']
+        model = Unidad
+        fields = ['nombre', 'descripcion', 'tipo']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-control'}),
+        }

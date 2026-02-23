@@ -12,7 +12,7 @@ from .forms import (
     MarcaModalForm,
     CategoriaModalForm,
     ProveedorModalForm,
-
+    UnidadModalForm
 )
 import json
 from django.shortcuts import redirect
@@ -288,17 +288,43 @@ def crear_proveedor_ajax(request):
 
 @require_POST
 def crear_unidad_ajax(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método no permitido"})
+    try:
+        data = json.loads(request.body)
+        nombre = data.get('nombre', '').strip()
+        descripcion = data.get('descripcion', '').strip()
+        tipo = data.get('tipo', 'unidad')  # <-- campo que faltaba leer
 
-    data = json.loads(request.body)
-    nombre = data.get("nombre")
-    descripcion = data.get("descripcion", "")
+        if not nombre:
+            return JsonResponse({
+                'success': False,
+                'error': 'El nombre de la unidad es requerido'
+            })
 
-    unidad, created = Unidad.objects.get_or_create(nombre=nombre, defaults={"descripcion": descripcion})
+        if Unidad.objects.filter(nombre=nombre).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'Ya existe una unidad con este nombre'
+            })
 
-    return JsonResponse({
-        "success": True,
-        "id": unidad.id,
-        "text": unidad.nombre
-    })
+        unidad = Unidad.objects.create(
+            nombre=nombre,
+            descripcion=descripcion if descripcion else None,
+            tipo=tipo  # <-- campo que faltaba guardar
+        )
+
+        return JsonResponse({
+            'success': True,
+            'id': unidad.id,
+            'text': str(unidad)  # Ahora muestra "Kilogramos (Por Peso)" gracias al __str__
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
