@@ -23,9 +23,9 @@ et_xmlfile==2.0.0
 freetype-py==2.5.1
 google-api-core==2.10.2
 google-api-python-client==2.190.0
-google-auth==2.49.0.dev0
+google-auth==1.35.0
+google-auth-oauthlib==0.4.6
 google-auth-httplib2==0.3.0
-google-auth-oauthlib==1.2.4
 googleapis-common-protos==1.72.0
 html5lib==1.1
 httplib2==0.31.2
