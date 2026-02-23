@@ -50,19 +50,13 @@
                     <td>{{ c.cantidad }}</td>
                     <td>{{ c.unidad }}</td>
                     <td>
-                        <a href="{% url 'apl:compra_editar' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
+                        <a href="{% url 'apl:compra:editar_compra' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
                             <i class="bi bi-pen-fill"></i>
                         </a>
                         <button type="button" onclick="eliminarCompra({{ c.id_factura }})" class="btn btn-danger btn-sm" title="Eliminar Compra">
                             <i class="bi bi-trash3-fill"></i>
                         </button>
-                        <!-- ✅ BOTÓN BAUCHER COMPRA -->
-                        <button type="button"
-                                onclick="generarBaucherCompra({{ c.id_factura }}, '{{ c.proveedor }}', {{ c.precio }}, {{ c.cantidad }})"
-                                class="btn btn-info btn-sm"
-                                title="Generar Baucher Compra">
-                            <i class="bi bi-printer-fill"></i>
-                        </button>
+
                     </td>
                 </tr>
                 {% empty %}
