@@ -14,9 +14,8 @@ env/
 # ========================================
 # DJANGO
 # ========================================
-# Base de datos local
-db.sqlite3
-
+secrets/
+*.json
 # Archivos generados
 media/
 staticfiles/
@@ -56,3 +55,6 @@ yarn-error.log*
 
 generar_informe.py
 
+google_drive_creds.json
+oauth_credentials.json
+token_drive.pkl

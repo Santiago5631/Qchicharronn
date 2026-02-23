@@ -2,305 +2,315 @@
 {% block content %}
 
 <div class="container mt-4">
-    <div class="card shadow mb-4">
-        <div class="card-header bg-gradient text-white" style="background: linear-gradient(90deg, #ff6b6b, #ffa500);">
-            <h4 class="mb-0">Consulta de Reportes</h4>
+
+<div class="card shadow mb-4">
+
+    <div class="card-header bg-gradient text-white" style="background: linear-gradient(90deg, #ff6b6b, #ffa500);">
+        <h4 class="mb-0">Consulta de Reportes</h4>
+    </div>
+
+    <div class="card-body">
+
+        <!-- Selección de tipo -->
+        <div class="mb-5">
+            <label class="form-label fw-bold d-block mb-3 text-center fs-5">
+                ¿Qué deseas consultar?
+            </label>
+
+            <div class="d-flex flex-wrap justify-content-center gap-4">
+
+                <button type="button"
+                        class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}"
+                        data-tipo="ventas">
+
+                    <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i>
+                    Ventas
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-success btn-lg tipo-btn shadow-sm {% if tipo_actual == 'compras' %}active{% endif %}"
+                        data-tipo="compras">
+
+                    <i class="bi bi-bag-fill fs-1 d-block mb-2"></i>
+                    Compras
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-info btn-lg tipo-btn shadow-sm {% if tipo_actual == 'pedidos' %}active{% endif %}"
+                        data-tipo="pedidos">
+
+                    <i class="bi bi-list-check fs-1 d-block mb-2"></i>
+                    Pedidos
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}"
+                        data-tipo="inventario">
+
+                    <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i>
+                    Inventario
+                </button>
+
+            </div>
         </div>
 
-        <div class="card-body">
 
-            <!-- Selección de tipo -->
-            <div class="mb-5">
-                <label class="form-label fw-bold d-block mb-3 text-center fs-5">¿Qué deseas consultar?</label>
+        <!-- Filtro de fechas -->
+        <form method="get" class="row g-3 align-items-end mb-4" id="filtro-form">
 
-                <div class="d-flex flex-wrap justify-content-center gap-4">
-                    <button type="button" class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}" data-tipo="ventas" title="Venta">
-                        <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i> Ventas
-                    </button>
+            <input type="hidden"
+                   name="tipo"
+                   id="tipo-hidden"
+                   value="{{ tipo_actual|default:'ventas' }}">
 
-                    <button type="button" class="btn btn-outline-success btn-lg tipo-btn shadow-sm {% if tipo_actual == 'compras' %}active{% endif %}" data-tipo="compras" title="Compra">
-                        <i class="bi bi-bag-fill fs-1 d-block mb-2"></i> Compras
-                    </button>
-
-                    <button type="button" class="btn btn-outline-info btn-lg tipo-btn shadow-sm {% if tipo_actual == 'pedidos' %}active{% endif %}" data-tipo="pedidos" title="Pedido">
-                        <i class="bi bi-list-check fs-1 d-block mb-2"></i> Pedidos
-                    </button>
-
-                    <button type="button" class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}" data-tipo="inventario" title="Inventario">
-                        <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i> Inventario
-                    </button>
-                </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Fecha de inicio</label>
+                <input type="date"
+                       name="fecha_inicio"
+                       class="form-control"
+                       value="{{ fecha_inicio|default:'' }}"
+                       required>
             </div>
 
-            <!-- Fechas -->
-            <form method="get" class="row g-3 align-items-end mb-4" id="filtro-form">
-                <input type="hidden" name="tipo" id="tipo-hidden" value="{{ tipo_actual|default:'ventas' }}">
-
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Fecha de inicio</label>
-                    <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio|default:'' }}" required>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Fecha de fin</label>
-                    <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin|default:'' }}" required>
-                </div>
-
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100 mt-4" title="Buscar">
-                        <i class="bi bi-search"></i> Consultar
-                    </button>
-                </div>
-            </form>
-
-            <!-- Mensaje -->
-            <div class="alert alert-info mt-3">
-                {{ mensaje }}
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Fecha de fin</label>
+                <input type="date"
+                       name="fecha_fin"
+                       class="form-control"
+                       value="{{ fecha_fin|default:'' }}"
+                       required>
             </div>
 
-            <!-- Ventas -->
-            {% if tipo_actual == 'ventas' and resultados %}
-            <div class="table-responsive mt-4">
-                <h5>Ventas encontradas ({{ cantidad }})</h5>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Pedido</th>
-                            <th class="text-end">Total</th>
-                            <th>Método</th>
-                            <th>Estado</th>
-                            <th>Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for v in resultados %}
-                        <tr>
-                            <td>{{ v.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ v.pedido.id }}</td>
-                            <td class="text-end">${{ v.total|floatformat:2 }}</td>
-                            <td>{{ v.get_metodo_pago_display }}</td>
-                            <td>{{ v.get_estado_display }}</td>
-                            <td>{{ v.admin|default:"—" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6" class="text-center">No hay ventas en este rango</td></tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="table-success fw-bold">
-                        <tr>
-                            <td colspan="2">TOTAL</td>
-                            <td class="text-end">${{ total|floatformat:2 }}</td>
-                            <td colspan="3">{{ cantidad }} ventas</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            {% endif %}
+            <div class="col-md-4">
+                <button type="submit"
+                        class="btn btn-primary w-100 mt-4">
 
-            <!-- Compras -->
-            {% if tipo_actual == 'compras' and resultados %}
-            <div class="table-responsive mt-4">
-                <h5>Compras encontradas ({{ cantidad }})</h5>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-success">
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Producto</th>
-                            <th class="text-end">Cantidad</th>
-                            <th class="text-end">Precio unit.</th>
-                            <th class="text-end">Subtotal</th>
-                            <th>Proveedor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for c in resultados %}
-                        <tr>
-                            <td>{{ c.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ c.producto.nombre|default:c.producto|default:"—" }}</td>
-                            <td class="text-end">{{ c.cantidad }}</td>
-                            <td class="text-end">${{ c.precio|floatformat:2 }}</td>
-                            <td class="text-end fw-bold">${{ c.subtotal|floatformat:2 }}</td>
-                            <td>{{ c.proveedor.nombre|default:c.proveedor|default:"—" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6" class="text-center">No hay compras en este rango</td></tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="table-active fw-bold">
-                        <tr>
-                            <td colspan="4">TOTAL</td>
-                            <td class="text-end">${{ total|floatformat:2 }}</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                    <i class="bi bi-search"></i>
+                    Consultar
+                </button>
             </div>
-            {% endif %}
 
-            <!-- Pedidos -->
-            {% if tipo_actual == 'pedidos' and resultados %}
-            <div class="table-responsive mt-4">
-                <h5>Pedidos encontrados ({{ cantidad }})</h5>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-info">
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Mesa</th>
-                            <th>Menús/Platos</th>
-                            <th class="text-end">Total</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in resultados %}
-                        <tr>
-                            <td>#{{ p.id }}</td>
-                            <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
-                            <td>{{ p.mesa }}</td>
-                            <td>
-                                <ul class="list-unstyled mb-0">
-                                    {% for detalle in p.detalles_list %}
-                                    <li class="mb-1">
-                                        <strong>{{ detalle.menu }}</strong>
-                                        <span class="text-muted">x{{ detalle.cantidad }}</span>
-                                        <span class="text-success">(${{ detalle.precio|floatformat:2 }} c/u = ${{ detalle.subtotal|floatformat:2 }})</span>
-                                    </li>
-                                    {% empty %}
-                                    <li class="text-muted">Sin detalles</li>
-                                    {% endfor %}
-                                </ul>
-                            </td>
-                            <td class="text-end fw-bold">${{ p.total_calculado|floatformat:2 }}</td>
-                            <td>
-                                {% if p.estado == 'pendiente' %}
-                                    <span class="badge bg-warning text-dark">{{ p.get_estado_display }}</span>
-                                {% elif p.estado == 'en_preparacion' %}
-                                    <span class="badge bg-info">{{ p.get_estado_display }}</span>
-                                {% elif p.estado == 'listo' %}
-                                    <span class="badge bg-primary">{{ p.get_estado_display }}</span>
-                                {% elif p.estado == 'entregado' %}
-                                    <span class="badge bg-success">{{ p.get_estado_display }}</span>
-                                {% elif p.estado == 'cancelado' %}
-                                    <span class="badge bg-danger">{{ p.get_estado_display }}</span>
-                                {% else %}
-                                    {{ p.get_estado_display }}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6" class="text-center">No hay pedidos en este rango</td></tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="table-active fw-bold">
-                        <tr>
-                            <td colspan="4">TOTAL</td>
-                            <td class="text-end">${{ total|floatformat:2 }}</td>
-                            <td>{{ cantidad }} pedidos</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            {% endif %}
-<!--
-<div class="card-body">
-    <div class="table-responsive">
-        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-            <thead>
+        </form>
+
+        <div class="alert alert-info mt-3">
+            {{ mensaje }}
+        </div>
+
+
+        <!-- Ventas -->
+        {% if tipo_actual == 'ventas' and resultados %}
+        <div class="table-responsive mt-4">
+
+            <h5>Ventas encontradas ({{ cantidad }})</h5>
+
+            <table class="table table-bordered table-hover datatable">
+
+                <thead class="table-primary">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Pedido</th>
+                    <th class="text-end">Total</th>
+                    <th>Método</th>
+                    <th>Estado</th>
+                    <th>Admin</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for v in resultados %}
+                <tr>
+                    <td>{{ v.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ v.pedido.id }}</td>
+                    <td class="text-end">${{ v.total|floatformat:2 }}</td>
+                    <td>{{ v.get_metodo_pago_display }}</td>
+                    <td>{{ v.get_estado_display }}</td>
+                    <td>{{ v.admin|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% endif %}
+
+
+        <!-- Compras -->
+        {% if tipo_actual == 'compras' and resultados %}
+        <div class="table-responsive mt-4">
+
+            <h5>Compras encontradas ({{ cantidad }})</h5>
+
+            <table class="table table-bordered table-hover datatable">
+
+                <thead class="table-success">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end">Subtotal</th>
+                    <th>Proveedor</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for c in resultados %}
+                <tr>
+                    <td>{{ c.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ c.producto.nombre|default:c.producto|default:"—" }}</td>
+                    <td class="text-end">{{ c.cantidad }}</td>
+                    <td class="text-end">${{ c.precio|floatformat:2 }}</td>
+                    <td class="text-end fw-bold">${{ c.subtotal|floatformat:2 }}</td>
+                    <td>{{ c.proveedor.nombre|default:c.proveedor|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% endif %}
+
+
+        <!-- Pedidos -->
+        {% if tipo_actual == 'pedidos' and resultados %}
+        <div class="table-responsive mt-4">
+
+            <h5>Pedidos encontrados ({{ cantidad }})</h5>
+
+            <table class="table table-bordered table-hover datatable">
+
+                <thead class="table-info">
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Mesa</th>
+                    <th>Menús</th>
+                    <th class="text-end">Total</th>
+                    <th>Estado</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for p in resultados %}
+                <tr>
+                    <td>#{{ p.id }}</td>
+                    <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
+                    <td>{{ p.mesa }}</td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            {% for detalle in p.detalles_list %}
+                            <li>
+                                {{ detalle.menu }} x{{ detalle.cantidad }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="text-end fw-bold">${{ p.total_calculado|floatformat:2 }}</td>
+                    <td>{{ p.get_estado_display }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% endif %}
+
+
+        <!-- Informes guardados -->
+        <div class="table-responsive mt-5">
+
+            <h5>Informes guardados</h5>
+
+            <table class="table table-bordered datatable">
+
+                <thead>
                 <tr>
                     <th>Título</th>
                     <th>Tipo</th>
-                    <th>Rango de Fechas</th>
-                    <th>Creado Por</th>
-                    <th>Fecha de Creación</th>
+                    <th>Rango</th>
+                    <th>Creado por</th>
+                    <th>Fecha</th>
                     <th>Acciones</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+
+                <tbody>
+
                 {% for i in informe %}
                 <tr>
+
                     <td>{{ i.titulo }}</td>
                     <td>{{ i.get_tipo_display }}</td>
                     <td>{{ i.fecha_inicio }} a {{ i.fecha_fin }}</td>
                     <td>{{ i.creado_por }}</td>
                     <td>{{ i.fecha_creacion }}</td>
+
                     <td>
-                        <a href="{% url 'apl:informe_editar' i.id %}" class="btn btn-warning btn-sm">
+
+                        <a href="{% url 'apl:informe_editar' i.id %}"
+                           class="btn btn-warning btn-sm">
+
                             <i class="bi bi-pen-fill"></i>
                         </a>
-                        <button type="button" onclick="eliminarInforme({{ i.pk }})" class="btn btn-danger btn-sm">
+
+                        <button
+                                type="button"
+                                class="btn btn-danger btn-sm btn-delete"
+                                data-url="{% url 'apl:informe:eliminar_informe' i.id %}"
+                                data-name="{{ i.titulo }}">
+
                             <i class="bi bi-trash3-fill"></i>
+
                         </button>
+
                     </td>
+
                 </tr>
-                {% empty %}
-                <tr><td colspan="6">No hay informes registrados.</td></tr>
                 {% endfor %}
-            </tbody>
-        </table>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
     </div>
 </div>
---->
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+
+{% block js_custom %}
 <script>
-function eliminarInforme(pk) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "No podrás revertir esta acción",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const url = "{% url 'apl:informe:eliminar_informe' 0 %}".replace("0", pk);
 
-            fetch(url, {
-                method: "DELETE",
-                headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "ok") {
-                    Swal.fire('Eliminado!', 'El informe fue eliminado correctamente.', 'success')
-                        .then(() => { location.reload(); });
-                }
-            });
-        }
-    });
-}
-
-// Script para manejar los botones de tipo de reporte
 document.addEventListener('DOMContentLoaded', () => {
+
     const botones = document.querySelectorAll('.tipo-btn');
     const inputTipoHidden = document.getElementById('tipo-hidden');
     const formFiltro = document.getElementById('filtro-form');
 
     botones.forEach(boton => {
-        boton.addEventListener('click', () => {
-            // Remover clase active de todos los botones
-            botones.forEach(b => b.classList.remove('active'));
 
-            // Agregar clase active al botón clickeado
+        boton.addEventListener('click', () => {
+
+            botones.forEach(b => b.classList.remove('active'));
             boton.classList.add('active');
 
-            // Actualizar el valor del campo oculto
-            const tipoSeleccionado = boton.dataset.tipo;
-            inputTipoHidden.value = tipoSeleccionado;
+            inputTipoHidden.value = boton.dataset.tipo;
 
-            // Si hay fechas seleccionadas, enviar el formulario
             const fi = document.querySelector('[name="fecha_inicio"]').value;
             const ff = document.querySelector('[name="fecha_fin"]').value;
+
             if (fi && ff) {
                 formFiltro.submit();
             }
-        });
-    });
-});
-</script>
 
+        });
+
+    });
+
+});
+
+</script>
 {% endblock %}

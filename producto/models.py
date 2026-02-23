@@ -19,18 +19,6 @@ class Producto(models.Model):
         ],
         default='cocina'
     )
-
-    # 🔥 NUEVO CAMPO
-    tipo_inventario = models.CharField(
-        max_length=10,
-        choices=[
-            ('peso', 'Por Peso'),
-            ('unidad', 'Por Unidad'),
-        ],
-        default='unidad',
-        help_text='Define cómo se controla el inventario de este producto'
-    )
-
     disponible = models.BooleanField(default=True)
 
     def reducir_stock(self, cantidad):
@@ -42,3 +30,9 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.stock})"
+
+@property
+def tipo_inventario(self):
+    if self.unidad:
+        return self.unidad.tipo
+    return 'unidad'
