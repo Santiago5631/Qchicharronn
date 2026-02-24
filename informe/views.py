@@ -49,9 +49,9 @@ def informe_list(request):
             try:
                 if tipo == 'ventas':
                     qs = Venta.objects.filter(
-                        fecha__gte=fecha_inicio,
-                        fecha__lte=fecha_fin
-                    ).select_related('pedido', 'admin').order_by('-fecha')
+                        fecha_venta__gte=fecha_inicio,
+                        fecha_venta__lte=fecha_fin
+                    ).select_related('pedido').order_by('-fecha_venta')
                     contexto['resultados'] = qs
                     contexto['cantidad'] = qs.count()
                     total_sum = qs.aggregate(total_sum=Sum('total'))['total_sum']
