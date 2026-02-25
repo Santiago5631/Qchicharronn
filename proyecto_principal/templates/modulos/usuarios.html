@@ -43,29 +43,31 @@
                         <td>{{ u.numero_celular }}</td>
                         <td>{{ u.estado }}</td>
 
-                        <td class="text-center">
+                      <td class="text-center">
 
-                            <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
-                                <button type="button"
-                                        class="btn btn-warning btn-sm mb-1"
-                                        title="Editar Usuario">
-                                    <i class="bi bi-pen-fill"></i>
-                                </button>
-                            </a>
+    <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
+        <button type="button" class="btn btn-warning btn-sm mb-1" title="Editar Usuario">
+            <i class="bi bi-pen-fill"></i>
+        </button>
+    </a>
 
-                            <button
-                                type="button"
-                                class="btn btn-danger btn-sm mb-1 btn-delete"
-                                data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
-                                data-name="{{ u.nombre }}"
-                                title="Eliminar Usuario">
+    <button type="button"
+            class="btn btn-info btn-sm mb-1 btn-reset-password"
+            data-url="{% url 'apl:usuario:usuario_reset_password' u.id %}"
+            data-name="{{ u.nombre }}"
+            title="Resetear Contraseña">
+        <i class="bi bi-key-fill text-white"></i>
+    </button>
 
-                                <i class="bi bi-trash3-fill"></i>
+    <button type="button"
+            class="btn btn-danger btn-sm mb-1 btn-delete"
+            data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
+            data-name="{{ u.nombre }}"
+            title="Eliminar Usuario">
+        <i class="bi bi-trash3-fill"></i>
+    </button>
 
-                            </button>
-
-                        </td>
-
+</td>
                     </tr>
 
                     {% empty %}
@@ -88,4 +90,44 @@
     {% csrf_token %}
 </form>
 
+{% endblock %}
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Seleccionamos todos los botones que tengan la clase .btn-reset-password
+    const resetButtons = document.querySelectorAll('.btn-reset-password');
+
+    // IMPORTANTE: Busca el token CSRF que ya tienes en tu form oculto
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    resetButtons.forEach(button => {
+        button.onclick = function() { // Cambié a .onclick para asegurar captura
+            const url = this.getAttribute('data-url');
+            const nombre = this.getAttribute('data-name');
+
+            if (confirm(`¿Estás seguro de resetear la contraseña de ${nombre}?`)) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ ÉXITO\n\n${data.message}\n\nNUEVA CONTRASEÑA: ${data.password_visible}`);
+                    } else {
+                        alert("❌ Error: " + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Error de conexión al servidor.");
+                });
+            }
+        };
+    });
+});
+</script>
 {% endblock %}

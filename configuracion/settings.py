@@ -189,7 +189,8 @@ GOOGLE_OAUTH_CREDS_PATH = os.path.join(BASE_DIR, 'oauth_credentials.json')
 GOOGLE_DRIVE_TOKEN_PATH = os.path.join(BASE_DIR, 'token_drive.pkl')
 
 # Ruta al ejecutable de mysqldump
-MYSQLDUMP_PATH = r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe'
+MYSQLDUMP_PATH = 'mysqldump'
 
 # ID de la carpeta de tu Google Drive personal donde se guardarán los backups
 GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
+BACKUP_ENCRYPTION_KEY = config('BACKUP_ENCRYPTION_KEY', default=SECRET_KEY)

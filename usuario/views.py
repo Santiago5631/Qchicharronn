@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView
 from django.views import View
@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from .forms import CustomPasswordResetForm
 from .models import Usuario
 from .utils import generar_password
+from django.shortcuts import get_object_or_404
+
 
 
 # ===============================
@@ -150,3 +152,27 @@ class UsuarioDeleteView(LoginRequiredMixin, View):
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
     template_name = 'registration/password_reset_form.html'
+
+#=========FUNCION DE CAMBIAR CONTRASEÑA=================
+class UsuarioResetPasswordView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        # Solo el admin puede hacer esto
+        if not request.user.is_staff:
+            return JsonResponse({'success': False, 'error': 'Permiso denegado'}, status=403)
+
+        usuario = get_object_or_404(Usuario, pk=pk)
+        nueva_password = generar_password()  # Tu utilidad
+
+        try:
+            usuario.set_password(nueva_password)
+            usuario.save()
+
+            # Opcional: enviar correo aquí si lo deseas
+
+            return JsonResponse({
+                'success': True,
+                'message': f'La contraseña de {usuario.nombre} ha sido actualizada.',
+                'password_visible': nueva_password
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
