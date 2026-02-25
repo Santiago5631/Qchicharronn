@@ -1,21 +1,16 @@
+# categoria/views.py
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from .models import *
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.shortcuts import render
 from .forms import CategoriaForm
 
-
-def listar_categoria(request):
-    data = {
-        'categoria': 'categoria',
-        'titulo': 'Lista de Categorías',
-        'categorias': Categoria.objects.all()
-    }
-    return render(request, 'modulos/categoria.html', data)
+from usuario.permisos import RolRequeridoMixin, SOLO_ADMIN
 
 
-class CategoriaListView(ListView):
+class CategoriaListView(RolRequeridoMixin, ListView):
+    """Solo administradores pueden ver las categorías."""
+    roles_permitidos = SOLO_ADMIN
     model = Categoria
     template_name = 'modulos/categoria.html'
     context_object_name = 'categorias'
@@ -28,11 +23,28 @@ class CategoriaListView(ListView):
         return context
 
 
-class CategoriaUpdateView(UpdateView):
+class CategoriaCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden crear categorías."""
+    roles_permitidos = SOLO_ADMIN
     model = Categoria
-    form_class = CategoriaForm          # ← Aquí también
+    form_class = CategoriaForm
+    template_name = 'forms/formulario_crear.html'
+    success_url = reverse_lazy('apl:categoria:listar_categoria')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Crear nueva Categoría'
+        context['modulo'] = 'categoria'
+        return context
+
+
+class CategoriaUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden editar categorías."""
+    roles_permitidos = SOLO_ADMIN
+    model = Categoria
+    form_class = CategoriaForm
     template_name = 'forms/formulario_actualizacion.html'
-    success_url = reverse_lazy('apl:listar_categoria')
+    success_url = reverse_lazy('apl:categoria:listar_categoria')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -40,7 +52,10 @@ class CategoriaUpdateView(UpdateView):
         context['modulo'] = 'categoria'
         return context
 
-class CategoriaDeleteView(DeleteView):
+
+class CategoriaDeleteView(RolRequeridoMixin, DeleteView):
+    """Solo administradores pueden eliminar categorías."""
+    roles_permitidos = SOLO_ADMIN
     model = Categoria
     template_name = 'forms/confirmar_eliminacion.html'
 
@@ -53,20 +68,5 @@ class CategoriaDeleteView(DeleteView):
         return context
 
     def get(self, request, *args, **kwargs):
-        # Renderiza solo el contenido para el modal
         self.object = self.get_object()
         return render(request, self.template_name, {'object': self.object})
-
-
-class CategoriaCreateView(CreateView):
-    model = Categoria
-    form_class = CategoriaForm          # ← Usa TU formulario personalizado
-    template_name = 'forms/formulario_crear.html'
-    success_url = reverse_lazy('apl:categoria:listar_categoria')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Crear nueva Categoría'
-        context['modulo'] = 'categoria'
-        return context
-

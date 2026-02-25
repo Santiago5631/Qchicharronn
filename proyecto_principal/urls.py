@@ -1,9 +1,10 @@
 from django.urls import path,include
 from proyecto_principal import views
+from django.contrib.auth.decorators import login_required
 
 app_name = 'apl'
-
 urlpatterns = [
+    path('dashboard/', login_required(views.dashboard), name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     # _________________________ Modulos de Usuario __________________________
     path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),
@@ -20,13 +21,13 @@ urlpatterns = [
     # _________________________ Modulos de Pedido __________________________
     path('pedidos/', include(("pedido.urls", 'pedido'), namespace='pedido')),
     # _________________________ Modulos de Empleado __________________________
-    path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
+    #path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
     # -------------------- Compra --------------------
     path('compras/', include('compra.urls', namespace='compra')),
     # -------------------- Venta --------------------------------------------
     path('ventas/', include('venta.urls', namespace='venta')),
     # -------------------- Administrador ------------------------------------
-    path('administradores/', include('administrador.urls', namespace='administrador')),
+    #path('administradores/', include('administrador.urls', namespace='administrador')),
     # -------------------- Informe ------------------------------------------
     path('informes/', include('informe.urls', namespace='informe')),
     # _________________________ Modulos de Producto __________________________

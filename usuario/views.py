@@ -1,35 +1,29 @@
 from django.shortcuts import render
+# usuario/views.py
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView
 from django.views import View
 from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
+
 from .forms import CustomPasswordResetForm
 from .models import Usuario
 from .utils import generar_password
 from django.shortcuts import get_object_or_404
 
 
-
-# ===============================
-# Vista de prueba (opcional)
-# ===============================
-def prueba(request):
-    data = {
-        'usuario': 'usuario',
-        'titulo': 'Lista de Usuarios',
-        'usuarios': Usuario.objects.all()
-    }
-    return render(request, 'modulos/usuarios.html', data)
+from usuario.permisos import RolRequeridoMixin, SOLO_ADMIN
 
 
-# ===============================
-# LISTA DE USUARIOS
-# ===============================
-class UsuarioListView(LoginRequiredMixin, ListView):
+# ══════════════════════════════════════════════
+# LISTA DE USUARIOS — Solo administradores
+# ══════════════════════════════════════════════
+class UsuarioListView(RolRequeridoMixin, ListView):
+    """Solo administradores pueden ver la lista de usuarios."""
+    roles_permitidos = SOLO_ADMIN
     model = Usuario
     template_name = 'modulos/usuarios.html'
     context_object_name = 'usuarios'
@@ -37,15 +31,17 @@ class UsuarioListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Lista de usuarios'
+        context['titulo']  = 'Lista de usuarios'
         context['usuario'] = 'usuario'
         return context
 
 
-# ===============================
-# CREAR USUARIO
-# ===============================
-class UsuarioCreateView(LoginRequiredMixin, CreateView):
+# ══════════════════════════════════════════════
+# CREAR USUARIO — Solo administradores
+# ══════════════════════════════════════════════
+class UsuarioCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden crear usuarios."""
+    roles_permitidos = SOLO_ADMIN
     model = Usuario
     template_name = 'forms/formulario_crear.html'
     login_url = '/login/'
@@ -69,18 +65,11 @@ class UsuarioCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        # 🔥 Generar contraseña temporal
         password_temporal = generar_password()
-
-        # Crear usuario sin guardar todavía
         user = form.save(commit=False)
-
-        # Encriptar contraseña correctamente
         user.set_password(password_temporal)
-
         user.save()
 
-        # 🔥 Enviar correo
         try:
             send_mail(
                 subject="Tu cuenta ha sido creada",
@@ -107,10 +96,13 @@ Te recomendamos cambiar tu contraseña después de ingresar.
         self.object = user
         return super().form_valid(form)
 
-# ===============================
-# ACTUALIZAR USUARIO
-# ===============================
-class UsuarioUpdateView(LoginRequiredMixin, UpdateView):
+
+# ══════════════════════════════════════════════
+# ACTUALIZAR USUARIO — Solo administradores
+# ══════════════════════════════════════════════
+class UsuarioUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden editar usuarios."""
+    roles_permitidos = SOLO_ADMIN
     model = Usuario
     template_name = 'forms/formulario_actualizacion.html'
     login_url = '/login/'
@@ -128,10 +120,12 @@ class UsuarioUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('apl:usuario:usuario_list')
 
 
-# ===============================
-# ELIMINAR USUARIO (AJAX)
-# ===============================
-class UsuarioDeleteView(LoginRequiredMixin, View):
+# ══════════════════════════════════════════════
+# ELIMINAR USUARIO — Solo administradores
+# ══════════════════════════════════════════════
+class UsuarioDeleteView(RolRequeridoMixin, View):
+    """Solo administradores pueden eliminar usuarios."""
+    roles_permitidos = SOLO_ADMIN
     login_url = '/login/'
 
     def post(self, request, pk, *args, **kwargs):
@@ -146,9 +140,10 @@ class UsuarioDeleteView(LoginRequiredMixin, View):
         return JsonResponse({'success': False}, status=400)
 
 
-# ===============================
-# PASSWORD RESET PERSONALIZADO
-# ===============================
+# ══════════════════════════════════════════════
+# PASSWORD RESET — Accesible sin restricción de rol
+# (el usuario ya está autenticado cuando llega aquí)
+# ══════════════════════════════════════════════
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
     template_name = 'registration/password_reset_form.html'

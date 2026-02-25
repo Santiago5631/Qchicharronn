@@ -1,13 +1,11 @@
+# compra/views.py
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404
 from .models import *
 from .forms import CompraForm
 from django.http import HttpResponse
-from django.template.loader import render_to_string
 from django.utils import timezone
 from openpyxl import Workbook
-from xhtml2pdf import pisa
-import io
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from reportlab.lib.pagesizes import A4
@@ -15,17 +13,14 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
+import io
+
+from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN
 
 
-def listar_compras(request):
-    data = {
-        "titulo": "Listado de Compras",
-        "compras": Compra.objects.all()
-    }
-    return render(request, 'modulos/compra.html', data)
-
-
-class CompraListView(ListView):
+class CompraListView(RolRequeridoMixin, ListView):
+    """Solo administradores pueden ver compras."""
+    roles_permitidos = SOLO_ADMIN
     model = Compra
     template_name = 'modulos/compra.html'
     context_object_name = 'compras'
@@ -36,7 +31,9 @@ class CompraListView(ListView):
         return context
 
 
-class CompraCreateView(CreateView):
+class CompraCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden crear compras."""
+    roles_permitidos = SOLO_ADMIN
     model = Compra
     template_name = 'forms/formulario_crear.html'
     form_class = CompraForm
@@ -52,7 +49,9 @@ class CompraCreateView(CreateView):
         return context
 
 
-class CompraUpdateView(UpdateView):
+class CompraUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden editar compras."""
+    roles_permitidos = SOLO_ADMIN
     model = Compra
     template_name = 'forms/formulario_actualizacion.html'
     fields = ['producto', 'fecha', 'precio', 'proveedor', 'cantidad', 'unidad']
@@ -62,7 +61,9 @@ class CompraUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class CompraDeleteView(DeleteView):
+class CompraDeleteView(RolRequeridoMixin, DeleteView):
+    """Solo administradores pueden eliminar compras."""
+    roles_permitidos = SOLO_ADMIN
     model = Compra
     template_name = 'forms/confirmar_eliminacion.html'
     success_url = '/apps/compras/listar/'
@@ -73,19 +74,18 @@ class CompraDeleteView(DeleteView):
         return context
 
 
-from django.shortcuts import render
-
-# -------------------- EXPORTAR A EXCEL --------------------
+# ──────────────────────────────────────────────
+# EXPORTAR A EXCEL — Solo administradores
+# ──────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def exportar_compras_excel(request):
     wb = Workbook()
     ws = wb.active
     ws.title = "Compras"
 
-    # Encabezados exactamente como en la tabla HTML
     encabezados = ['ID', 'Producto', 'Fecha', 'Precio', 'Proveedor', 'Cantidad', 'Unidad']
     ws.append(encabezados)
 
-    # Estilo de encabezado
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="007bff", end_color="007bff", fill_type="solid")
     align_center = Alignment(horizontal="center", vertical="center")
@@ -96,14 +96,12 @@ def exportar_compras_excel(request):
         cell.fill = header_fill
         cell.alignment = align_center
 
-    # Datos
     compras = Compra.objects.select_related('producto', 'proveedor').all().order_by('-fecha')
     total_precio = 0
 
     for c in compras:
         precio = c.precio or 0
         total_precio += precio
-
         ws.append([
             c.id_factura or '',
             c.producto.nombre if c.producto else 'Sin producto',
@@ -114,16 +112,13 @@ def exportar_compras_excel(request):
             str(c.unidad) if c.unidad else '',
         ])
 
-    # Total final
     ws.append([])
     ws.append(['', '', '', f'Total General:', f"${total_precio:,.2f}", '', ''])
 
-    # Ajustar ancho de columnas
     for i in range(1, 8):
         ws.column_dimensions[get_column_letter(i)].width = 15
-    ws.column_dimensions[get_column_letter(2)].width = 30  # Producto más ancho
+    ws.column_dimensions[get_column_letter(2)].width = 30
 
-    # Nombre con fecha
     filename = f"compras_{timezone.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -132,20 +127,24 @@ def exportar_compras_excel(request):
     wb.save(response)
     return response
 
-# -------------------- EXPORTAR A PDF --------------------
+
+# ──────────────────────────────────────────────
+# EXPORTAR A PDF — Solo administradores
+# ──────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def exportar_compras_pdf(request):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=40)
     elements = []
     styles = getSampleStyleSheet()
 
-    # Título
-    titulo = Paragraph(f"Listado de Compras<br/><small>Generado el {timezone.now().strftime('%d/%m/%Y %H:%M')}</small>",
-                       styles['Title'])
+    titulo = Paragraph(
+        f"Listado de Compras<br/><small>Generado el {timezone.now().strftime('%d/%m/%Y %H:%M')}</small>",
+        styles['Title']
+    )
     elements.append(titulo)
     elements.append(Spacer(1, 20))
 
-    # Datos
     data = [['ID', 'Producto', 'Fecha', 'Precio', 'Proveedor', 'Cantidad', 'Unidad']]
 
     compras = Compra.objects.select_related('producto', 'proveedor').all().order_by('-fecha')
@@ -164,10 +163,8 @@ def exportar_compras_pdf(request):
             str(c.unidad or ''),
         ])
 
-    # Fila de total
     data.append(['', '', 'TOTAL:', f"${total_precio:,.2f}", '', '', ''])
 
-    # Tabla con estilo
     table = Table(data, colWidths=[50, 120, 70, 70, 100, 60, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007bff')),
@@ -178,11 +175,8 @@ def exportar_compras_pdf(request):
         ('FONTSIZE', (0, 0), (-1, 0), 11),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, 1), (-1, -2), colors.HexColor('#f8f9fa')),
-        ('BACKGROUND', (-1, -1), (-1, -1), colors.HexColor('#e9ecef')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
     ]))
 
     elements.append(table)
