@@ -2,7 +2,6 @@ from django.urls import path,include
 from proyecto_principal import views
 
 app_name = 'apl'
-
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     # _________________________ Modulos de Usuario __________________________
@@ -20,13 +19,13 @@ urlpatterns = [
     # _________________________ Modulos de Pedido __________________________
     path('pedidos/', include(("pedido.urls", 'pedido'), namespace='pedido')),
     # _________________________ Modulos de Empleado __________________________
-    path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
+    #path('empleados/', include(('empleado.urls', 'empleado'), namespace='empleado')),
     # -------------------- Compra --------------------
     path('compras/', include('compra.urls', namespace='compra')),
     # -------------------- Venta --------------------------------------------
     path('ventas/', include('venta.urls', namespace='venta')),
     # -------------------- Administrador ------------------------------------
-    path('administradores/', include('administrador.urls', namespace='administrador')),
+    #path('administradores/', include('administrador.urls', namespace='administrador')),
     # -------------------- Informe ------------------------------------------
     path('informes/', include('informe.urls', namespace='informe')),
     # _________________________ Modulos de Producto __________________________
@@ -39,4 +38,6 @@ urlpatterns = [
     path('inventario/', include(("inventario.urls", 'inventario'), namespace='inventario')),
     #_____________________________Unidad_____________________________________________
     path('unidad/', include(("unidad.urls", 'unidad'), namespace='unidad')),
+    #________________________________Backups__________________________________________
+    path('backups/', include('backups.urls')),  # Quita la tupla y el namespace de aquí si te da error
 ]

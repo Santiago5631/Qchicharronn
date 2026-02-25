@@ -1,7 +1,3 @@
-"""
-Django settings for configuracion project.
-"""
-
 import os
 from pathlib import Path
 from decouple import config
@@ -12,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = 'django-insecure-o&^w-82qr1lo&08_$amo$$__6&77#5!k*nc!3jof(916o@@ku)'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
 # APPS
 INSTALLED_APPS = [
@@ -31,13 +27,11 @@ INSTALLED_APPS = [
 
     # captcha
     'captcha',
-    'proyecto_principal.apps.ProyectoPrincipalConfig',
 
-    # Tus apps personalizadas
-    'administrador.apps.AdministradorConfig',
+    # Apps del proyecto
+    'proyecto_principal.apps.ProyectoPrincipalConfig',
     'categoria.apps.CategoriaConfig',
     'compra.apps.CompraConfig',
-    'empleado.apps.EmpleadoConfig',
     'informe.apps.InformeConfig',
     'marca.apps.MarcaConfig',
     'menu.apps.MenuConfig',
@@ -51,13 +45,12 @@ INSTALLED_APPS = [
     'usuario.apps.UsuarioConfig',
     'venta.apps.VentaConfig',
     "inventario.apps.InventarioConfig",
+    "backups.apps.BackupsConfig",
 
     # aplicaciones extras
     "login",
     "widget_tweaks",
     "django_select2",
-    'dbbackup',
-    'gdstorage',
 ]
 
 SITE_ID = 1
@@ -120,26 +113,21 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'es'
+TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Static files
+# Static and Media files
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "proyecto_principal" ]
+STATICFILES_DIRS = [BASE_DIR / "proyecto_principal"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Configuración de medios
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Configuración de sesión
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 86400
-
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 AUTH_USER_MODEL = 'usuario.Usuario'
 
 AUTHENTICATION_BACKENDS = [
@@ -147,7 +135,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Redirect después del login
+# Redirects
 LOGIN_REDIRECT_URL = '/apps/dashboard/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
@@ -163,7 +151,7 @@ ACCOUNT_ALLOW_REGISTRATION = False
 ACCOUNT_FORMS = {'reset_password': 'usuario.forms.CustomPasswordResetForm'}
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 
-# Email - Gmail real
+# Email Config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -188,42 +176,20 @@ MESSAGE_TAGS = {
 }
 
 # ==============================================================================
-# SISTEMA PROFESIONAL DE BACKUPS (GOOGLE DRIVE) - CONFIGURACIÓN CORREGIDA
+# CONFIGURACIÓN DE BACKUPS (GOOGLE DRIVE - OAuth2 con Gmail personal)
 # ==============================================================================
 
-# 1. Credenciales y Carpeta
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'secrets', 'qchicharron-1761667105817-43035ce4e2fb.json')
+# Ruta al JSON de OAuth2 que descargaste de Google Cloud Console
+# (tipo "Desktop app", llámalo oauth_credentials.json y ponlo en la raíz)
+GOOGLE_OAUTH_CREDS_PATH = os.path.join(BASE_DIR, 'oauth_credentials.json')
 
-# RECOMENDACIÓN: Aquí puedes poner el ID de la carpeta o su nombre exacto
-GOOGLE_DRIVE_STORAGE_MEDIA_ROOT = 'Copias de seguridad que chicharron'
+# Token generado automáticamente al ejecutar generar_token.py por primera vez
+GOOGLE_DRIVE_TOKEN_PATH = os.path.join(BASE_DIR, 'token_drive.pkl')
 
-# 2. SOLUCIÓN AL ERROR DE CUOTA (403): Delegación de permisos
-GOOGLE_DRIVE_STORAGE_SERVICE_ACCOUNT_PERMISSION = {
-    'role': 'editor',
-    'type': 'user',
-    'emailAddress': 'davidsanti5631@gmail.com'  # <--- ¡CAMBIA ESTO POR TU GMAIL!
-}
+# Ruta al ejecutable de mysqldump
+MYSQLDUMP_PATH = r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe'
 
-# 3. Almacenamientos
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-    "dbbackup_drive": {
-        "BACKEND": "gdstorage.storage.GoogleDriveStorage",
-    },
-}
+# ID de la carpeta de tu Google Drive personal donde se guardarán los backups
+GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
 
-# 4. Configuración de dbbackup
-DBBACKUP_STORAGE_ALIAS = 'dbbackup_drive'
-DBBACKUP_CLEANUP_KEEP = 7
-
-DBBACKUP_CONNECTORS = {
-    'default': {
-        'CONNECTOR': 'dbbackup.db.mysql.MysqlDumpConnector',
-        'DUMP_COMMAND': r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe',
-    }
-}
+LOGIN_URL = '/login/'

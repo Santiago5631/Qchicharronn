@@ -1,10 +1,18 @@
+# mesa/views.py
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Mesa
 from .forms import MesaForm
 
-class MesaListView(ListView):
+from usuario.permisos import RolRequeridoMixin, ADMIN_MESERO
+# ADMIN_MESERO = ['administrador', 'mesero']
+# Los cocineros no gestionan mesas
+
+
+class MesaListView(RolRequeridoMixin, ListView):
+    """Admin y Meseros pueden ver mesas."""
+    roles_permitidos = ADMIN_MESERO
     model = Mesa
     template_name = 'modulos/mesa.html'
     context_object_name = 'mesa'
@@ -14,9 +22,12 @@ class MesaListView(ListView):
         context['titulo'] = 'Lista de Mesas'
         return context
 
-class MesaCreateView(CreateView):
+
+class MesaCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden CREAR mesas."""
+    roles_permitidos = ['administrador']
     model = Mesa
-    form_class = MesaForm  # Usar el formulario personalizado
+    form_class = MesaForm
     template_name = 'forms/formulario_crear.html'
     success_url = reverse_lazy('apl:mesa:mesa_list')
 
@@ -24,7 +35,7 @@ class MesaCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Crear Mesa'
         context['modulo'] = 'mesa'
-        context['boton'] = 'Guardar'
+        context['boton']  = 'Guardar'
         return context
 
     def form_valid(self, form):
@@ -35,9 +46,12 @@ class MesaCreateView(CreateView):
         messages.error(self.request, 'Por favor, corrige los errores en el formulario.')
         return super().form_invalid(form)
 
-class MesaUpdateView(UpdateView):
+
+class MesaUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden EDITAR mesas."""
+    roles_permitidos = ['administrador']
     model = Mesa
-    form_class = MesaForm  # Usar el formulario personalizado
+    form_class = MesaForm
     template_name = 'forms/formulario_actualizacion.html'
     success_url = reverse_lazy('apl:mesa:mesa_list')
 
@@ -45,7 +59,7 @@ class MesaUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Editar Mesa'
         context['modulo'] = 'mesa'
-        context['boton'] = 'Actualizar'
+        context['boton']  = 'Actualizar'
         return context
 
     def form_valid(self, form):
@@ -56,16 +70,19 @@ class MesaUpdateView(UpdateView):
         messages.error(self.request, 'Por favor, corrige los errores en el formulario.')
         return super().form_invalid(form)
 
-class MesaDeleteView(DeleteView):
+
+class MesaDeleteView(RolRequeridoMixin, DeleteView):
+    """Solo administradores pueden ELIMINAR mesas."""
+    roles_permitidos = ['administrador']
     model = Mesa
     template_name = 'forms/confirmar_eliminacion.html'
     success_url = reverse_lazy('apl:mesa:mesa_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Eliminar Mesa'
-        context['modulo'] = 'mesa'
-        context['objeto'] = self.object
+        context['titulo']  = 'Eliminar Mesa'
+        context['modulo']  = 'mesa'
+        context['objeto']  = self.object
         return context
 
     def delete(self, request, *args, **kwargs):

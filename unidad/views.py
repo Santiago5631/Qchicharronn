@@ -1,10 +1,16 @@
+# unidad/views.py
 from django.http import JsonResponse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from unidad.models import Unidad
-from unidad.forms import UnidadForm  # <-- agregar este import
+from unidad.forms import UnidadForm
 
-class UnidadListView(ListView):
+from usuario.permisos import RolRequeridoMixin, SOLO_ADMIN
+
+
+class UnidadListView(RolRequeridoMixin, ListView):
+    """Solo administradores pueden ver unidades."""
+    roles_permitidos = SOLO_ADMIN
     model = Unidad
     template_name = 'modulos/unidad.html'
     context_object_name = 'unidades'
@@ -15,10 +21,12 @@ class UnidadListView(ListView):
         return context
 
 
-class UnidadCreateView(CreateView):
+class UnidadCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden crear unidades."""
+    roles_permitidos = SOLO_ADMIN
     model = Unidad
     template_name = 'forms/formulario_crear.html'
-    form_class = UnidadForm  # <-- reemplaza fields = ['nombre', 'descripcion']
+    form_class = UnidadForm
 
     def get_success_url(self):
         return reverse_lazy('apl:unidad:unidad_list')
@@ -30,10 +38,12 @@ class UnidadCreateView(CreateView):
         return context
 
 
-class UnidadUpdateView(UpdateView):
+class UnidadUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden editar unidades."""
+    roles_permitidos = SOLO_ADMIN
     model = Unidad
     template_name = 'forms/formulario_actualizacion.html'
-    form_class = UnidadForm  # <-- reemplaza fields = ['nombre', 'descripcion']
+    form_class = UnidadForm
 
     def get_success_url(self):
         return reverse_lazy('apl:unidad:unidad_list')
@@ -44,7 +54,9 @@ class UnidadUpdateView(UpdateView):
         return context
 
 
-class UnidadDeleteView(DeleteView):
+class UnidadDeleteView(RolRequeridoMixin, DeleteView):
+    """Solo administradores pueden eliminar unidades."""
+    roles_permitidos = SOLO_ADMIN
     model = Unidad
     template_name = 'forms/confirmar_eliminacion.html'
 
