@@ -31,7 +31,12 @@ class CustomLoginView(LoginView):
         return reverse_lazy('apl:dashboard')
 
     def form_valid(self, form):
-        # Verificar reCAPTCHA antes de autenticar
+        # Si estamos en modo desarrollo, permitimos omitir el reCAPTCHA
+        if settings.DEBUG:
+            messages.success(self.request, '¡Bienvenido! (reCAPTCHA omitido en desarrollo)')
+            return super().form_valid(form)
+
+        # Verificar reCAPTCHA antes de autenticar (Solo en producción o DEBUG=False)
         recaptcha_token = self.request.POST.get('g-recaptcha-response')
 
         if not recaptcha_token:
