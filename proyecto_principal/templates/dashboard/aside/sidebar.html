@@ -1,4 +1,5 @@
 {% load static %}
+{% load permisos_tags %}
 <nav class="sidebar close">
     <header>
         <div class="image-text">
@@ -17,6 +18,8 @@
             </li>
 
             <ul class="menu-links">
+
+                {# ── Panel de Control — todos los roles ── #}
                 <li class="nav-link">
                     <a href="{% url 'apl:dashboard' %}">
                         <i class='bx bx-home-alt icon'></i>
@@ -24,24 +27,15 @@
                     </a>
                 </li>
 
+                {# ════════════════════════════════════════════ #}
+                {# SOLO ADMINISTRADOR                          #}
+                {# ════════════════════════════════════════════ #}
+                {% if request.user|tiene_cargo:"administrador" %}
+
                 <li class="nav-link">
                     <a href="{% url 'apl:usuario:usuario_list' %}">
                         <i class='bx bxs-user-rectangle icon'></i>
                         <span class="text nav-text">Usuarios</span>
-                    </a>
-                </li>
-
-                <li class="nav-link">
-                    <a href="{% url 'apl:mesa:mesa_list' %}">
-                        <i class='bx bxs-pin icon'></i>
-                        <span class="text nav-text">Mesa</span>
-                    </a>
-                </li>
-
-                <li class="nav-link">
-                    <a href="{% url 'apl:menu:menu_list' %}">
-                        <i class='bx bx-restaurant icon'></i>
-                        <span class="text nav-text">Menu</span>
                     </a>
                 </li>
 
@@ -52,54 +46,34 @@
                     </a>
                 </li>
 
-               <!--- <li class="nav-link">
-                    <a href="{"% url 'apl:empleado:listar_empleado' %}">
-                        <i class='bx bxs-user icon'></i>
-                        <span class="text nav-text">Empleados</span>
-                    </a>
-                </li>-->
                 <li class="nav-link">
                     <a href="{% url 'apl:compra:compra_list' %}">
                         <i class='bx bxs-wallet icon'></i>
                         <span class="text nav-text">Compra</span>
                     </a>
                 </li>
-                <li class="nav-link">
-                    <a href="{% url 'apl:venta:venta_list' %}">
-                        <i class='bx bxs-cart-alt icon'></i>
-                        <span class="text nav-text">Venta</span>
-                    </a>
-                </li>
-               <!-- <li class="nav-link">
-                    <a href="{"% url 'apl:administrador:administrador_list' %}">
-                        <i class='bx bx-user-circle icon'></i>
-                        <span class="text nav-text">Administrador</span>
-                    </a>
-                </li>-->
+
                 <li class="nav-link">
                     <a href="{% url 'apl:producto:producto_list' %}">
                         <i class='bx bxs-bowl-hot icon'></i>
                         <span class="text nav-text">Producto</span>
                     </a>
                 </li>
+
                 <li class="nav-link">
                     <a href="{% url 'apl:proveedor:proveedor_list' %}">
                         <i class='bx bxs-user-badge icon'></i>
                         <span class="text nav-text">Proveedor</span>
                     </a>
                 </li>
+
                 <li class="nav-link">
                     <a href="{% url 'apl:nomina:nomina_list' %}">
                         <i class='bx bx-money-withdraw icon'></i>
                         <span class="text nav-text">Nomina</span>
                     </a>
                 </li>
-                <li class="nav-link">
-                    <a href="{% url 'apl:inventario:dashboard' %}">
-                        <i class='bx bxs-archive-out icon'></i>
-                        <span class="text nav-text">Inventario</span>
-                    </a>
-                </li>
+
                 <li class="nav-link">
                     <a href="{% url 'apl:unidad:unidad_list' %}">
                         <i class='bx bx-tag icon'></i>
@@ -113,25 +87,111 @@
                         <span class="text nav-text">Informes</span>
                     </a>
                 </li>
+
                 <li class="nav-link">
                     <a href="{% url 'apl:backups:generar_backup' %}">
-                        <i class='bx bxs-notepad icon'></i>
+                        <i class='bx bx-cloud-upload icon'></i>
                         <span class="text nav-text">Copias de Seguridad</span>
                     </a>
                 </li>
+
+                {% endif %}
+                {# ── fin solo administrador ── #}
+
+
+                {# ════════════════════════════════════════════ #}
+                {# ADMINISTRADOR + MESERO                      #}
+                {# ════════════════════════════════════════════ #}
+                {% if request.user|cargo_en:"administrador,mesero" %}
+
+                <li class="nav-link">
+                    <a href="{% url 'apl:mesa:mesa_list' %}">
+                        <i class='bx bxs-pin icon'></i>
+                        <span class="text nav-text">Mesa</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a href="{% url 'apl:venta:venta_list' %}">
+                        <i class='bx bxs-cart-alt icon'></i>
+                        <span class="text nav-text">Venta</span>
+                    </a>
+                </li>
+
+                {% endif %}
+                {# ── fin admin + mesero ── #}
+
+
+                {# ════════════════════════════════════════════ #}
+                {# ADMINISTRADOR + COCINERO + PARRILLA         #}
+                {# ════════════════════════════════════════════ #}
+                {% if request.user|cargo_en:"administrador,cocinero,parrilla" %}
+
+                <li class="nav-link">
+                    <a href="{% url 'apl:inventario:dashboard' %}">
+                        <i class='bx bxs-archive-out icon'></i>
+                        <span class="text nav-text">Inventario</span>
+                    </a>
+                </li>
+
+                {% endif %}
+                {# ── fin admin + cocinas ── #}
+
+
+                {# ════════════════════════════════════════════ #}
+                {# TODOS LOS ROLES                             #}
+                {# ════════════════════════════════════════════ #}
+                <li class="nav-link">
+                    <a href="{% url 'apl:menu:menu_list' %}">
+                        <i class='bx bx-restaurant icon'></i>
+                        <span class="text nav-text">Menu</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a href="{% url 'apl:menu:pedido_list' %}">
+                        <i class='bx bx-receipt icon'></i>
+                        <span class="text nav-text">Pedidos</span>
+                    </a>
+                </li>
+
+                {# ════════════════════════════════════════════ #}
+                {# COMANDAS — Diferenciadas por tipo de cocina  #}
+                {# ════════════════════════════════════════════ #}
+
+                {# Comanda Cocina — solo admin y cocinero #}
+                {% if request.user|cargo_en:"administrador,cocinero" %}
+                <li class="nav-link">
+                    <a href="{% url 'apl:pedido:listar_pedido' %}">
+                        <i class='bx bx-fire icon'></i>
+                        <span class="text nav-text">Comandas Cocina</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {# Comanda Parrilla — solo admin y parrilla #}
+                {% if request.user|cargo_en:"administrador,parrilla" %}
+                <li class="nav-link">
+                    <a href="{% url 'apl:pedido:listar_pedido' %}">
+                        <i class='bx bx-dish icon'></i>
+                        <span class="text nav-text">Comandas Parrilla</span>
+                    </a>
+                </li>
+                {% endif %}
+
             </ul>
         </div>
 
         <div class="bottom-content">
             <li>
-    <form method="post" action="{% url 'login:logout' %}" id="logout-form">
-        {% csrf_token %}
-        <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">
-            <i class='bx bx-log-out icon'></i>
-            <span class="text nav-text">Cerrar Sesion</span>
-        </a>
-    </form>
-</li>
+                <form method="post" action="{% url 'login:logout' %}" id="logout-form">
+                    {% csrf_token %}
+                    <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">
+                        <i class='bx bx-log-out icon'></i>
+                        <span class="text nav-text">Cerrar Sesion</span>
+                    </a>
+                </form>
+            </li>
 
             <li class="mode">
                 <div class="moon-sun">
@@ -139,7 +199,6 @@
                     <i class='bx bx-sun icon sun'></i>
                 </div>
                 <span class="mode-text text">Modo Oscuro</span>
-
                 <div class="toggle-switch">
                     <span class="switch"></span>
                 </div>

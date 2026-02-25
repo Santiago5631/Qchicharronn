@@ -1,4 +1,5 @@
 {% load static %}
+{% load permisos_tags %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function () {
     /* =========================
        SELECT2 GLOBAL
     ========================= */
-
     if ($.fn.select2) {
         $('.select2').select2({
             width: '100%',
@@ -97,9 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /* =========================
        DATATABLE GLOBAL
     ========================= */
-
     if ($.fn.DataTable) {
-
         $('.datatable').DataTable({
             language: {
                 lengthMenu: "Mostrar _MENU_ registros por página",
@@ -119,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
             responsive: true,
             autoWidth: false
         });
-
     }
 
 });
@@ -128,12 +125,10 @@ document.addEventListener('DOMContentLoaded', function () {
 /* =========================
    SWEETALERT DELETE GLOBAL
 ========================= */
-
 $(document).on("click", ".btn-delete", function (e) {
-
     e.preventDefault();
 
-    let url = $(this).data("url");
+    let url  = $(this).data("url");
     let name = $(this).data("name");
 
     Swal.fire({
@@ -146,20 +141,15 @@ $(document).on("click", ".btn-delete", function (e) {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar"
     }).then((result) => {
-
         if (result.isConfirmed) {
-
             $.ajax({
                 url: url,
                 type: "POST",
                 data: {
                     csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
                 },
-
                 success: function (response) {
-
                     if (response.status === "ok") {
-
                         Swal.fire({
                             title: "¡Eliminado!",
                             text: `"${name}" fue eliminado correctamente.`,
@@ -168,27 +158,18 @@ $(document).on("click", ".btn-delete", function (e) {
                         }).then(() => {
                             location.reload();
                         });
-
                     }
-
                 },
-
                 error: function () {
-
                     Swal.fire({
                         title: "Error",
                         text: "No se pudo eliminar el registro",
                         icon: "error"
                     });
-
                 }
-
             });
-
         }
-
     });
-
 });
 
 </script>

@@ -1,3 +1,4 @@
+# inventario/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, View
@@ -6,7 +7,6 @@ from django.db import transaction
 from django.utils import timezone
 from django.http import JsonResponse
 from decimal import Decimal
-from datetime import datetime, timedelta
 
 from .models import InventarioDiario, MovimientoInventario, HistorialStock, TipoInventario
 from .forms import (
@@ -18,29 +18,30 @@ from .forms import (
 )
 from producto.models import Producto
 
+from usuario.permisos import RolRequeridoMixin, COCINAS
+# COCINAS = ['administrador', 'cocinero', 'parrilla']
+# Los meseros NO tienen acceso al inventario
+
 
 # ==================== DASHBOARD ====================
-class InventarioDashboardView(View):
-    """Vista principal del inventario"""
+class InventarioDashboardView(RolRequeridoMixin, View):
+    """Vista principal del inventario — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     template_name = 'inventario/dashboard.html'
 
     def get(self, request):
-        # Obtener inventario del día actual
         hoy = timezone.now().date()
         inventario_hoy = InventarioDiario.objects.filter(fecha=hoy).first()
 
-        # Productos con bajo stock
         productos_bajo_stock = Producto.objects.filter(
             disponible=True,
-            stock__lt=10  # Ajustar según necesidad
+            stock__lt=10
         ).order_by('stock')[:10]
 
-        # Últimos movimientos
         ultimos_movimientos = MovimientoInventario.objects.select_related(
             'producto', 'inventario_diario'
         ).order_by('-fecha_actualizacion')[:10]
 
-        # Productos sin stock
         productos_sin_stock = Producto.objects.filter(
             disponible=True,
             stock=0
@@ -53,26 +54,23 @@ class InventarioDashboardView(View):
             'ultimos_movimientos': ultimos_movimientos,
             'productos_sin_stock': productos_sin_stock,
         }
-
         return render(request, self.template_name, context)
 
 
 # ==================== APERTURA DE INVENTARIO ====================
-class AperturaInventarioView(View):
-    """Vista para abrir el inventario del día"""
+class AperturaInventarioView(RolRequeridoMixin, View):
+    """Abrir inventario del día — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     template_name = 'inventario/apertura.html'
 
     def get(self, request):
         hoy = timezone.now().date()
 
-        # Verificar si ya existe inventario para hoy
         if InventarioDiario.objects.filter(fecha=hoy).exists():
             messages.warning(request, 'Ya existe un inventario abierto para hoy')
             return redirect('apl:inventario:dashboard')
 
         form = AperturaInventarioForm(initial={'fecha': hoy})
-
-        # Obtener todos los productos disponibles
         productos = Producto.objects.filter(disponible=True).order_by('nombre')
 
         context = {
@@ -80,7 +78,6 @@ class AperturaInventarioView(View):
             'form': form,
             'productos': productos,
         }
-
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -89,33 +86,27 @@ class AperturaInventarioView(View):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    # Crear inventario diario
                     inventario = form.save()
 
-                    # Obtener productos seleccionados del POST
                     productos_data = {}
                     for key, value in request.POST.items():
                         if key.startswith('producto_'):
                             producto_id = key.split('_')[1]
-                            if value.strip():  # Solo si tiene valor
+                            if value.strip():
                                 productos_data[producto_id] = value
 
                     if not productos_data:
                         messages.error(request, 'Debe seleccionar al menos un producto')
                         return redirect('apl:inventario:apertura')
 
-                    # Crear movimientos de inventario
                     for producto_id, inventario_inicial in productos_data.items():
                         producto = Producto.objects.get(id=producto_id)
-
                         MovimientoInventario.objects.create(
                             inventario_diario=inventario,
                             producto=producto,
                             tipo_control=producto.tipo_inventario,
                             inventario_inicial=Decimal(inventario_inicial),
                         )
-
-                        # Actualizar stock del producto
                         producto.stock = Decimal(inventario_inicial)
                         producto.save()
 
@@ -128,15 +119,15 @@ class AperturaInventarioView(View):
             except Exception as e:
                 messages.error(request, f'Error al abrir inventario: {str(e)}')
                 return redirect('apl:inventario:apertura')
-
         else:
             messages.error(request, 'Por favor corrija los errores')
             return self.get(request)
 
 
 # ==================== CIERRE DE INVENTARIO ====================
-class CierreInventarioView(View):
-    """Vista para cerrar el inventario del día"""
+class CierreInventarioView(RolRequeridoMixin, View):
+    """Cerrar inventario del día — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     template_name = 'inventario/cierre.html'
 
     def get(self, request, pk):
@@ -153,7 +144,6 @@ class CierreInventarioView(View):
             'inventario': inventario,
             'movimientos': movimientos,
         }
-
         return render(request, self.template_name, context)
 
     def post(self, request, pk):
@@ -169,20 +159,16 @@ class CierreInventarioView(View):
                 registros_procesados = 0
 
                 for movimiento in movimientos:
-                    # Obtener inventario final del formulario
-                    campo_nombre = f'inventario_final_{movimiento.id}'
+                    campo_nombre  = f'inventario_final_{movimiento.id}'
                     motivo_nombre = f'motivo_ajuste_{movimiento.id}'
-
                     inventario_final = request.POST.get(campo_nombre)
-                    motivo_ajuste = request.POST.get(motivo_nombre, '')
+                    motivo_ajuste    = request.POST.get(motivo_nombre, '')
 
                     if inventario_final:
                         movimiento.registrar_cierre(
                             inventario_final_fisico=inventario_final,
                             motivo_ajuste=motivo_ajuste if motivo_ajuste else None
                         )
-
-                        # Registrar en historial
                         HistorialStock.objects.create(
                             producto=movimiento.producto,
                             tipo_movimiento='cierre',
@@ -192,12 +178,9 @@ class CierreInventarioView(View):
                             referencia=f"Cierre {inventario.fecha.strftime('%d/%m/%Y')}",
                             observaciones=f"Consumo: {movimiento.consumo_calculado} | Ajuste: {movimiento.ajuste_manual}"
                         )
-
                         registros_procesados += 1
 
-                # Cerrar el inventario
                 inventario.cerrar_inventario()
-
                 messages.success(
                     request,
                     f'Inventario cerrado exitosamente. {registros_procesados} productos procesados'
@@ -210,8 +193,9 @@ class CierreInventarioView(View):
 
 
 # ==================== DETALLE DE INVENTARIO ====================
-class InventarioDetalleView(DetailView):
-    """Vista de detalle de un inventario específico"""
+class InventarioDetalleView(RolRequeridoMixin, DetailView):
+    """Detalle de inventario — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     model = InventarioDiario
     template_name = 'inventario/detalle.html'
     context_object_name = 'inventario'
@@ -220,31 +204,24 @@ class InventarioDetalleView(DetailView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = f"Inventario {self.object.fecha.strftime('%d/%m/%Y')}"
 
-        # Movimientos agrupados por tipo
         movimientos = self.object.movimientos.select_related('producto').order_by('producto__nombre')
-
-        context['movimientos_peso'] = movimientos.filter(tipo_control='peso')
+        context['movimientos_peso']   = movimientos.filter(tipo_control='peso')
         context['movimientos_unidad'] = movimientos.filter(tipo_control='unidad')
 
-        # Estadísticas
         total_productos = movimientos.count()
         productos_con_diferencia = movimientos.exclude(
             inventario_final__isnull=True
-        ).filter(
-            tipo_control='unidad'
-        ).exclude(
-            ajuste_manual=0
-        ).count()
+        ).filter(tipo_control='unidad').exclude(ajuste_manual=0).count()
 
-        context['total_productos'] = total_productos
+        context['total_productos']         = total_productos
         context['productos_con_diferencia'] = productos_con_diferencia
-
         return context
 
 
 # ==================== LISTA DE INVENTARIOS ====================
-class InventarioListView(ListView):
-    """Lista de todos los inventarios"""
+class InventarioListView(RolRequeridoMixin, ListView):
+    """Lista de todos los inventarios — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     model = InventarioDiario
     template_name = 'inventario/lista.html'
     context_object_name = 'inventarios'
@@ -252,24 +229,22 @@ class InventarioListView(ListView):
 
     def get_queryset(self):
         queryset = InventarioDiario.objects.all()
-
-        # Filtrar por estado si se proporciona
         estado = self.request.GET.get('estado')
         if estado:
             queryset = queryset.filter(estado=estado)
-
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Lista de Inventarios'
-        context['estado_actual'] = self.request.GET.get('estado', '')
+        context['titulo']         = 'Lista de Inventarios'
+        context['estado_actual']  = self.request.GET.get('estado', '')
         return context
 
 
 # ==================== AJUSTES MANUALES ====================
-class AjusteInventarioView(View):
-    """Vista para realizar ajustes manuales de inventario"""
+class AjusteInventarioView(RolRequeridoMixin, View):
+    """Ajustes manuales — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     template_name = 'inventario/ajuste.html'
 
     def get(self, request):
@@ -286,14 +261,12 @@ class AjusteInventarioView(View):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    producto = form.cleaned_data['producto']
-                    tipo_movimiento = form.cleaned_data['tipo_movimiento']
-                    cantidad = form.cleaned_data['cantidad']
-                    motivo = form.cleaned_data['motivo']
+                    producto         = form.cleaned_data['producto']
+                    tipo_movimiento  = form.cleaned_data['tipo_movimiento']
+                    cantidad         = form.cleaned_data['cantidad']
+                    motivo           = form.cleaned_data['motivo']
+                    stock_anterior   = producto.stock
 
-                    stock_anterior = producto.stock
-
-                    # Aplicar el movimiento
                     if tipo_movimiento == 'entrada':
                         producto.stock += cantidad
                     elif tipo_movimiento == 'salida':
@@ -303,7 +276,6 @@ class AjusteInventarioView(View):
 
                     producto.save()
 
-                    # Registrar en historial
                     HistorialStock.objects.create(
                         producto=producto,
                         tipo_movimiento=tipo_movimiento,
@@ -322,7 +294,6 @@ class AjusteInventarioView(View):
 
             except Exception as e:
                 messages.error(request, f'Error al realizar ajuste: {str(e)}')
-
         else:
             messages.error(request, 'Por favor corrija los errores')
 
@@ -330,24 +301,24 @@ class AjusteInventarioView(View):
 
 
 # ==================== REPORTES ====================
-class ReporteInventarioView(View):
-    """Vista para generar reportes de inventario"""
+class ReporteInventarioView(RolRequeridoMixin, View):
+    """Reportes de inventario — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     template_name = 'inventario/reporte.html'
 
     def get(self, request):
         form = FiltroReporteForm(request.GET or None)
-        movimientos = None
+        movimientos  = None
         estadisticas = {}
 
         if form.is_valid():
-            # Filtrar movimientos
             movimientos = MovimientoInventario.objects.select_related(
                 'producto', 'inventario_diario'
             ).exclude(inventario_final__isnull=True)
 
-            fecha_desde = form.cleaned_data.get('fecha_desde')
-            fecha_hasta = form.cleaned_data.get('fecha_hasta')
-            producto = form.cleaned_data.get('producto')
+            fecha_desde  = form.cleaned_data.get('fecha_desde')
+            fecha_hasta  = form.cleaned_data.get('fecha_hasta')
+            producto     = form.cleaned_data.get('producto')
             tipo_control = form.cleaned_data.get('tipo_control')
 
             if fecha_desde:
@@ -361,17 +332,12 @@ class ReporteInventarioView(View):
 
             movimientos = movimientos.order_by('-inventario_diario__fecha')
 
-            # Calcular estadísticas
             if movimientos.exists():
-                total_consumo = sum(m.consumo_calculado for m in movimientos)
-                total_diferencias = sum(abs(m.diferencia) for m in movimientos)
-                productos_con_ajuste = movimientos.exclude(ajuste_manual=0).count()
-
                 estadisticas = {
                     'total_registros': movimientos.count(),
-                    'total_consumo': total_consumo,
-                    'total_diferencias': total_diferencias,
-                    'productos_con_ajuste': productos_con_ajuste,
+                    'total_consumo': sum(m.consumo_calculado for m in movimientos),
+                    'total_diferencias': sum(abs(m.diferencia) for m in movimientos),
+                    'productos_con_ajuste': movimientos.exclude(ajuste_manual=0).count(),
                 }
 
         context = {
@@ -380,13 +346,13 @@ class ReporteInventarioView(View):
             'movimientos': movimientos,
             'estadisticas': estadisticas,
         }
-
         return render(request, self.template_name, context)
 
 
 # ==================== HISTORIAL DE STOCK ====================
-class HistorialStockView(ListView):
-    """Vista del historial de movimientos de stock"""
+class HistorialStockView(RolRequeridoMixin, ListView):
+    """Historial de stock — Admin, Cocinero, Parrilla."""
+    roles_permitidos = COCINAS
     model = HistorialStock
     template_name = 'inventario/historial.html'
     context_object_name = 'movimientos'
@@ -394,17 +360,14 @@ class HistorialStockView(ListView):
 
     def get_queryset(self):
         queryset = HistorialStock.objects.select_related('producto')
-
-        # Filtrar por producto si se proporciona
         producto_id = self.request.GET.get('producto')
         if producto_id:
             queryset = queryset.filter(producto_id=producto_id)
-
         return queryset.order_by('-fecha')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Historial de Stock'
-        context['productos'] = Producto.objects.filter(disponible=True)
+        context['titulo']               = 'Historial de Stock'
+        context['productos']            = Producto.objects.filter(disponible=True)
         context['producto_seleccionado'] = self.request.GET.get('producto', '')
         return context

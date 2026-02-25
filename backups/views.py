@@ -1,3 +1,4 @@
+# backups/views.py
 import os
 import pickle
 import subprocess
@@ -14,11 +15,13 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
+from usuario.permisos import rol_requerido, SOLO_ADMIN
+
 
 # ─────────────────────────────────────────────
 # CONSTANTES
 # ─────────────────────────────────────────────
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SCOPES     = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_PATH = settings.GOOGLE_DRIVE_TOKEN_PATH
 CREDS_PATH = settings.GOOGLE_OAUTH_CREDS_PATH
 
@@ -29,7 +32,6 @@ def _get_credentials():
         return None
     with open(TOKEN_PATH, 'rb') as f:
         creds = pickle.load(f)
-    # Refrescar si expiraron
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
         with open(TOKEN_PATH, 'wb') as f:
@@ -44,32 +46,31 @@ def _esta_autenticado():
 
 # ─────────────────────────────────────────────
 # VISTA PRINCIPAL — Página de backups
+# Solo accesible para Administradores
 # ─────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def realizar_copia_seguridad(request):
     autenticado = _esta_autenticado()
 
     if request.method == "POST":
         creds = _get_credentials()
 
-        # Si no hay token válido, redirigir a Google para autenticarse
         if not creds:
             return redirect(reverse('apl:backups:google_auth'))
 
-        # ── Con credenciales válidas, generar el backup ──
-        db_config = settings.DATABASES['default']
-        MYSQLDUMP_EXE = settings.MYSQLDUMP_PATH
+        db_config      = settings.DATABASES['default']
+        MYSQLDUMP_EXE  = settings.MYSQLDUMP_PATH
         PARENT_FOLDER_ID = settings.GOOGLE_DRIVE_FOLDER_ID
 
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        timestamp   = datetime.now().strftime("%Y-%m-%d_%H-%M")
         nombre_base = f"backup_db_{timestamp}"
-        # DESPUÉS ✅ - van a una carpeta específica
         CARPETA_TEMP = os.path.join(settings.BASE_DIR, 'backups', 'temp')
-        os.makedirs(CARPETA_TEMP, exist_ok=True)  # La crea si no existe
+        os.makedirs(CARPETA_TEMP, exist_ok=True)
 
         ruta_sql = os.path.join(CARPETA_TEMP, f"{nombre_base}.sql")
         ruta_zip = os.path.join(CARPETA_TEMP, f"{nombre_base}.zip")
+
         try:
-            # 1. GENERAR SQL
             os.environ['MYSQL_PWD'] = str(db_config['PASSWORD'])
             comando = [
                 MYSQLDUMP_EXE,
@@ -80,11 +81,9 @@ def realizar_copia_seguridad(request):
             ]
             subprocess.run(comando, check=True, shell=True)
 
-            # 2. COMPRIMIR
             with zipfile.ZipFile(ruta_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 zipf.write(ruta_sql, arcname=os.path.basename(ruta_sql))
 
-            # 3. SUBIR A DRIVE
             service = build('drive', 'v3', credentials=creds)
             file_metadata = {
                 'name': os.path.basename(ruta_zip),
@@ -121,7 +120,9 @@ def realizar_copia_seguridad(request):
 
 # ─────────────────────────────────────────────
 # VISTA — Inicia el flujo OAuth2 con Google
+# Solo accesible para Administradores
 # ─────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def google_auth(request):
     flow = Flow.from_client_secrets_file(
         CREDS_PATH,
@@ -139,7 +140,9 @@ def google_auth(request):
 
 # ─────────────────────────────────────────────
 # VISTA — Callback que Google llama tras autenticarse
+# Solo accesible para Administradores
 # ─────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def google_callback(request):
     state = request.session.get('oauth_state')
 
@@ -153,11 +156,10 @@ def google_callback(request):
     flow.fetch_token(authorization_response=request.build_absolute_uri())
     creds = flow.credentials
 
-    # Guardar token para uso futuro
     with open(TOKEN_PATH, 'wb') as f:
         pickle.dump(creds, f)
 
-    messages.success(request, "✅ Cuenta de Google vinculada correctamente. Ahora puedes generar tu backup.")
+    messages.success(request, "✅ Cuenta de Google vinculada correctamente.")
     return redirect('apl:backups:generar_backup')
 
 
