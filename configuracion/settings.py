@@ -61,9 +61,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'configuracion.middleware.RequireLoginMiddleware',
 ]
 
 ROOT_URLCONF = 'configuracion.urls'
@@ -139,14 +141,17 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_REDIRECT_URL = '/apps/dashboard/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = '/login/'
 
 # === CONFIGURACIÓN DE ALLAUTH ===
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_SIGNUP_FIELDS = ['email']
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_ALLOW_REGISTRATION = False
 ACCOUNT_FORMS = {'reset_password': 'usuario.forms.CustomPasswordResetForm'}
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
