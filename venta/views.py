@@ -39,7 +39,16 @@ class VentaDetailView(DetailView):
         context['items'] = self.object.items.all()
         context['clientes'] = Cliente.objects.all()
         context['titulo'] = f'Detalle de Venta #{self.object.numero_factura}'
+        venta = self.object
+        if venta.cliente_factura:
+            context['cliente_display'] = venta.cliente_factura
+        elif venta.cliente:
+            context['cliente_display'] = venta.cliente
+        else:
+            context['cliente_display'] = None
         return context
+
+
 
 
 
@@ -51,37 +60,44 @@ class VentaFacturaView(DetailView):
     def get_queryset(self):
         return Venta.objects.select_related(
             'pedido',
-            'mesa'
+            'mesa',
+            'cliente',
+            'cliente_factura'
         ).prefetch_related(
             'items'
         )
 
     def get_object(self, queryset=None):
         venta = super().get_object(queryset)
-        if venta.estado != 'pagado':
-            raise Http404("La venta aún no está pagada")
+        if venta.estado != 'pagado' and venta.estado != 'pendiente':
+            raise Http404("Estado inválido")
         return venta
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-
         venta = self.object
-        if not venta.cliente_factura and venta.cliente:
-            context['cliente_factura_display'] = venta.cliente
+
+        # Prioridad
+        if venta.cliente_factura_id:  # usar _id es más confiable
+            try:
+                cliente_mostrar = Cliente.objects.get(pk=venta.cliente_factura_id)
+            except Cliente.DoesNotExist:
+                cliente_mostrar = None
+        elif venta.cliente_id:
+            try:
+                cliente_mostrar = Cliente.objects.get(pk=venta.cliente_id)
+            except Cliente.DoesNotExist:
+                cliente_mostrar = None
         else:
-            context['cliente_factura_display'] = venta.cliente_factura
+            cliente_mostrar = None
+
+        context['cliente_display'] = cliente_mostrar
+        context['clientes'] = Cliente.objects.all()
         context['titulo'] = f'Factura {venta.numero_factura}'
         context['items'] = venta.items.all()
-        context['fecha'] = venta.fecha_venta
-        context['metodo_pago'] = venta.get_metodo_pago_display()
-        context['clientes'] = Cliente.objects.all()
-
-        print("ENTRANDO A VENTA FACTURA VIEW")
-        print("Clientes:", Cliente.objects.count())
 
         return context
-
 
 
 class VentaFinalizarView(View):
@@ -98,24 +114,27 @@ class VentaFinalizarView(View):
             messages.error(request, 'Debe seleccionar un método de pago.')
             return redirect('apl:venta:venta_detail', pk=venta.pk)
 
-        # ASIGNACIÓN AUTOMÁTICA DEL CLIENTE PARA FACTURACIÓN
-        # Prioridad: si ya hay cliente_factura → mantenerlo
-        # Si no, usar el del pedido si existe, o el nombre histórico
-        if not venta.cliente_factura:
-            if venta.cliente:
-                venta.cliente_factura = venta.cliente
-            elif venta.cliente_nombre:
-                # Si solo tienes nombre, no puedes asignar objeto → opcional: dejar como está o crear un cliente genérico
-                pass  # o manejar como prefieras
+        # 🔹 NUEVO: obtener cliente_factura del form
+        cliente_factura_id = request.POST.get('cliente_factura', '').strip()
+
+        if cliente_factura_id:
+            try:
+                cliente = Cliente.objects.get(pk=cliente_factura_id)
+                venta.cliente_factura = cliente
+            except Cliente.DoesNotExist:
+                messages.warning(request, 'Cliente seleccionado no encontrado.')
+                venta.cliente_factura = None
+        else:
+            venta.cliente_factura = venta.cliente if venta.cliente else None
 
         # Guardar datos
         venta.metodo_pago = metodo_pago
         venta.estado = 'pagado'
         venta.save()
 
-        # Marcar pedido como entregado (ya lo tienes)
+        # Marcar pedido como entregado
         if venta.pedido:
-            venta.pedido.estado = 'entregado'  # o 'terminado' como usas en services
+            venta.pedido.estado = 'entregado'
             venta.pedido.save()
 
         messages.success(
@@ -123,44 +142,5 @@ class VentaFinalizarView(View):
             f'Venta #{venta.numero_factura} finalizada correctamente.'
         )
 
-        return redirect('apl:venta:venta_factura', pk=venta.pk)
+        return redirect('apl:venta:factura', pk=venta.pk)
 
-
-class VentaCambiarClienteView(View):
-    def post(self, request, pk):
-        print("=== CAMBIO CLIENTE EJECUTADO ===")
-        print("Venta PK:", pk)
-        print("POST completo:", request.POST)
-        print("Método:", request.method)
-
-        cliente_id = request.POST.get("cliente")
-        print("Valor recibido de 'cliente':", cliente_id)
-
-        venta = get_object_or_404(Venta, pk=pk)
-        print("Cliente factura antes:", venta.cliente_factura_id)
-
-        if cliente_id and cliente_id.strip() and cliente_id.isdigit():
-            try:
-                cliente = Cliente.objects.get(id=int(cliente_id))
-                print("Cliente encontrado:", cliente.id, cliente.nombre)
-
-                venta.cliente_factura = cliente
-                venta.cliente_nombre = f"{cliente.nombre}"
-                if cliente.numero_documento:
-                    venta.cliente_nombre += f" - {cliente.numero_documento}"
-
-                venta.save()
-                print("Guardado OK → cliente_factura ahora:", venta.cliente_factura_id)
-                messages.success(request, f"Cliente cambiado a {cliente.nombre}")
-            except Cliente.DoesNotExist:
-                print("Cliente NO existe con id:", cliente_id)
-                messages.error(request, "Cliente no encontrado")
-            except Exception as e:
-                print("ERROR al guardar:", str(e))
-                messages.error(request, f"Error: {str(e)}")
-        else:
-            print("No llegó cliente_id válido (vacío o no numérico)")
-            messages.warning(request, "Selecciona un cliente válido")
-
-        print("=== FIN CAMBIO ===")
-        return redirect('apl:venta:venta_factura', pk=venta.pk)

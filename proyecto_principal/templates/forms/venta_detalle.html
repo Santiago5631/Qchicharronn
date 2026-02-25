@@ -27,18 +27,32 @@
         {% endif %}
         <br><br>
 
-        <strong>Cliente para facturación:</strong><br>
-        {% if venta.cliente_factura %}
-            {{ venta.cliente_factura.nombre }}
-            {% if venta.cliente_factura.numero_documento %}
-                - {{ venta.cliente_factura.numero_documento }}
-            {% endif %}
-        {% elif venta.cliente_nombre %}
-            {{ venta.cliente_nombre }} <small>(usado automáticamente del pedido)</small>
-        {% else %}
-            <span class="text-muted">Sin cliente asignado</span>
-        {% endif %}
-        <br>
+        <strong>Cliente Facturación:</strong><br>
+{% if cliente_display %}
+    {{ cliente_display.nombre }}
+    {% if cliente_display.numero_documento %}
+        - {{ cliente_display.numero_documento }}
+    {% endif %}
+{% else %}
+    <span class="text-muted">Sin cliente asignado</span>
+{% endif %}
+    <strong>Cliente Facturación:</strong><br>
+
+<!-- DEBUG TEMPORAL -->
+<small class="text-danger">
+    cliente_display: {{ cliente_display }}<br>
+    venta.cliente_factura_id: {{ venta.cliente_factura_id }}<br>
+    venta.cliente_id: {{ venta.cliente_id }}
+</small>
+
+{% if cliente_display %}
+    {{ cliente_display.nombre }}
+    {% if cliente_display.numero_documento %}
+        - {{ cliente_display.numero_documento }}
+    {% endif %}
+{% else %}
+    <span class="text-muted">Sin cliente asignado</span>
+{% endif %}
 
         <strong>Tipo pedido:</strong> {{ venta.tipo_pedido }}<br>
         {% if venta.mesa %}
@@ -93,36 +107,37 @@
         <!-- ===================== -->
         <h4 class="mt-4">Seleccionar Cliente para Factura</h4>
 
-        <form method="post" action="{% url 'apl:venta:venta_cambiar_cliente' venta.pk %}">
-            {% csrf_token %}
+        <a href="{% url 'apl:clientes:crear_cliente' %}"
+   class="btn btn-info mt-2">
+    Registrar Nuevo Cliente
+</a>
 
-            <select name="cliente" class="form-select">
-                <option value="">-- Seleccionar Cliente --</option>
-
-                {% for c in clientes %}
-                    <option value="{{ c.id }}"
-                        {% if venta.cliente_factura and venta.cliente_factura.id == c.id %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ c.nombre }} - {{ c.numero_documento }}
-                    </option>
-                {% empty %}
-                    <option disabled>No hay clientes registrados</option>
-                {% endfor %}
-            </select>
-
-            <button type="submit" class="btn btn-primary mt-2">
-                Guardar Cliente
-            </button>
-        </form>
 
         <!-- ===================== -->
         <!-- FORM FINALIZAR VENTA -->
         <!-- ===================== -->
         <form method="post" action="{% url 'apl:venta:venta_finalizar' venta.pk %}">
             {% csrf_token %}
+            <div class="col-md-6 mt-3">
+    <label><strong>Cliente para Factura</strong></label>
 
+    <select name="cliente_factura" class="form-control">
+        <option value="">-- Sin cliente --</option>
+
+        {% for cliente in clientes %}
+            <option value="{{ cliente.id }}"
+                {% if venta.cliente_factura and venta.cliente_factura.id == cliente.id %}
+                    selected
+                {% endif %}
+            >
+                {{ cliente.nombre }}
+                {% if cliente.numero_documento %}
+                    - {{ cliente.numero_documento }}
+                {% endif %}
+            </option>
+        {% endfor %}
+    </select>
+</div>
             <div class="row mt-4">
                 <div class="col-md-4">
                     <label>Método de Pago</label>

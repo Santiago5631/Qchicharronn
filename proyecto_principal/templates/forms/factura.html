@@ -80,7 +80,23 @@
 <p><strong>Factura:</strong> {{ venta.numero_factura }}</p>
 <p><strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}</p>
 <p><strong>Cliente:</strong> {{ venta.cliente_nombre }}</p>
+<p><strong>Factura:</strong> {{ venta.numero_factura }}</p>
+<p><strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}</p>
 
+<!-- REEMPLAZA esto -->
+<!-- <p><strong>Cliente:</strong> {{ venta.cliente_nombre }}</p> -->
+
+<!-- POR esto -->
+<p><strong>Cliente:</strong>
+    {% if cliente_display %}
+        {{ cliente_display.nombre }}
+        {% if cliente_display.numero_documento %}
+            - {{ cliente_display.numero_documento }}
+        {% endif %}
+    {% else %}
+        {{ venta.cliente_nombre|default:"Consumidor Final" }}
+    {% endif %}
+</p>
 {% if venta.mesa %}
 <p><strong>Mesa:</strong> {{ venta.mesa }}</p>
 {% endif %}
