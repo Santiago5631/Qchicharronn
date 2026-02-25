@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'venta.apps.VentaConfig',
     "inventario.apps.InventarioConfig",
     "backups.apps.BackupsConfig",
+    "clientes.apps.ClientesConfig",
 
     # aplicaciones extras
     "login",

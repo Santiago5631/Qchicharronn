@@ -1,6 +1,7 @@
 from django.db import models
 from menu.models import Pedido
 from decimal import Decimal
+from clientes.models import Cliente
 
 class Venta(models.Model):
     ESTADO_CHOICES = (
@@ -65,7 +66,6 @@ class Venta(models.Model):
     class Meta:
         ordering = ['-fecha_venta']
 
-
     def save(self, *args, **kwargs):
 
         if not self.numero_factura:
@@ -79,44 +79,6 @@ class Venta(models.Model):
                 self.cliente_nombre += f" - {self.cliente_factura.numero_documento}"
 
         super().save(*args, **kwargs)
-
-        # Si la venta cambió a 'pagado', reducir el inventario
-        if self.estado == 'pagado' and estado_anterior != 'pagado':
-            self.reducir_inventario()
-
-    def reducir_inventario(self):
-        """Reduce el stock de productos cuando se completa una venta"""
-        try:
-            # Obtener el pedido asociado
-            from pedido.models import PedidoDetalle
-            from menu.models import MenuProducto
-
-            # Obtener todos los detalles del pedido
-            detalles_pedido = PedidoDetalle.objects.filter(pedido=self.pedido).select_related('menu')
-
-            with transaction.atomic():
-                for detalle in detalles_pedido:
-                    # Para cada menú en el pedido, obtener sus productos
-                    menu_productos = MenuProducto.objects.filter(menu=detalle.menu).select_related('producto')
-
-                    for menu_producto in menu_productos:
-                        # Calcular la cantidad total a reducir
-                        cantidad_a_reducir = menu_producto.cantidad * detalle.cantidad
-
-                        # Reducir el stock del producto
-                        producto = menu_producto.producto
-                        if producto.stock >= cantidad_a_reducir:
-                            producto.stock -= cantidad_a_reducir
-                            producto.save()
-                        else:
-                            # Si no hay suficiente stock, registrar pero no fallar
-                            print(
-                                f"Advertencia: Stock insuficiente para {producto.nombre}. Stock actual: {producto.stock}, requerido: {cantidad_a_reducir}")
-                            # Reducir hasta 0
-                            producto.stock = 0
-                            producto.save()
-        except Exception as e:
-            print(f"Error al reducir inventario: {str(e)}")
 
     def __str__(self):
         return self.numero_factura
