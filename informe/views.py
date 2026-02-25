@@ -1,22 +1,30 @@
-from django.shortcuts import render, redirect
-from django.db.models import Sum
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+# informe/views.py
+from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
+from django.db.models import Sum
+from django.utils import timezone
+import datetime
+
 from venta.models import Venta
 from compra.models import Compra
 from inventario.models import InventarioDiario
 from menu.models import Menu
 from .models import Informe
-from django.utils import timezone
-import datetime
+
+from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN
 
 
+# ──────────────────────────────────────────────
+# VISTA PRINCIPAL DE REPORTES — Solo administradores
+# ──────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def informe_list(request):
-    tipo = request.GET.get('tipo', 'ventas')
+    tipo            = request.GET.get('tipo', 'ventas')
     fecha_inicio_str = request.GET.get('fecha_inicio')
-    fecha_fin_str = request.GET.get('fecha_fin')
+    fecha_fin_str   = request.GET.get('fecha_fin')
 
     contexto = {
         'titulo': 'Consulta de Reportes',
@@ -30,16 +38,18 @@ def informe_list(request):
     }
 
     fecha_inicio = None
-    fecha_fin = None
+    fecha_fin    = None
+
     if fecha_inicio_str:
         try:
             fecha_inicio = datetime.datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
-        except:
+        except Exception:
             contexto['mensaje'] = "Formato de fecha de inicio inválido."
+
     if fecha_fin_str:
         try:
             fecha_fin = datetime.datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
-        except:
+        except Exception:
             contexto['mensaje'] = "Formato de fecha de fin inválido."
 
     if fecha_inicio and fecha_fin:
@@ -53,9 +63,9 @@ def informe_list(request):
                         fecha_venta__lte=fecha_fin
                     ).select_related('pedido').order_by('-fecha_venta')
                     contexto['resultados'] = qs
-                    contexto['cantidad'] = qs.count()
+                    contexto['cantidad']   = qs.count()
                     total_sum = qs.aggregate(total_sum=Sum('total'))['total_sum']
-                    contexto['total'] = total_sum if total_sum is not None else 0
+                    contexto['total']  = total_sum if total_sum is not None else 0
                     contexto['mensaje'] = f"Se encontraron {contexto['cantidad']} ventas - Total: ${contexto['total']:,.2f}"
 
                 elif tipo == 'compras':
@@ -63,14 +73,11 @@ def informe_list(request):
                         fecha__gte=fecha_inicio,
                         fecha__lte=fecha_fin
                     ).select_related('producto', 'proveedor').order_by('-fecha')
-
-                    # Calculamos subtotal en cada objeto
                     for compra in qs:
                         compra.subtotal = compra.precio * compra.cantidad
-
                     contexto['resultados'] = qs
-                    contexto['cantidad'] = qs.count()
-                    contexto['total'] = sum(compra.subtotal for compra in qs)
+                    contexto['cantidad']   = qs.count()
+                    contexto['total']  = sum(compra.subtotal for compra in qs)
                     contexto['mensaje'] = f"Se encontraron {contexto['cantidad']} compras - Total: ${contexto['total']:,.2f}"
 
                 elif tipo == 'pedidos':
@@ -80,12 +87,10 @@ def informe_list(request):
                         fecha__lte=fecha_fin
                     ).prefetch_related('detalles__menu').order_by('-fecha')
 
-                    # Calcular el total de cada pedido y preparar detalles
                     for pedido in qs:
                         total = 0
                         detalles_list = []
                         for detalle in pedido.detalles.all():
-                            # Usar get_precio_final() que calcula el precio con descuento
                             precio = detalle.menu.get_precio_final() if hasattr(detalle.menu, 'get_precio_final') else (detalle.menu.precio_base if hasattr(detalle.menu, 'precio_base') else 0)
                             subtotal = precio * detalle.cantidad
                             total += subtotal
@@ -96,11 +101,11 @@ def informe_list(request):
                                 'subtotal': subtotal
                             })
                         pedido.total_calculado = total
-                        pedido.detalles_list = detalles_list
+                        pedido.detalles_list   = detalles_list
 
                     contexto['resultados'] = qs
-                    contexto['cantidad'] = qs.count()
-                    contexto['total'] = sum(p.total_calculado for p in qs)
+                    contexto['cantidad']   = qs.count()
+                    contexto['total']  = sum(p.total_calculado for p in qs)
                     contexto['mensaje'] = f"Se encontraron {contexto['cantidad']} pedidos - Total: ${contexto['total']:,.2f}"
 
                 elif tipo == 'inventario':
@@ -109,16 +114,16 @@ def informe_list(request):
                         fecha__lte=fecha_fin
                     ).order_by('-fecha')
                     contexto['resultados'] = qs
-                    contexto['cantidad'] = qs.count()
-                    contexto['abiertos'] = qs.filter(estado='abierto').count()
-                    contexto['cerrados'] = qs.filter(estado='cerrado').count()
-                    contexto['mensaje'] = f"{contexto['cantidad']} registros diarios encontrados ({contexto['abiertos']} abiertos, {contexto['cerrados']} cerrados)"
+                    contexto['cantidad']   = qs.count()
+                    contexto['abiertos']   = qs.filter(estado='abierto').count()
+                    contexto['cerrados']   = qs.filter(estado='cerrado').count()
+                    contexto['mensaje'] = f"{contexto['cantidad']} registros diarios encontrados"
 
                 elif tipo == 'menu':
                     qs = Menu.objects.all().order_by('nombre')
                     contexto['resultados'] = qs
-                    contexto['cantidad'] = qs.count()
-                    contexto['mensaje'] = f"Mostrando {contexto['cantidad']} productos del menú actual (sin filtro por fecha)"
+                    contexto['cantidad']   = qs.count()
+                    contexto['mensaje'] = f"Mostrando {contexto['cantidad']} productos del menú actual"
 
                 else:
                     contexto['mensaje'] = "Tipo de reporte no reconocido."
@@ -129,14 +134,18 @@ def informe_list(request):
     return render(request, 'modulos/informe.html', contexto)
 
 
-# Vistas CRUD para Informe (modelo de informes guardados)
-class InformeListView(ListView):
+# ──────────────────────────────────────────────
+# CRUD de Informes — Solo administradores
+# ──────────────────────────────────────────────
+class InformeListView(RolRequeridoMixin, ListView):
+    roles_permitidos = SOLO_ADMIN
     model = Informe
     template_name = 'modulos/informe.html'
     context_object_name = 'informes'
 
 
-class InformeCreateView(CreateView):
+class InformeCreateView(RolRequeridoMixin, CreateView):
+    roles_permitidos = SOLO_ADMIN
     model = Informe
     fields = ['titulo', 'descripcion', 'tipo', 'fecha_inicio', 'fecha_fin']
     template_name = 'forms/formulario_crear.html'
@@ -147,7 +156,8 @@ class InformeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class InformeUpdateView(UpdateView):
+class InformeUpdateView(RolRequeridoMixin, UpdateView):
+    roles_permitidos = SOLO_ADMIN
     model = Informe
     fields = ['titulo', 'descripcion', 'tipo', 'fecha_inicio', 'fecha_fin']
     template_name = 'forms/formulario_actualizacion.html'
@@ -158,7 +168,8 @@ class InformeUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class InformeDeleteView(DeleteView):
+class InformeDeleteView(RolRequeridoMixin, DeleteView):
+    roles_permitidos = SOLO_ADMIN
     model = Informe
     success_url = reverse_lazy('apl:informe:informe_list')
 
@@ -168,11 +179,14 @@ class InformeDeleteView(DeleteView):
         return JsonResponse({"status": "ok"})
 
 
+# ──────────────────────────────────────────────
+# EXPORTACIONES — Solo administradores
+# ──────────────────────────────────────────────
+@rol_requerido(*SOLO_ADMIN)
 def exportar_excel(request):
-    # Implementación básica
     return HttpResponse("Exportar a Excel - En desarrollo", content_type="text/plain")
 
 
+@rol_requerido(*SOLO_ADMIN)
 def exportar_pdf(request):
-    # Implementación básica
     return HttpResponse("Exportar a PDF - En desarrollo", content_type="text/plain")

@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
+# nomina/views.py
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Sum, Q
+from django.db.models import Sum
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
@@ -12,8 +12,12 @@ import datetime
 from .models import Nomina
 from .forms import NominaForm, NominaFiltroForm
 
+from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN
 
-class NominaListView(ListView):
+
+class NominaListView(RolRequeridoMixin, ListView):
+    """Solo administradores pueden ver nóminas."""
+    roles_permitidos = SOLO_ADMIN
     model = Nomina
     template_name = 'modulos/nomina.html'
     context_object_name = 'nominas'
@@ -21,12 +25,10 @@ class NominaListView(ListView):
 
     def get_queryset(self):
         queryset = Nomina.objects.select_related('empleado', 'creado_por').all()
-
-        # Filtros
         fecha_inicio = self.request.GET.get('fecha_inicio')
-        fecha_fin = self.request.GET.get('fecha_fin')
-        empleado_id = self.request.GET.get('empleado')
-        estado = self.request.GET.get('estado')
+        fecha_fin    = self.request.GET.get('fecha_fin')
+        empleado_id  = self.request.GET.get('empleado')
+        estado       = self.request.GET.get('estado')
 
         if fecha_inicio:
             queryset = queryset.filter(fecha_pago__gte=fecha_inicio)
@@ -41,19 +43,18 @@ class NominaListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Gestión de Nóminas'
-        context['filtro_form'] = NominaFiltroForm(self.request.GET)
-
-        # Calcular totales
+        context['titulo']       = 'Gestión de Nóminas'
+        context['filtro_form']  = NominaFiltroForm(self.request.GET)
         nominas = self.get_queryset()
-        context['total_general'] = nominas.aggregate(total=Sum('total'))['total'] or 0
+        context['total_general']  = nominas.aggregate(total=Sum('total'))['total'] or 0
         context['total_pendiente'] = nominas.filter(estado='pendiente').aggregate(total=Sum('total'))['total'] or 0
-        context['total_pagado'] = nominas.filter(estado='pagado').aggregate(total=Sum('total'))['total'] or 0
-
+        context['total_pagado']    = nominas.filter(estado='pagado').aggregate(total=Sum('total'))['total'] or 0
         return context
 
 
-class NominaCreateView(CreateView):
+class NominaCreateView(RolRequeridoMixin, CreateView):
+    """Solo administradores pueden crear nóminas."""
+    roles_permitidos = SOLO_ADMIN
     model = Nomina
     form_class = NominaForm
     template_name = 'forms/formulario_crear.html'
@@ -61,19 +62,20 @@ class NominaCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Crear Nómina'
-        context['entidad'] = 'Nómina'
+        context['titulo']   = 'Crear Nómina'
+        context['entidad']  = 'Nómina'
         return context
 
     def form_valid(self, form):
-        # Asignar el usuario autenticado como creador solo si está autenticado
         if self.request.user.is_authenticated:
             form.instance.creado_por = self.request.user
         messages.success(self.request, 'Nómina creada correctamente')
         return super().form_valid(form)
 
 
-class NominaUpdateView(UpdateView):
+class NominaUpdateView(RolRequeridoMixin, UpdateView):
+    """Solo administradores pueden editar nóminas."""
+    roles_permitidos = SOLO_ADMIN
     model = Nomina
     form_class = NominaForm
     template_name = 'forms/formulario_actualizacion.html'
@@ -81,7 +83,7 @@ class NominaUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Editar Nómina'
+        context['titulo']  = 'Editar Nómina'
         context['entidad'] = 'Nómina'
         return context
 
@@ -90,7 +92,9 @@ class NominaUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class NominaDeleteView(DeleteView):
+class NominaDeleteView(RolRequeridoMixin, DeleteView):
+    """Solo administradores pueden eliminar nóminas."""
+    roles_permitidos = SOLO_ADMIN
     model = Nomina
     success_url = reverse_lazy('apl:nomina:nomina_list')
 
@@ -100,16 +104,14 @@ class NominaDeleteView(DeleteView):
         return JsonResponse({"status": "ok"})
 
 
+@rol_requerido(*SOLO_ADMIN)
 def generar_pdf_nomina(request):
-    """Genera un PDF con el reporte de nóminas filtrado"""
-
-    # Obtener filtros
+    """Genera PDF de nóminas — solo administradores."""
     fecha_inicio = request.GET.get('fecha_inicio')
-    fecha_fin = request.GET.get('fecha_fin')
-    empleado_id = request.GET.get('empleado')
-    estado = request.GET.get('estado')
+    fecha_fin    = request.GET.get('fecha_fin')
+    empleado_id  = request.GET.get('empleado')
+    estado       = request.GET.get('estado')
 
-    # Filtrar nóminas
     nominas = Nomina.objects.select_related('empleado').all()
 
     if fecha_inicio:
@@ -121,10 +123,8 @@ def generar_pdf_nomina(request):
     if estado:
         nominas = nominas.filter(estado=estado)
 
-    # Calcular totales
     total_general = nominas.aggregate(total=Sum('total'))['total'] or 0
 
-    # Contexto para el template
     context = {
         'nominas': nominas,
         'total_general': total_general,
@@ -133,16 +133,10 @@ def generar_pdf_nomina(request):
         'fecha_generacion': datetime.datetime.now(),
     }
 
-    # Renderizar template
-    template = get_template('nomina/reporte_pdf.html')
-    html = template.render(context)
-
-    # Crear PDF
-    response = HttpResponse(content_type='application/pdf')
-    response[
-        'Content-Disposition'] = f'attachment; filename="reporte_nomina_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-
-    # Generar PDF
+    template    = get_template('nomina/reporte_pdf.html')
+    html        = template.render(context)
+    response    = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporte_nomina_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     pisa_status = pisa.CreatePDF(html, dest=response)
 
     if pisa_status.err:

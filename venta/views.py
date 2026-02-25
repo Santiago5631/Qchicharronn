@@ -8,14 +8,23 @@ from django.views.generic import DetailView
 from clientes.models import Cliente
 
 
-class VentaListView(ListView):
+from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN, ADMIN_MESERO
+# ADMIN_MESERO = ['administrador', 'mesero']
+# Los cocineros no gestionan ventas/facturación
+
+
+class VentaListView(RolRequeridoMixin, ListView):
+    """
+    Admin y Meseros pueden ver las ventas.
+    (El mesero necesita ver el estado para saber cuándo cobrar)
+    """
+    roles_permitidos = ADMIN_MESERO
     model = Venta
     template_name = 'modulos/venta.html'
     context_object_name = 'ventas'
     ordering = ['-fecha_venta']  # más recientes primero
 
     def get_queryset(self):
-        # optimización (no rompe nada)
         return Venta.objects.select_related('pedido').all()
 
     def get_context_data(self, **kwargs):
@@ -23,13 +32,14 @@ class VentaListView(ListView):
 
         # 🔹 Separar ventas
         context['ventas_pendientes'] = self.object_list.filter(estado='pendiente')
-        context['ventas_pagadas'] = self.object_list.filter(estado='pagado')
-
-        context['titulo'] = 'Listado de Ventas'
+        context['ventas_pagadas']    = self.object_list.filter(estado='pagado')
+        context['titulo']            = 'Listado de Ventas'
         return context
 
 
-class VentaDetailView(DetailView):
+class VentaDetailView(RolRequeridoMixin, DetailView):
+    """Admin y Meseros pueden ver el detalle de una venta."""
+    roles_permitidos = ADMIN_MESERO
     model = Venta
     template_name = 'forms/venta_detalle.html'
     context_object_name = 'venta'
@@ -49,10 +59,12 @@ class VentaDetailView(DetailView):
         return context
 
 
-
-
-
-class VentaFacturaView(DetailView):
+class VentaFacturaView(RolRequeridoMixin, DetailView):
+    """
+    Admin y Meseros pueden ver la factura.
+    Solo se muestra si la venta está pagada.
+    """
+    roles_permitidos = ADMIN_MESERO
     model = Venta
     template_name = 'forms/factura.html'
     context_object_name = 'venta'
@@ -66,6 +78,7 @@ class VentaFacturaView(DetailView):
         ).prefetch_related(
             'items'
         )
+        return Venta.objects.select_related('pedido', 'mesa').prefetch_related('items')
 
     def get_object(self, queryset=None):
         venta = super().get_object(queryset)
@@ -96,11 +109,18 @@ class VentaFacturaView(DetailView):
         context['clientes'] = Cliente.objects.all()
         context['titulo'] = f'Factura {venta.numero_factura}'
         context['items'] = venta.items.all()
+        context['metodo_pago']  = venta.get_metodo_pago_display()
 
         return context
 
 
-class VentaFinalizarView(View):
+class VentaFinalizarView(RolRequeridoMixin, View):
+    """
+    Admin y Meseros pueden finalizar/cobrar una venta.
+    (El mesero es quien cobra al cliente)
+    """
+    roles_permitidos = ADMIN_MESERO
+
     def post(self, request, pk):
         venta = get_object_or_404(Venta, pk=pk)
 
@@ -108,7 +128,6 @@ class VentaFinalizarView(View):
             messages.warning(request, 'Esta venta ya está finalizada.')
             return redirect('apl:venta:venta_list')
 
-        # Obtener método de pago
         metodo_pago = request.POST.get('metodo_pago')
         if not metodo_pago:
             messages.error(request, 'Debe seleccionar un método de pago.')
@@ -129,10 +148,9 @@ class VentaFinalizarView(View):
 
         # Guardar datos
         venta.metodo_pago = metodo_pago
-        venta.estado = 'pagado'
+        venta.estado      = 'pagado'
         venta.save()
 
-        # Marcar pedido como entregado
         if venta.pedido:
             venta.pedido.estado = 'entregado'
             venta.pedido.save()

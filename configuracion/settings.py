@@ -1,7 +1,3 @@
-"""
-Django settings for configuracion project.
-"""
-
 import os
 from pathlib import Path
 from decouple import config
@@ -12,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = 'django-insecure-o&^w-82qr1lo&08_$amo$$__6&77#5!k*nc!3jof(916o@@ku)'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
 # APPS
 INSTALLED_APPS = [
@@ -29,20 +25,13 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
 
-    # proveedores sociales
-    'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.facebook',
-
     # captcha
     'captcha',
 
     # Apps del proyecto
     'proyecto_principal.apps.ProyectoPrincipalConfig',
-    # Tus apps personalizadas
-    'administrador.apps.AdministradorConfig',
     'categoria.apps.CategoriaConfig',
     'compra.apps.CompraConfig',
-    'empleado.apps.EmpleadoConfig',
     'informe.apps.InformeConfig',
     'marca.apps.MarcaConfig',
     'menu.apps.MenuConfig',
@@ -73,9 +62,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'configuracion.middleware.RequireLoginMiddleware',
 ]
 
 ROOT_URLCONF = 'configuracion.urls'
@@ -116,8 +107,6 @@ DATABASES = {
     }
 }
 
-
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -125,7 +114,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 # Internationalization
 LANGUAGE_CODE = 'es'
@@ -144,7 +132,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 AUTH_USER_MODEL = 'usuario.Usuario'
 
 AUTHENTICATION_BACKENDS = [
@@ -156,16 +143,17 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_REDIRECT_URL = '/apps/dashboard/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = '/login/'
 
 # === CONFIGURACIÓN DE ALLAUTH ===
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_SIGNUP_FIELDS = ['email']
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
-
-# DESACTIVAR REGISTRO PÚBLICO Y SOCIAL LOGINS
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_ALLOW_REGISTRATION = False
 ACCOUNT_FORMS = {'reset_password': 'usuario.forms.CustomPasswordResetForm'}
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
@@ -204,3 +192,9 @@ GOOGLE_OAUTH_CREDS_PATH = os.path.join(BASE_DIR, 'oauth_credentials.json')
 
 # Token generado automáticamente al ejecutar generar_token.py por primera vez
 GOOGLE_DRIVE_TOKEN_PATH = os.path.join(BASE_DIR, 'token_drive.pkl')
+
+# Ruta al ejecutable de mysqldump
+MYSQLDUMP_PATH = r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe'
+
+# ID de la carpeta de tu Google Drive personal donde se guardarán los backups
+GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
