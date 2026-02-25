@@ -1,4 +1,4 @@
-{% extends "templates/dashboard/layout.html" %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 {% block content %}
 
@@ -9,16 +9,16 @@
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
         <a href="{% url 'apl:compra:crear_compra' %}">
-            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Nueva</button>
+            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill" title="Nueva Compra"></i> Nueva</button>
         </a>
         <a href="{% url 'apl:compra:exportar_pdf' %}">
             <button class="btn btn-danger btn-sm me-2">
-                <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
+                <i class="bi bi-file-earmark-pdf-fill" title="Exportar a PDF"></i> Exportar PDF
             </button>
         </a>
         <a href="{% url 'apl:compra:exportar_excel' %}">
             <button class="btn btn-success btn-sm">
-                <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+                <i class="bi bi-file-earmark-excel-fill" title="Exportar a Excel"></i> Exportar Excel
             </button>
         </a>
     </div>
@@ -50,19 +50,13 @@
                     <td>{{ c.cantidad }}</td>
                     <td>{{ c.unidad }}</td>
                     <td>
-                        <a href="{% url 'apl:compra_editar' c.id_factura %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'apl:compra:editar_compra' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
                             <i class="bi bi-pen-fill"></i>
                         </a>
-                        <button type="button" onclick="eliminarCompra({{ c.id_factura }})" class="btn btn-danger btn-sm">
+                        <button type="button" onclick="eliminarCompra({{ c.id_factura }})" class="btn btn-danger btn-sm" title="Eliminar Compra">
                             <i class="bi bi-trash3-fill"></i>
                         </button>
-                        <!-- ✅ BOTÓN BAUCHER COMPRA -->
-                        <button type="button"
-                                onclick="generarBaucherCompra({{ c.id_factura }}, '{{ c.proveedor }}', {{ c.precio }}, {{ c.cantidad }})"
-                                class="btn btn-info btn-sm"
-                                title="Generar Baucher Compra">
-                            <i class="bi bi-printer-fill"></i>
-                        </button>
+
                     </td>
                 </tr>
                 {% empty %}

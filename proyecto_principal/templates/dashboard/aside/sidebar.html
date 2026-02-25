@@ -5,10 +5,6 @@
             <span class="image">
                 <img src="{% static 'lib/img/Logo.png' %}" alt="logo">
             </span>
-            <div class="text header-text">
-                <span class="name">CodingLab</span>
-                <span class="profession">web developer</span>
-            </div>
         </div>
         <i class='bx bx-chevron-right toggle'></i>
     </header>
@@ -22,44 +18,105 @@
 
             <ul class="menu-links">
                 <li class="nav-link">
-                    <a href="#">
+                    <a href="{% url 'apl:dashboard' %}">
                         <i class='bx bx-home-alt icon'></i>
-                        <span class="text nav-text">DashBoard</span>
+                        <span class="text nav-text">Panel de Control</span>
                     </a>
                 </li>
 
                 <li class="nav-link">
-                    <a href="#">
-                        <i class='bx bx-bar-chart-alt-2 icon'></i>
-                        <span class="text nav-text">Revenue</span>
+                    <a href="{% url 'apl:usuario:usuario_list' %}">
+                        <i class='bx bxs-user-rectangle icon'></i>
+                        <span class="text nav-text">Usuarios</span>
                     </a>
                 </li>
 
                 <li class="nav-link">
-                    <a href="#">
-                        <i class='bx bx-bell icon'></i>
-                        <span class="text nav-text">Notification</span>
+                    <a href="{% url 'apl:mesa:mesa_list' %}">
+                        <i class='bx bxs-pin icon'></i>
+                        <span class="text nav-text">Mesa</span>
                     </a>
                 </li>
 
                 <li class="nav-link">
-                    <a href="#">
-                        <i class='bx bx-pie-chart-alt icon'></i>
-                        <span class="text nav-text">Analytics</span>
+                    <a href="{% url 'apl:menu:menu_list' %}">
+                        <i class='bx bx-restaurant icon'></i>
+                        <span class="text nav-text">Menu</span>
                     </a>
                 </li>
 
                 <li class="nav-link">
-                    <a href="#">
-                        <i class='bx bx-heart icon'></i>
-                        <span class="text nav-text">Likes</span>
+                    <a href="{% url 'apl:categoria:listar_categoria' %}">
+                        <i class='bx bxs-bar-chart-alt-2 icon'></i>
+                        <span class="text nav-text">Categorias</span>
+                    </a>
+                </li>
+
+               <!--- <li class="nav-link">
+                    <a href="{"% url 'apl:empleado:listar_empleado' %}">
+                        <i class='bx bxs-user icon'></i>
+                        <span class="text nav-text">Empleados</span>
+                    </a>
+                </li>-->
+                <li class="nav-link">
+                    <a href="{% url 'apl:compra:compra_list' %}">
+                        <i class='bx bxs-wallet icon'></i>
+                        <span class="text nav-text">Compra</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:venta:venta_list' %}">
+                        <i class='bx bxs-cart-alt icon'></i>
+                        <span class="text nav-text">Venta</span>
+                    </a>
+                </li>
+               <!-- <li class="nav-link">
+                    <a href="{"% url 'apl:administrador:administrador_list' %}">
+                        <i class='bx bx-user-circle icon'></i>
+                        <span class="text nav-text">Administrador</span>
+                    </a>
+                </li>-->
+                <li class="nav-link">
+                    <a href="{% url 'apl:producto:producto_list' %}">
+                        <i class='bx bxs-bowl-hot icon'></i>
+                        <span class="text nav-text">Producto</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:proveedor:proveedor_list' %}">
+                        <i class='bx bxs-user-badge icon'></i>
+                        <span class="text nav-text">Proveedor</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:nomina:nomina_list' %}">
+                        <i class='bx bx-money-withdraw icon'></i>
+                        <span class="text nav-text">Nomina</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:inventario:dashboard' %}">
+                        <i class='bx bxs-archive-out icon'></i>
+                        <span class="text nav-text">Inventario</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:unidad:unidad_list' %}">
+                        <i class='bx bx-tag icon'></i>
+                        <span class="text nav-text">Unidad</span>
                     </a>
                 </li>
 
                 <li class="nav-link">
-                    <a href="#">
-                        <i class='bx bx-wallet icon'></i>
-                        <span class="text nav-text">Wallets</span>
+                    <a href="{% url 'apl:informe:informe_list' %}">
+                        <i class='bx bxs-notepad icon'></i>
+                        <span class="text nav-text">Informes</span>
+                    </a>
+                </li>
+                <li class="nav-link">
+                    <a href="{% url 'apl:backups:generar_backup' %}">
+                        <i class='bx bxs-notepad icon'></i>
+                        <span class="text nav-text">Copias de Seguridad</span>
                     </a>
                 </li>
             </ul>
@@ -71,7 +128,7 @@
         {% csrf_token %}
         <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">
             <i class='bx bx-log-out icon'></i>
-            <span class="text nav-text">Logout</span>
+            <span class="text nav-text">Cerrar Sesion</span>
         </a>
     </form>
 </li>
@@ -81,7 +138,7 @@
                     <i class='bx bx-moon icon moon'></i>
                     <i class='bx bx-sun icon sun'></i>
                 </div>
-                <span class="mode-text text">Dark mode</span>
+                <span class="mode-text text">Modo Oscuro</span>
 
                 <div class="toggle-switch">
                     <span class="switch"></span>

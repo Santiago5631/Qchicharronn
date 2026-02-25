@@ -1,100 +1,129 @@
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
-
-body {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-    font-family: Arial, sans-serif;
-}
-
+/* ===== FORMULARIO ===== */
 .form-container {
-    max-width: 550px;
-    margin: 50px auto;
-    padding: 25px;
-    background: #fff8f0;
-    border-radius: 15px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    animation: fadeIn 0.8s ease-in-out;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
 }
 
-
-
-.form-container h1 {
-    font-family: 'Pacifico', cursive;
-    font-size: 2.5rem;
-    text-align: center;
-    color: #d35400;
+.form-container h1, .form-container h2, .form-container h3 {
+    background: linear-gradient(90deg, #e53935, #ffb300);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
     margin-bottom: 20px;
-    text-transform: uppercase;
+    text-align: center;
 }
 
-.form-container form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.form-container label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
 }
 
-.form-container input, 
-.form-container textarea, 
-.form-container select {
+.form-container input,
+.form-container select,
+.form-container textarea {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #f39c12;
-    border-radius: 10px;
-    font-size: 15px;
-    background-color: #fffaf0;
-    transition: all 0.3s ease;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .form-container input:focus,
-.form-container textarea:focus,
-.form-container select:focus {
-    border-color: #e67e22;
+.form-container select:focus,
+.form-container textarea:focus {
+    border-color: #e53935;
     outline: none;
-    box-shadow: 0 0 8px rgba(230, 126, 34, 0.5);
+    box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
 }
 
-.form-container button {
-    background-color: #e67e22;
+/* ===== BOTONES ===== */
+.create-button {
+    background: linear-gradient(90deg, #e53935, #ffb300);
     color: white;
-    padding: 14px;
     border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: bold;
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
 }
 
-.form-container button:hover {
-    background-color: #d35400;
-    transform: scale(1.03);
+.create-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 4px 12px rgba(229, 57, 53, 0.3);
 }
 
-.form-container .back-link {
-    text-align: center;
+.field-with-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.field-with-button > div:first-child {
+    flex: 1;
+}
+
+button[type="submit"] {
+    background: linear-gradient(90deg, #e53935, #ffb300);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 20px rgba(229, 57, 53, 0.4);
+}
+
+.back-link button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
     margin-top: 15px;
+    transition: background-color 0.3s ease;
 }
 
-.form-container .back-link a {
-    color: #c0392b;
-    text-decoration: none;
-    font-weight: bold;
+.back-link button:hover {
+    background: #5a6268;
 }
 
-.form-container .back-link a:hover {
-    text-decoration: underline;
-}
-
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(20px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-@media (max-width: 600px) {
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
     .form-container {
-        padding: 20px;
-        margin: 20px;
+        margin: 10px;
+        padding: 15px;
     }
 
-    .form-container h1 {
-        font-size: 2rem;
+    .field-with-button {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .create-button {
+        margin-left: 0;
+        margin-top: 10px;
     }
 }

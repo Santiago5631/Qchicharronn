@@ -1,114 +1,85 @@
 {% extends "dashboard/layout.html" %}
 {% load static %}
+
 {% block content %}
 
-    <form id="csrf-form" style="display:none;">
+<form id="csrf-form" style="display:none;">
     {% csrf_token %}
-    </form>
+</form>
 
 <div class="card shadow mb-4">
+
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
     </div>
+
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+            <table class="table table-bordered datatable" width="100%">
+
                 <thead>
                     <tr>
                         <th>ID Unidad</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
+                        <th>Tipo</th>
                         <th>
                             <a href="{% url 'apl:unidad:unidad_create' %}">
-                                <button type="button" class="btn btn-block btn-success btn-lg">
+                                <button type="button" class="btn btn-success btn-sm">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
                         </th>
                     </tr>
                 </thead>
+
                 <tbody>
+
                     {% for u in unidades %}
                     <tr>
+
                         <td>{{ u.id }}</td>
                         <td>{{ u.nombre }}</td>
                         <td>{{ u.descripcion }}</td>
+                        <td>{{ u.get_tipo_display }}</td>
+
                         <td>
+
                             <a href="{% url 'apl:unidad:unidad_edit' u.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-warning btn-sm">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
+
                             <button
-                                    type="button"
-                                    class="btn btn-danger btn-sm d-inline mb-1 btn-delete"
-                                    data-url="{% url 'apl:unidad:unidad_delete' u.id %}"
-                                    data-name="{{ u.id }}">
+                                type="button"
+                                class="btn btn-danger btn-sm btn-delete"
+                                data-url="{% url 'apl:unidad:unidad_delete' u.id %}"
+                                data-name="{{ u.nombre }}">
+
                                 <i class="bi bi-trash3-fill"></i>
+
                             </button>
+
                         </td>
+
                     </tr>
+
                     {% empty %}
                     <tr>
-                        <td colspan="4">No hay unidades registradas.</td>
+                        <td colspan="5" class="text-center">
+                            No hay unidades registradas.
+                        </td>
                     </tr>
                     {% endfor %}
+
                 </tbody>
+
             </table>
+
         </div>
     </div>
 </div>
+
 {% endblock %}
-
-{% block js_plugins %}
-<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
-
-<script>
-// sweetalert_delete.js
-$(document).on("click", ".btn-delete", function (e) {
-    e.preventDefault();
-
-    let url = $(this).data("url");
-    let name = $(this).data("name");
-
-    Swal.fire({
-        title: "¿Estás seguro?",
-        text: `Se eliminará ${name}`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar"
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: url,
-                type: "POST",
-                data: {
-                    csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
-                },
-                success: function (response) {
-                    if (response.status === "ok") {
-                        Swal.fire(
-                            "Eliminado",
-                            `${name} fue eliminado correctamente.`,
-                            "success"
-                        ).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire("Error", response.message, "error");
-                    }
-                },
-                error: function (xhr, status, error) {
-                    Swal.fire("Error", "No se pudo eliminar", "error");
-                    console.error(error);
-                }
-            });
-        }
-    });
-});
-</script>
-{% endblock %}
-

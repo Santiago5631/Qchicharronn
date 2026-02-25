@@ -164,7 +164,7 @@ body.dark .sidebar header .toggle {
 
 .sidebar .menu{
     margin-top: 35px;
-
+    overflow-y: auto;
 }
 
 .sidebar .search-box{

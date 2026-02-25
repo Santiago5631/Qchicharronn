@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     const defaultOptions = {
-        buttonColor: '#0048ff',
+        buttonColor: '#0ec4d5',
         buttonIconColor: '#ffffff',
-        highlightColor: '#0048ff',
+        highlightColor: '#0ec4d5',
         menuBackgroundColor: '#ffffff',
         menuTextColor: '#333333',
         customLabels: {}
@@ -46,27 +46,27 @@ document.addEventListener("DOMContentLoaded", function() {
         return n
     };
     let i = n([
-            { label: "Readable Font", key: "readable-font", icon: "local_parking" },
-            { label: "Highlight Links", key: "highlight-links", icon: "link" },
-            { label: "Highlight Title", key: "highlight-title", icon: "title" }
+            { label: "Fuente Legible", key: "readable-font", icon: "local_parking" },
+            { label: "Resaltar Enlaces", key: "highlight-links", icon: "link" },
+            { label: "Resaltar titulos", key: "highlight-title", icon: "title" }
         ]),
         o = n([
-            { label: "Monochrome", key: "monochrome", icon: "filter_b_and_w" },
-            { label: "Low Saturation", key: "low-saturation", icon: "gradient" },
-            { label: "High Saturation", key: "high-saturation", icon: "filter_vintage" },
-            { label: "High Contrast", key: "high-contrast", icon: "tonality" },
-            { label: "Light Contrast", key: "light-contrast", icon: "brightness_5" },
+            { label: "Monocromatico", key: "monochrome", icon: "filter_b_and_w" },
+            { label: "Baja Saturacion", key: "low-saturation", icon: "gradient" },
+            { label: "Alta Saturacion", key: "high-saturation", icon: "filter_vintage" },
+            { label: "Alto Contraste", key: "high-contrast", icon: "tonality" },
+            { label: "Contraste Claro", key: "light-contrast", icon: "brightness_5" },
         ], "asw-filter"),
         l = n([
-            { label: "Big Cursor", key: "big-cursor", icon: "mouse" },
-            { label: "Stop Animations", key: "stop-animations", icon: "motion_photos_off" },
-            { label: "Reading Guide", key: "readable-guide", icon: "local_library" }
+            { label: "Cursor Grande", key: "big-cursor", icon: "mouse" },
+            { label: "Detene Animaciones", key: "stop-animations", icon: "motion_photos_off" },
+            { label: "Guia de Lectura", key: "readable-guide", icon: "local_library" }
         ], "asw-tools");
     var r = document.createElement("div");
     r.innerHTML = `
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons&text=${a.toString()}" rel="stylesheet">
     <style>
-        .asw-menu, .asw-menu-btn { position: fixed; left: 20px; transition: .3s; z-index: 500000; }
+        .asw-menu, .asw-menu-btn { position: fixed; right: 20px; transition: .3s; z-index: 500000; }
         .asw-widget { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; font-weight: 400; -webkit-font-smoothing: antialiased; }
         .asw-widget * { box-sizing: border-box; }
         .asw-menu-btn { bottom: 20px; background: ${options.buttonColor}; box-shadow: 0 5px 15px 0 rgb(37 44 97 / 15%), 0 2px 4px 0 rgb(93 100 148 / 20%); border-radius: 50%; align-items: center; justify-content: center; transform: translateY(0); width: 50px; height: 50px; display: flex; fill: ${options.buttonIconColor} !important; cursor: pointer; }
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-menu-btn:hover { transform: scale(1.05); }
         .asw-menu { display: none; top: 20px; border-radius: 8px; box-shadow: -1px 0 20px -14px #000; opacity: 1; overflow: hidden; background: ${options.menuBackgroundColor}; width: 500px; line-height: 1; font-size: 14px; height: calc(100vh - 40px - 75px); letter-spacing: .015em; color: ${options.menuTextColor}; }
         .asw-btn, .asw-footer a { font-size: 14px !important; }
-        .asw-menu-header { display: flex; align-items: center; justify-content: space-between; background: #0334b1; color: #fff; padding-left: 12px; font-weight: 600; }
+        .asw-menu-header { display: flex; align-items: center; justify-content: space-between; background: #0ec4d5; color: #fff; padding-left: 12px; font-weight: 600; }
         .asw-menu-header > div { display: flex; }
         .asw-menu-header div[role=button] { padding: 12px; cursor: pointer; }
         .asw-menu-header div[role=button]:hover, .asw-minus:hover, .asw-plus:hover { opacity: .8; }
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-btn .material-icons { margin-bottom: 16px; }
         .asw-btn:hover { border-color: ${options.highlightColor}; }
         .asw-btn.asw-selected { background: ${options.highlightColor}; color: #fff; border-color: ${options.highlightColor}; }
-        .asw-footer { position: absolute; bottom: 0; left: 0; right: 0; background: #0334b1; padding: 16px; text-align: center; color: #fff; }
+        .asw-footer { position: absolute; bottom: 0; left: 0; right: 0; background: #0ec4d5; padding: 16px; text-align: center; color: #fff; }
         .asw-footer a { text-decoration: underline; color: #fff; background: 0 0 !important; }
         .asw-menu-content { overflow: scroll; max-height: calc(100% - 80px); }
         .asw-card { margin: 0 15px 30px; }
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-adjust-font { background: #ecf3ff; padding: 20px 25px; margin-bottom: 16px; }
         .asw-adjust-font .label { display: flex; align-items: center; }
         .asw-adjust-font > div { display: flex; justify-content: space-between; margin-top: 20px; align-items: center; font-size: 16px; font-weight: 700; }
-        .asw-adjust-font div[role=button] { background: #0648ff; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
+        .asw-adjust-font div[role=button] { background: #0ec4d5; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
         .asw-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: none; }
         @media only screen and (max-width: 560px) {
             .asw-menu { width: calc(100vw - 20px); left: 10px; }
@@ -108,10 +108,10 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="asw-menu">
             <div class="asw-menu-header">Accesibilidad
                 <div>
-                    <div role="button" class="asw-menu-reset" title="Reset Settings">
+                    <div role="button" class="asw-menu-reset" title="Restablecer Configuracion">
                         <span class="material-icons">reiniciar</span>
                     </div>
-                    <div role="button" class="asw-menu-close" title="Close Accessibility Menu">
+                    <div role="button" class="asw-menu-close" title="Cerrar Menu de Accesibilidad">
                         <span class="material-icons">cerrar</span>
                     </div>
                 </div>
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
             </div>
             <div class="asw-footer">
-                <a href="https://bennyluk.github.io/Sienna-Accessibility-Widget/">By: Sienna Free Accessibility Widget</a>
+                <a href="https://bennyluk.github.io/Sienna-Accessibility-Widget/"> Sienna Free Accessibility Widget</a>
             </div>
         </div>
         <div class="asw-overlay"></div>
@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 t.style["font-size"] = a + "px"
             }
         }));
-        let n = "Default";
+        let n = "Normal";
         1 !== s && (s > 1 ? n = "+" : s < 1 && (n = "-"), n += parseInt(100 * s) + "%"), a && (a.parentElement.querySelector(".asw-amount").innerHTML = n), t.states.fontSize = s
     };
     let m = r.querySelector(".asw-menu"), g = r.querySelector(".asw-overlay");
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
         t.states = {}, p(), u(), h(void 0, 1), document.querySelectorAll(".asw-btn").forEach(function(t) {
             t.classList.remove("asw-selected"), t.setAttribute("aria-pressed", "false")
         }), document.querySelectorAll(".asw-amount").forEach(function(t) {
-            t.innerHTML = "Default"
+            t.innerHTML = "Normal"
         }), e()
     }, !1), m.querySelectorAll(".asw-btn").forEach(function(t) {
         t.addEventListener("click", f, !1)

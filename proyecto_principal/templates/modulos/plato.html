@@ -4,7 +4,7 @@
 <div class="card shadow mb-4">
     <div class="card-header d-flex justify-content-between align-items-center py-3 mb-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
-        <a href="{% url 'apl:plato:crear_plato' %}" class="btn btn-success btn-sm">
+        <a href="{% url 'apl:plato:crear_plato' %}" class="btn btn-success btn-sm" title="Crear Plato">
             <i class="bi bi-plus-circle"></i> Nuevo Plato
         </a>
     </div>
@@ -32,7 +32,7 @@
                         <td>{{ p.precio }}</td>
                         <td>
                             <a href="{% url 'apl:plato:editar_plato' p.id %}">
-                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1">
+                                <button type="button" class="btn btn-warning btn-sm d-inline mb-1" title="Editar Plato">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
@@ -41,7 +41,7 @@
                                     <button type="button"
                                             class="btn btn-danger btn-sm btn-delete"
                                             data-url="{% url 'apl:plato:eliminar_plato' p.pk %}"
-                                            data-name="el plato {{ p.nombre }}">
+                                            data-name="el plato {{ p.nombre }}" title="Eliminar">
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>
                         </td>

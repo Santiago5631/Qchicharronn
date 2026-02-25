@@ -28,7 +28,7 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         # Redirige a la lista de usuarios
-        return reverse_lazy('apl:usuario:usuario_list')
+        return reverse_lazy('apl:dashboard')
 
     def form_valid(self, form):
         # Verificar reCAPTCHA antes de autenticar

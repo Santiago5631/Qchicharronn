@@ -22,10 +22,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
-    # apps necesarias para allauth
-    'django.contrib.sites',  # obligatorio para allauth
-
+    # allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -36,6 +35,8 @@ INSTALLED_APPS = [
 
     # captcha
     'captcha',
+
+    # Apps del proyecto
     'proyecto_principal.apps.ProyectoPrincipalConfig',
     # Tus apps personalizadas
     'administrador.apps.AdministradorConfig',
@@ -55,12 +56,14 @@ INSTALLED_APPS = [
     'usuario.apps.UsuarioConfig',
     'venta.apps.VentaConfig',
     "inventario.apps.InventarioConfig",
-    "clientes.apps.ClientesConfig",
-    #aplicaciones extras
+    "backups.apps.BackupsConfig",
+
+    # aplicaciones extras
     "login",
     "widget_tweaks",
     "django_select2",
 ]
+
 SITE_ID = 1
 
 MIDDLEWARE = [
@@ -80,8 +83,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',                    # carpeta raíz (por si la usas después)
-            BASE_DIR / 'proyecto_principal' / 'templates',  # ← agrega esta línea
+            BASE_DIR / 'templates',
+            BASE_DIR / 'proyecto_principal' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -116,43 +119,27 @@ DATABASES = {
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
 # Internationalization
 LANGUAGE_CODE = 'es'
-
+TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
+# Static and Media files
 STATIC_URL = 'static/'
-
-STATICFILES_DIRS = [ BASE_DIR / "static"]
-
+STATICFILES_DIRS = [BASE_DIR / "proyecto_principal"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Configuración de medios para imágenes
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Configuración de sesión para el carrito
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 86400  # 24 horas
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -160,38 +147,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'usuario.Usuario'
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # login normal
-    'allauth.account.auth_backends.AuthenticationBackend',  # allauth
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Redirect después del login
-LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
-ACCOUNT_LOGIN_REDIRECT_URL = '/apps/usuarios/listar/'
+# Redirects
+LOGIN_REDIRECT_URL = '/apps/dashboard/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/apps/dashboard'
 LOGOUT_REDIRECT_URL = '/login/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
 
-# === CONFIGURACIÓN MÍNIMA Y SEGURA PARA LOGIN ===
-ACCOUNT_EMAIL_VERIFICATION = "none"
+# === CONFIGURACIÓN DE ALLAUTH ===
+ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_SIGNUP_FIELDS = ['email']
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
 
 # DESACTIVAR REGISTRO PÚBLICO Y SOCIAL LOGINS
 ACCOUNT_ALLOW_REGISTRATION = False
-ACCOUNT_SIGNUP_FORM_CLASS = None
-SOCIALACCOUNT_PROVIDERS = {}  # Desactiva Google, Facebook, etc.
-
-# Recuperación de contraseña
-ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = True
+ACCOUNT_FORMS = {'reset_password': 'usuario.forms.CustomPasswordResetForm'}
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 
-# reCAPTCHA
-RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
-RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
-NOCAPTCHA = True
-
-# Email - Gmail real
+# Email Config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -201,6 +179,11 @@ EMAIL_HOST_PASSWORD = 'zqni cgkh qafi unzm'
 DEFAULT_FROM_EMAIL = 'Q\'chicharron Local <qchicharron32@gmail.com>'
 SERVER_EMAIL = 'qchicharron32@gmail.com'
 
+# reCAPTCHA
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+NOCAPTCHA = True
+
 # Mensajes
 MESSAGE_TAGS = {
     messages.DEBUG: "info",
@@ -209,7 +192,14 @@ MESSAGE_TAGS = {
     messages.WARNING: "warning",
     messages.ERROR: "error",
 }
-ACCOUNT_FORMS = {
-    'reset_password': 'usuario.forms.CustomPasswordResetForm',
-}
-ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
+
+# ==============================================================================
+# CONFIGURACIÓN DE BACKUPS (GOOGLE DRIVE - OAuth2 con Gmail personal)
+# ==============================================================================
+
+# Ruta al JSON de OAuth2 que descargaste de Google Cloud Console
+# (tipo "Desktop app", llámalo oauth_credentials.json y ponlo en la raíz)
+GOOGLE_OAUTH_CREDS_PATH = os.path.join(BASE_DIR, 'oauth_credentials.json')
+
+# Token generado automáticamente al ejecutar generar_token.py por primera vez
+GOOGLE_DRIVE_TOKEN_PATH = os.path.join(BASE_DIR, 'token_drive.pkl')

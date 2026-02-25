@@ -1,15 +1,17 @@
 {% extends "dashboard/layout.html" %}
-
 {% block content %}
 <div class="card shadow mb-4">
+
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
     </div>
+
     <div class="card-body">
         <div class="table-responsive">
 
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+            <table class="table table-bordered datatable" width="100%" cellspacing="0">
+
+                <thead class="text-center">
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
@@ -18,9 +20,9 @@
                         <th>Email</th>
                         <th>Número Celular</th>
                         <th>Estado</th>
-                        <th>
+                        <th style="width:120px;">
                             <a href="{% url 'apl:usuario:crear_usuario' %}">
-                                <button type="button" class="btn btn-success btn-sm">
+                                <button type="button" class="btn btn-success btn-sm" title="Crear Usuario">
                                     <i class="bi bi-plus-circle-fill"></i>
                                 </button>
                             </a>
@@ -29,8 +31,10 @@
                 </thead>
 
                 <tbody>
+
                     {% for u in usuarios %}
                     <tr>
+
                         <td>{{ u.id }}</td>
                         <td>{{ u.nombre }}</td>
                         <td>{{ u.cedula }}</td>
@@ -38,104 +42,50 @@
                         <td>{{ u.email }}</td>
                         <td>{{ u.numero_celular }}</td>
                         <td>{{ u.estado }}</td>
-                        <td>
-                            <!-- Editar -->
+
+                        <td class="text-center">
+
                             <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
-                                <button type="button" class="btn btn-warning btn-sm mb-1">
+                                <button type="button"
+                                        class="btn btn-warning btn-sm mb-1"
+                                        title="Editar Usuario">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
 
-                            <!-- Eliminar -->
                             <button
                                 type="button"
                                 class="btn btn-danger btn-sm mb-1 btn-delete"
                                 data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
-                                data-nombre="{{ u.nombre }}">
+                                data-name="{{ u.nombre }}"
+                                title="Eliminar Usuario">
+
                                 <i class="bi bi-trash3-fill"></i>
+
                             </button>
+
                         </td>
+
                     </tr>
 
                     {% empty %}
                     <tr>
-                        <td colspan="8">No hay usuarios registrados.</td>
+                        <td colspan="8" class="text-center">
+                            No hay usuarios registrados.
+                        </td>
                     </tr>
                     {% endfor %}
+
                 </tbody>
+
             </table>
 
         </div>
     </div>
 </div>
-
 <!-- CSRF oculto para AJAX -->
 <form style="display:none;">
     {% csrf_token %}
 </form>
-
-<!-- SweetAlert2 Script -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    document.querySelectorAll(".btn-delete").forEach(button => {
-
-        button.addEventListener("click", function () {
-
-            const url = this.dataset.url;
-            const nombre = this.dataset.nombre;
-            const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            Swal.fire({
-                title: "¿Estás seguro?",
-                text: `Se eliminará "${nombre}"`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Sí, eliminar",
-                cancelButtonText: "Cancelar"
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-
-                    fetch(url, {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrf_token,
-                            "X-Requested-With": "XMLHttpRequest"
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-
-                        if (data.success) {
-                            Swal.fire({
-                                title: "Eliminado",
-                                text: `"${nombre}" fue eliminado correctamente`,
-                                icon: "success",
-                                timer: 1200,
-                                showConfirmButton: false
-                            });
-
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1200);
-                        }
-
-                    })
-                    .catch(() => {
-                        Swal.fire("Error", "No se pudo eliminar", "error");
-                    });
-
-                }
-            });
-
-        });
-
-    });
-
-});
-</script>
 
 {% endblock %}
