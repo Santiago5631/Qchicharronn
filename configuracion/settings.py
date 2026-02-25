@@ -196,5 +196,3 @@ MYSQLDUMP_PATH = r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe'
 
 # ID de la carpeta de tu Google Drive personal donde se guardarán los backups
 GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
-
-LOGIN_URL = '/login/'
