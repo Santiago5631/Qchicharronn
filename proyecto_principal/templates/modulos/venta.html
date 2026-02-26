@@ -1,128 +1,105 @@
 {% extends "dashboard/layout.html" %}
 {% block content %}
-
-<div class="card shadow mb-4">
-
-<div class="card-header py-3 d-flex justify-content-between align-items-center">
-
-    <h6 class="m-0 font-weight-bold text-primary">
-        Lista de Ventas
-    </h6>
-
-    <div>
-        <button id="btnPendientes" class="btn btn-warning btn-sm" title="Pendientes">
-            Pendientes
-        </button>
-
-        <button id="btnPagadas" class="btn btn-success btn-sm" title="Finalizadas">
-            Finalizadas
-        </button>
-
-        <button id="btnTodas" class="btn btn-secondary btn-sm" title="Todas">
-            Todas
-        </button>
-    </div>
-
+<div class="mb-3">
+    <button id="btnPendientes" class="btn btn-warning btn-sm">
+        Pendientes
+    </button>
+    <button id="btnPagadas" class="btn btn-success btn-sm">
+        Finalizadas
+    </button>
+    <button id="btnAnuladas" class="btn btn-danger btn-sm">
+        Anuladas
+    </button>
+    <button id="btnTodas" class="btn btn-secondary btn-sm">
+        Todas
+    </button>
 </div>
 
-<div class="card-body">
+<table id="tablaVentas" class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Factura</th>
+            <th>Pedido</th>
+            <th>Mesero</th>
+            <th>Cliente</th>
+            <th>Mesa/llevar</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for v in ventas %}
+        <tr>
+            <td>{{ v.numero_factura }}</td>
+            <td>#{{ v.pedido.numero_pedido }}</td>
 
-    <div class="table-responsive">
+<td>
+    {% if v.mesero %}
+        {{ v.mesero.get_full_name|default:v.mesero.username }}
+    {% else %}
+        <span class="text-muted">Sin asignar</span>
+    {% endif %}
+</td>
 
-        <table id="tablaVentas" class="table table-bordered datatable" width="100%" cellspacing="0">
+<td>{{ v.pedido.cliente_nombre }}</td>
 
-            <thead class="text-center">
-                <tr>
-                    <th>Factura</th>
-                    <th>Pedido</th>
-                    <th>Cliente</th>
-                    <th>Mesa / Llevar</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th style="width:190px;">Acciones</th>
-                </tr>
-            </thead>
+            <td>
+    {% if v.mesa %}
+        Mesa {{ v.mesa.numero }}
+    {% else %}
+        Para llevar
+    {% endif %}
+</td>
 
-            <tbody>
 
-                {% for v in ventas %}
-                <tr>
 
-                    <td>{{ v.numero_factura }}</td>
+            <td>{{ v.fecha_venta|date:"d/m/Y H:i" }}</td>
+            <td class="text-end fw-bold">$ {{ v.total }}</td>
+            <td data-estado="{{ v.estado }}">
+    {% if v.estado == 'pendiente' %}
+        <span class="badge bg-warning">Pendiente</span>
 
-                    <td>#{{ v.pedido.numero_pedido }}</td>
+    {% elif v.estado == 'pagado' %}
+        <span class="badge bg-success">Pagado</span>
 
-                    <td>{{ v.pedido.cliente_nombre }}</td>
+    {% elif v.estado == 'anulada' %}
+        <span class="badge bg-danger">Anulada</span>
 
-                    <td>
-                        {% if v.mesa %}
-                            Mesa {{ v.mesa.numero }}
-                        {% else %}
-                            Para llevar
-                        {% endif %}
-                    </td>
+    {% endif %}
+</td>
 
-                    <td>{{ v.fecha_venta|date:"d/m/Y H:i" }}</td>
 
-                    <td class="text-end fw-bold">
-                        $ {{ v.total }}
-                    </td>
+            <td class="text-center">
 
-                    <td data-estado="{{ v.estado }}">
-                        {% if v.estado == 'pendiente' %}
-                            <span class="badge bg-warning">Pendiente</span>
-                        {% else %}
-                            <span class="badge bg-success">Pagado</span>
-                        {% endif %}
-                    </td>
+                {% if v.estado == 'pendiente' %}
+                <form method="post" action="{% url 'apl:venta:venta_finalizar' v.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button class="btn btn-success btn-sm">
+                        Finalizar
+                    </button>
+                </form>
+                {% endif %}
 
-                    <td class="text-center">
+                <a href="{% url 'apl:venta:venta_detail' v.pk %}"
+                   class="btn btn-outline-primary btn-sm">
+                    Ver
+                </a>
 
-                        {% if v.estado == 'pendiente' %}
-                        <form method="post"
-                              action="{% url 'apl:venta:venta_finalizar' v.pk %}"
-                              style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-success btn-sm" title="Finalizar">
-                                Finalizar
-                            </button>
-                        </form>
-                        {% endif %}
+                {% if v.estado == 'pagado' %}
+                <a href="{% url 'apl:venta:factura' v.pk %}"
+                   class="btn btn-outline-dark btn-sm">
+                    Factura
+                </a>
+                {% endif %}
 
-                        <a href="{% url 'apl:venta:venta_detail' v.pk %}"
-                           class="btn btn-outline-primary btn-sm"
-                           title="Ver Venta">
-                            Ver
-                        </a>
-
-                        {% if v.estado == 'pagado' %}
-                        <a href="{% url 'apl:venta:factura' v.pk %}"
-                           class="btn btn-outline-dark btn-sm"
-                           title="Factura">
-                            Factura
-                        </a>
-                        {% endif %}
-
-                    </td>
-
-                </tr>
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-</div>
-
-{% endblock %}
-
-{% block extra_js %}
-
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% block js_init %}
 <script>
 $(document).ready(function() {
 
@@ -145,22 +122,44 @@ $(document).ready(function() {
         pageLength: 10
     });
 
-    // Mostrar pendientes por defecto
-    table.column(6).search('Pendiente').draw();
+    // Filtro personalizado por estado usando data-estado
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+
+        var filtroActivo = $('#tablaVentas').data('filtro') || 'pendiente';
+        var estado = table.row(dataIndex).node().querySelector('td[data-estado]').getAttribute('data-estado');
+
+        if (filtroActivo === 'todas') return true;
+        return estado === filtroActivo;
+    });
+
+    // Filtro por defecto: pendientes
+    $('#tablaVentas').data('filtro', 'pendiente');
+    table.draw();
 
     $('#btnPendientes').on('click', function() {
-        table.column(6).search('Pendiente').draw();
+        $('#tablaVentas').data('filtro', 'pendiente');
+        table.draw();
     });
 
     $('#btnPagadas').on('click', function() {
-        table.column(6).search('Pagado').draw();
+        $('#tablaVentas').data('filtro', 'pagado');
+        table.draw();
     });
-
+    $('#btnAnuladas').on('click', function() {
+        $('#tablaVentas').data('filtro', 'anulada');
+        table.draw();
+    });
     $('#btnTodas').on('click', function() {
-        table.column(6).search('').draw();
+        $('#tablaVentas').data('filtro', 'todas');
+        table.draw();
     });
 
 });
+
 </script>
+
+{% endblock %}
+
+
 
 {% endblock %}

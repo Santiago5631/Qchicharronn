@@ -10,5 +10,6 @@ urlpatterns = [
     path('factura/<int:pk>/', VentaFacturaView.as_view(), name='factura'),
     path('finalizar/<int:pk>/', VentaFinalizarView.as_view(), name='venta_finalizar'),
 
+
     ]
 

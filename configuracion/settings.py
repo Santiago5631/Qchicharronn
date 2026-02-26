@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'venta.apps.VentaConfig',
     "inventario.apps.InventarioConfig",
     "backups.apps.BackupsConfig",
+    "clientes.apps.ClientesConfig",
 
     # aplicaciones extras
     "login",
@@ -89,6 +90,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'configuracion.wsgi.application'
+
 
 # Database
 DATABASES = {

@@ -16,6 +16,7 @@
                 <thead class="bg-primary text-white">
                     <tr>
                         <th>ID</th>
+                        <th>Mesero</th>
                         <th>Mesa</th>
                         <th>Fecha</th>
                         <th>Platos / Menús</th>
@@ -28,8 +29,17 @@
                     {% for pe in pedidos %}
                     <tr>
                         <td>{{ pe.id }}</td>
-                        <td>{{ pe.mesa.numero }}</td>
-                        <td>{{ pe.fecha|date:"d/m/Y H:i" }}</td>
+<td>
+    {% if pe.mesero %}
+        {{ pe.mesero.get_full_name }}
+    {% else %}
+        <span class="text-muted">Sin asignar</span>
+    {% endif %}
+</td>
+<td>{{ pe.mesa.numero }}</td>
+
+                        <td>{{ pe.fecha_creacion|date:"d/m/Y H:i" }}</td>
+
                         <td>
                             {% for det in pe.detalles.all %}
                                 {{ det.menu.nombre }} (x{{ det.cantidad }}){% if not forloop.last %}, {% endif %}
@@ -53,7 +63,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No hay pedidos registrados.</td>
+                        <td colspan="8" class="text-center">No hay pedidos registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

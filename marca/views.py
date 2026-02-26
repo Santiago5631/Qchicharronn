@@ -1,11 +1,18 @@
-# marca/views.py
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from .models import *
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.shortcuts import render
 
 from usuario.permisos import RolRequeridoMixin, SOLO_ADMIN
 
+def listar_marca(request):
+    data = {
+        'marca': 'marca',
+        'titulo': 'Lista de Marcas',
+        'marcas': Marca.objects.all()
+    }
+    return render(request, 'modulos/marca.html', data)
 
 class MarcaListView(RolRequeridoMixin, ListView):
     """Solo administradores pueden ver marcas."""
@@ -64,5 +71,21 @@ class MarcaDeleteView(RolRequeridoMixin, DeleteView):
         return context
 
     def get(self, request, *args, **kwargs):
+        # Renderiza solo el contenido para el modal
         self.object = self.get_object()
         return render(request, self.template_name, {'object': self.object})
+
+
+class MarcaCreateView(CreateView):
+    model = Marca
+    template_name = 'forms/formulario_crear.html'
+    fields = ['nombre', 'descripcion', 'pais_origen']
+
+    def get_success_url(self):
+        return reverse_lazy('apl:marca:marca_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Crear nueva Marca'
+        context['modulo'] = "informe"
+        return context

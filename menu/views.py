@@ -246,6 +246,8 @@ class PedidoListView(RolRequeridoMixin, ListView):
 
     def get_queryset(self):
         queryset = Pedido.objects.prefetch_related('items__menu').all()
+        if self.request.user.cargo == 'mesero':
+            queryset = queryset.filter(mesero=self.request.user)
         estado = self.request.GET.get('estado')
         if estado and estado in dict(Pedido.ESTADO_CHOICES):
             queryset = queryset.filter(estado=estado)
@@ -372,6 +374,7 @@ class PedidoCreateView(RolRequeridoMixin, View):
                         pedido.observaciones  = form.cleaned_data['observaciones']
                     else:
                         pedido = form.save(commit=False)
+                        pedido.mesero = request.user
 
                     pedido.estado = 'pendiente'
                     pedido.save()
