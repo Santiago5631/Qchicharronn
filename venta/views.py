@@ -8,7 +8,9 @@ from django.views.generic import DetailView
 from clientes.models import Cliente
 
 
-from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN, ADMIN_MESERO
+from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN, CAJA
+
+
 # ADMIN_MESERO = ['administrador', 'mesero']
 # Los cocineros no gestionan ventas/facturación
 
@@ -18,7 +20,7 @@ class VentaListView(RolRequeridoMixin, ListView):
     Admin y Meseros pueden ver las ventas.
     (El mesero necesita ver el estado para saber cuándo cobrar)
     """
-    roles_permitidos = ADMIN_MESERO
+    roles_permitidos = CAJA
     model = Venta
     template_name = 'modulos/venta.html'
     context_object_name = 'ventas'
@@ -45,7 +47,7 @@ class VentaListView(RolRequeridoMixin, ListView):
 
 class VentaDetailView(RolRequeridoMixin, DetailView):
     """Admin y Meseros pueden ver el detalle de una venta."""
-    roles_permitidos = ADMIN_MESERO
+    roles_permitidos = CAJA
     model = Venta
     template_name = 'forms/venta_detalle.html'
     context_object_name = 'venta'
@@ -70,7 +72,7 @@ class VentaFacturaView(RolRequeridoMixin, DetailView):
     Admin y Meseros pueden ver la factura.
     Solo se muestra si la venta está pagada.
     """
-    roles_permitidos = ADMIN_MESERO
+    roles_permitidos = CAJA
     model = Venta
     template_name = 'forms/factura.html'
     context_object_name = 'venta'
@@ -125,7 +127,7 @@ class VentaFinalizarView(RolRequeridoMixin, View):
     Admin y Meseros pueden finalizar/cobrar una venta.
     (El mesero es quien cobra al cliente)
     """
-    roles_permitidos = ADMIN_MESERO
+    roles_permitidos = CAJA
 
     def post(self, request, pk):
         venta = get_object_or_404(Venta, pk=pk)

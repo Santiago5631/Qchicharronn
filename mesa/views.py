@@ -5,14 +5,16 @@ from django.contrib import messages
 from .models import Mesa
 from .forms import MesaForm
 
-from usuario.permisos import RolRequeridoMixin, ADMIN_MESERO
+from usuario.permisos import RolRequeridoMixin, ADMIN_MESERO, CAJA
+
+
 # ADMIN_MESERO = ['administrador', 'mesero']
 # Los cocineros no gestionan mesas
 
 
 class MesaListView(RolRequeridoMixin, ListView):
     """Admin y Meseros pueden ver mesas."""
-    roles_permitidos = ADMIN_MESERO
+    roles_permitidos = CAJA
     model = Mesa
     template_name = 'modulos/mesa.html'
     context_object_name = 'mesa'

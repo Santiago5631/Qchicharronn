@@ -21,3 +21,10 @@ COPY . .
 EXPOSE 8000
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Si usas una imagen basada en Debian/Ubuntu (ej. python:3.11)
+# Si usas una imagen basada en Python (Debian/Ubuntu)
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    gzip \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
