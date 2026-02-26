@@ -8,24 +8,20 @@ ADMINISTRADOR = 'administrador'
 COCINERO      = 'cocinero'
 PARRILLA      = 'parrilla'
 MESERO        = 'mesero'
+CAJERA        = 'cajera'          # ← ROL NUEVO
 
-TODOS      = [ADMINISTRADOR, COCINERO, PARRILLA, MESERO]
-COCINAS    = [ADMINISTRADOR, COCINERO, PARRILLA]
-SOLO_ADMIN = [ADMINISTRADOR]
-ADMIN_MESERO = [ADMINISTRADOR, MESERO]
+TODOS         = [ADMINISTRADOR, COCINERO, PARRILLA, MESERO, CAJERA]
+COCINAS       = [ADMINISTRADOR, COCINERO, PARRILLA]
+SOLO_ADMIN    = [ADMINISTRADOR]
+ADMIN_MESERO  = [ADMINISTRADOR, MESERO]
+ADMIN_CAJERA  = [ADMINISTRADOR, CAJERA]                    # ← NUEVO
+CAJA          = [ADMINISTRADOR, MESERO, CAJERA]            # ← NUEVO (ventas/pedidos/mesas)
 
 
-# ══════════════════════════════════════════
+# ══════════════════════════════════════════════
 # MIXIN para Vistas de Clase (CBV)
-# ══════════════════════════════════════════
+# ══════════════════════════════════════════════
 class RolRequeridoMixin(LoginRequiredMixin):
-    """
-    Protege vistas de clase según el campo 'cargo' del usuario.
-
-    Uso:
-        class MiVista(RolRequeridoMixin, ListView):
-            roles_permitidos = ['administrador', 'cocinero']
-    """
     roles_permitidos = []
     login_url = '/login/'
 
@@ -37,17 +33,10 @@ class RolRequeridoMixin(LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-# ══════════════════════════════════════════
+# ══════════════════════════════════════════════
 # DECORADOR para Vistas de Función
-# ══════════════════════════════════════════
+# ══════════════════════════════════════════════
 def rol_requerido(*roles):
-    """
-    Protege vistas de función según el campo 'cargo' del usuario.
-
-    Uso:
-        @rol_requerido('administrador', 'mesero')
-        def mi_vista(request): ...
-    """
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):

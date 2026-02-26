@@ -1,0 +1,314 @@
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0 fw-bold">
+            <i class='bx bxs-user-circle me-2' style="color: var(--primary-color)"></i>
+            Mi Perfil
+        </h2>
+        <span class="badge rounded-pill px-3 py-2"
+              style="background: var(--primary-color); font-size: .85rem;">
+            {{ request.user.get_cargo_display|default:request.user.cargo|capfirst }}
+        </span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- COLUMNA IZQUIERDA — Foto y resumen  -->
+        <!-- ═══════════════════════════════════ -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-5">
+
+                    <!-- Foto de perfil -->
+                    <div class="position-relative d-inline-block mb-4">
+                        <img id="preview-foto"
+                             src="{{ usuario.get_foto_url }}"
+                             alt="Foto de perfil"
+                             class="rounded-circle shadow"
+                             style="width:130px; height:130px; object-fit:cover; border: 4px solid var(--primary-color)">
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ usuario.nombre|default:"Sin nombre" }}</h4>
+                    <p class="text-muted mb-1">{{ usuario.email }}</p>
+                    <p class="text-muted small mb-3">
+                        <i class='bx bx-phone me-1'></i>
+                        {{ usuario.numero_celular|default:"Sin celular" }}
+                    </p>
+
+                    <!-- Badge de estado -->
+                    {% if usuario.estado == 'activo' %}
+                        <span class="badge bg-success px-3 py-2">
+                            <i class='bx bx-check-circle me-1'></i> Activo
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger px-3 py-2">
+                            <i class='bx bx-x-circle me-1'></i> Inactivo
+                        </span>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <!-- Info extra -->
+                    <div class="text-start px-2">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Cédula</span>
+                            <span class="fw-semibold small">{{ usuario.cedula|default:"—" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Último acceso</span>
+                            <span class="fw-semibold small">
+                                {{ usuario.last_login|date:"d/m/Y H:i"|default:"—" }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Miembro desde</span>
+                            <span class="fw-semibold small">
+                                {{ usuario.date_joined|date:"d/m/Y" }}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- COLUMNA DERECHA — Formularios           -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="col-lg-8">
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" id="perfilTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#tab-datos">
+                        <i class='bx bxs-edit me-1'></i> Mis datos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-password">
+                        <i class='bx bxs-lock-alt me-1'></i> Cambiar contraseña
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <!-- ══════════════════════════ -->
+                <!-- TAB 1 — Editar datos       -->
+                <!-- ══════════════════════════ -->
+                <div class="tab-pane fade show active" id="tab-datos">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold">
+                                <i class='bx bxs-user me-2'></i>Información personal
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="actualizar_perfil">
+
+                                <div class="row g-3">
+
+                                    <!-- Nombre -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-user me-1'></i>Nombre completo
+                                        </label>
+                                        {{ form_perfil.nombre }}
+                                        {% if form_perfil.nombre.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_perfil.nombre.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Cédula -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-id-card me-1'></i>Cédula
+                                        </label>
+                                        {{ form_perfil.cedula }}
+                                        {% if form_perfil.cedula.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_perfil.cedula.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Correo -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-envelope me-1'></i>Correo electrónico
+                                        </label>
+                                        {{ form_perfil.email }}
+                                        {% if form_perfil.email.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_perfil.email.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Celular -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-phone me-1'></i>Número celular
+                                        </label>
+                                        {{ form_perfil.numero_celular }}
+                                        {% if form_perfil.numero_celular.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_perfil.numero_celular.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Foto de perfil -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-image me-1'></i>Foto de perfil
+                                        </label>
+                                        {{ form_perfil.foto_perfil }}
+                                        {% if form_perfil.foto_perfil.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_perfil.foto_perfil.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">
+                                            Formatos permitidos: JPG, PNG, WEBP. Máximo 2MB.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class='bx bx-save me-2'></i>Guardar cambios
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════ -->
+                <!-- TAB 2 — Cambiar contraseña -->
+                <!-- ══════════════════════════ -->
+                <div class="tab-pane fade" id="tab-password">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold">
+                                <i class='bx bxs-lock-alt me-2'></i>Cambiar contraseña
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="cambiar_password">
+
+                                <div class="row g-3">
+
+                                    <!-- Contraseña actual -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-lock me-1'></i>Contraseña actual
+                                        </label>
+                                        {{ form_password.old_password }}
+                                        {% if form_password.old_password.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_password.old_password.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Nueva contraseña -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-lock-open me-1'></i>Nueva contraseña
+                                        </label>
+                                        {{ form_password.new_password1 }}
+                                        {% if form_password.new_password1.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_password.new_password1.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Confirmar contraseña -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class='bx bx-lock-open me-1'></i>Confirmar contraseña
+                                        </label>
+                                        {{ form_password.new_password2 }}
+                                        {% if form_password.new_password2.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_password.new_password2.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="submit" class="btn btn-warning px-4">
+                                        <i class='bx bx-key me-2'></i>Cambiar contraseña
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block js_custom %}
+<script>
+// Preview de la foto antes de subir
+document.querySelector('input[name="foto_perfil"]').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validar tamaño (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Imagen muy grande',
+            text: 'La imagen no debe superar 2MB.',
+            confirmButtonColor: '#e74a3b'
+        });
+        e.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('preview-foto').src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Si hay errores en el form de contraseña, abrir ese tab automáticamente
+{% if form_password.errors %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabPassword = document.querySelector('a[href="#tab-password"]');
+        if (tabPassword) {
+            new bootstrap.Tab(tabPassword).show();
+        }
+    });
+{% endif %}
+</script>
+{% endblock %}

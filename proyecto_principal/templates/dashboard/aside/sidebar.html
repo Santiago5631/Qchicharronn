@@ -14,12 +14,12 @@
         <div class="menu">
             <li class="search-box">
                 <i class='bx bx-search icon'></i>
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Buscar...">
             </li>
 
             <ul class="menu-links">
 
-                {# ── Panel de Control — todos los roles ── #}
+                {# ── Dashboard — todos los roles ── #}
                 <li class="nav-link">
                     <a href="{% url 'apl:dashboard' %}">
                         <i class='bx bx-home-alt icon'></i>
@@ -100,9 +100,9 @@
 
 
                 {# ════════════════════════════════════════════ #}
-                {# ADMINISTRADOR + MESERO                      #}
+                {# ADMINISTRADOR + MESERO + CAJERA             #}
                 {# ════════════════════════════════════════════ #}
-                {% if request.user|cargo_en:"administrador,mesero" %}
+                {% if request.user|cargo_en:"administrador,mesero,cajera" %}
 
                 <li class="nav-link">
                     <a href="{% url 'apl:mesa:mesa_list' %}">
@@ -119,7 +119,7 @@
                 </li>
 
                 {% endif %}
-                {# ── fin admin + mesero ── #}
+                {# ── fin admin + mesero + cajera ── #}
 
 
                 {# ════════════════════════════════════════════ #}
@@ -155,11 +155,7 @@
                     </a>
                 </li>
 
-                {# ════════════════════════════════════════════ #}
-                {# COMANDAS — Diferenciadas por tipo de cocina  #}
-                {# ════════════════════════════════════════════ #}
-
-                {# Comanda Cocina — solo admin y cocinero #}
+                {# Comanda Cocina — admin y cocinero #}
                 {% if request.user|cargo_en:"administrador,cocinero" %}
                 <li class="nav-link">
                     <a href="{% url 'apl:pedido:listar_pedido' %}">
@@ -169,7 +165,7 @@
                 </li>
                 {% endif %}
 
-                {# Comanda Parrilla — solo admin y parrilla #}
+                {# Comanda Parrilla — admin y parrilla #}
                 {% if request.user|cargo_en:"administrador,parrilla" %}
                 <li class="nav-link">
                     <a href="{% url 'apl:pedido:listar_pedido' %}">
@@ -183,6 +179,15 @@
         </div>
 
         <div class="bottom-content">
+
+            {# ── Enlace al perfil propio — todos los roles ── #}
+            <li class="nav-link">
+                <a href="{% url 'apl:usuario:perfil' %}">
+                    <i class='bx bxs-user-circle icon'></i>
+                    <span class="text nav-text">Mi Perfil</span>
+                </a>
+            </li>
+
             <li>
                 <form method="post" action="{% url 'login:logout' %}" id="logout-form">
                     {% csrf_token %}
@@ -199,7 +204,6 @@
                     <i class='bx bx-sun icon sun'></i>
                 </div>
                 <span class="mode-text text">Modo Oscuro</span>
-
                 <div class="toggle-switch">
                     <span class="switch"></span>
                 </div>

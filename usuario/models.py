@@ -1,19 +1,13 @@
+# usuario/models.py
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
 class UsuarioManager(BaseUserManager):
-    """
-    Manager personalizado para crear usuarios y superusuarios sin username.
-    """
     def create_user(self, email, password=None, **extra_fields):
-        """
-        Crea y guarda un usuario con el email y contraseña dados.
-        """
         if not email:
             raise ValueError(_('El correo electrónico es obligatorio'))
-
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -21,9 +15,6 @@ class UsuarioManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        """
-        Crea y guarda un superusuario con el email y contraseña dados.
-        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -37,13 +28,8 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractUser):
-    """
-    Modelo de usuario personalizado que usa email como identificador principal.
-    """
-    # Quitamos username porque autenticamos por email
     username = None
 
-    # Tus campos originales
     nombre = models.CharField(
         _("nombre completo"),
         max_length=100,
@@ -67,6 +53,7 @@ class Usuario(AbstractUser):
             ('administrador', 'Administrador'),
             ('cocinero', 'Cocinero'),
             ('parrilla', 'Parrilla'),
+            ('cajera', 'Cajera'),          # ← ROL NUEVO
         ],
         blank=True,
     )
@@ -82,8 +69,14 @@ class Usuario(AbstractUser):
         choices=[('activo', 'Activo'), ('inactivo', 'Inactivo')],
         default='activo',
     )
+    foto_perfil = models.ImageField(         # ← CAMPO NUEVO
+        _("foto de perfil"),
+        upload_to='perfiles/',
+        blank=True,
+        null=True,
+        help_text="Foto de perfil del usuario"
+    )
 
-    # Campo principal para autenticación
     email = models.EmailField(
         _("correo electrónico"),
         unique=True,
@@ -93,19 +86,10 @@ class Usuario(AbstractUser):
         },
     )
 
-    # Configuración obligatoria para autenticar por email
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # No pedimos más campos obligatorios al crear superusuario
+    REQUIRED_FIELDS = []
 
-    # Manager personalizado
     objects = UsuarioManager()
-
-    # Campos útiles que hereda de AbstractUser
-    # is_active     → para desactivar cuentas
-    # is_staff      → para acceso al admin
-    # is_superuser  → para permisos de superusuario
-    # date_joined   → fecha de creación
-    # last_login    → última sesión
 
     class Meta:
         verbose_name = _("usuario")
@@ -120,3 +104,9 @@ class Usuario(AbstractUser):
 
     def get_short_name(self):
         return self.nombre.split()[0] if self.nombre else self.email
+
+    def get_foto_url(self):
+        """Retorna la URL de la foto o una imagen por defecto."""
+        if self.foto_perfil:
+            return self.foto_perfil.url
+        return '/static/lib/img/default_avatar.png'
