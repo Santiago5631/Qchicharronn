@@ -12,6 +12,7 @@ ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
 # APPS
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -19,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'channels',
 
     # allauth
     'allauth',
@@ -58,6 +60,7 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -199,3 +202,15 @@ MYSQLDUMP_PATH = 'mysqldump'
 # ID de la carpeta de tu Google Drive personal donde se guardarán los backups
 GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
 BACKUP_ENCRYPTION_KEY = config('BACKUP_ENCRYPTION_KEY', default=SECRET_KEY)
+
+
+ASGI_APPLICATION = 'configuracion.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('redis', 6379)],  # 👈 'redis' no '127.0.0.1'
+        },
+    },
+}

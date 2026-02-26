@@ -14,8 +14,11 @@ from decimal import Decimal
 from venta.services import crear_venta_desde_pedido, actualizar_venta_desde_pedido
 from django.urls import reverse
 from django.db.models import Count
-
 from usuario.permisos import RolRequeridoMixin, rol_requerido, SOLO_ADMIN, TODOS, COCINAS
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import VistaConfig
+from categoria.models import Categoria
 
 
 # ══════════════════════════════════════════════
@@ -612,3 +615,67 @@ class PedidoUpdate(RolRequeridoMixin, View):
         request.session.modified           = True
 
         return redirect('apl:menu:pedido_create')
+
+# ============================================================
+# AGREGAR a menu/views.py
+# ============================================================
+
+
+
+def _get_pedidos_activos(area, categorias_ids):
+    """
+    Retorna pedidos pendientes/preparando que tengan al menos
+    un item cuya categoría esté en la vista.
+    """
+    return (
+        Pedido.objects
+        .filter(estado__in=['pendiente', 'preparando'])
+        .prefetch_related(
+            'items__menu__categoria_menu',
+            'mesa',
+            'mesero',
+        )
+        .order_by('fecha_creacion')
+    )
+
+
+@login_required
+def vista_cocina(request, area):
+    """Vista para Parrilla o Cocina"""
+    if area not in ('parrilla', 'cocina'):
+        from django.http import Http404
+        raise Http404
+
+    # Obtener o crear la config de esta vista
+    config, _ = VistaConfig.objects.get_or_create(area=area)
+
+    # Todas las categorías disponibles (para el selector)
+    todas_categorias = Categoria.objects.all().order_by('nombre')
+
+    # Categorías actualmente activas en esta vista
+    categorias_activas = config.categorias_activas.values_list('id', flat=True)
+
+    # Pedidos activos filtrados por categorías de esta vista
+    pedidos_raw = _get_pedidos_activos(area, categorias_activas)
+
+    # Filtrar items de cada pedido que correspondan a las categorías activas
+    pedidos = []
+    for pedido in pedidos_raw:
+        items_filtrados = [
+            item for item in pedido.items.all()  # ✅ related_name='items'
+            if item.menu and item.menu.categoria_menu_id in categorias_activas
+        ]
+        if items_filtrados:
+            pedidos.append({
+                'pedido': pedido,
+                'items': items_filtrados,
+            })
+
+    context = {
+        'area': area,
+        'area_display': 'Parrilla' if area == 'parrilla' else 'Cocina',
+        'todas_categorias': todas_categorias,
+        'categorias_activas_ids': list(categorias_activas),
+        'pedidos': pedidos,
+    }
+    return render(request, 'modulos/vista_cocina.html', context)
