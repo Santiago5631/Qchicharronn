@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from django.conf import settings
 
 
 
@@ -135,12 +136,21 @@ class Pedido(models.Model):
         choices=TIPO_PEDIDO_CHOICES,
         default='mesa'
     )
+    mesero = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='pedidos',
+        verbose_name='Mesero',
+        null = True,  # 👈 AGREGAR ESTO
+        blank = True
+    )
 
     mesa = models.ForeignKey(
         'mesa.Mesa',
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+
     )
 
     estado = models.CharField(

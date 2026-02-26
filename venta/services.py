@@ -8,6 +8,7 @@ def crear_venta_desde_pedido(pedido):
 
     venta = Venta.objects.create(
         pedido=pedido,
+        mesero=pedido.mesero,
         cliente_nombre=pedido.cliente_nombre,
         cliente_factura=None,
         tipo_pedido=pedido.tipo_pedido,

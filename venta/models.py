@@ -2,11 +2,14 @@ from django.db import models
 from menu.models import Pedido
 from decimal import Decimal
 from clientes.models import Cliente
+from django.conf import settings
+
 
 class Venta(models.Model):
     ESTADO_CHOICES = (
         ('pendiente', 'Pendiente'),
         ('pagado', 'Pagado'),
+        ('anulada', 'Anulada'),
     )
     METODO_PAGO_CHOICES = (
         ('efectivo', 'Efectivo'),
@@ -25,6 +28,13 @@ class Venta(models.Model):
         null=True,
         blank=True,
         related_name='ventas_facturadas'
+    )
+    mesero = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='ventas',
+        null=True,
+        blank=True
     )
 
     metodo_pago = models.CharField(

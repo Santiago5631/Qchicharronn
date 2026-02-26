@@ -7,6 +7,9 @@
     <button id="btnPagadas" class="btn btn-success btn-sm">
         Finalizadas
     </button>
+    <button id="btnAnuladas" class="btn btn-danger btn-sm">
+        Anuladas
+    </button>
     <button id="btnTodas" class="btn btn-secondary btn-sm">
         Todas
     </button>
@@ -17,6 +20,7 @@
         <tr>
             <th>Factura</th>
             <th>Pedido</th>
+            <th>Mesero</th>
             <th>Cliente</th>
             <th>Mesa/llevar</th>
             <th>Fecha</th>
@@ -30,7 +34,17 @@
         <tr>
             <td>{{ v.numero_factura }}</td>
             <td>#{{ v.pedido.numero_pedido }}</td>
-            <td>{{ v.pedido.cliente_nombre }}</td>
+
+<td>
+    {% if v.mesero %}
+        {{ v.mesero.get_full_name|default:v.mesero.username }}
+    {% else %}
+        <span class="text-muted">Sin asignar</span>
+    {% endif %}
+</td>
+
+<td>{{ v.pedido.cliente_nombre }}</td>
+
             <td>
     {% if v.mesa %}
         Mesa {{ v.mesa.numero }}
@@ -46,10 +60,16 @@
             <td data-estado="{{ v.estado }}">
     {% if v.estado == 'pendiente' %}
         <span class="badge bg-warning">Pendiente</span>
-    {% else %}
+
+    {% elif v.estado == 'pagado' %}
         <span class="badge bg-success">Pagado</span>
+
+    {% elif v.estado == 'anulada' %}
+        <span class="badge bg-danger">Anulada</span>
+
     {% endif %}
 </td>
+
 
             <td class="text-center">
 
@@ -125,7 +145,10 @@ $(document).ready(function() {
         $('#tablaVentas').data('filtro', 'pagado');
         table.draw();
     });
-
+    $('#btnAnuladas').on('click', function() {
+        $('#tablaVentas').data('filtro', 'anulada');
+        table.draw();
+    });
     $('#btnTodas').on('click', function() {
         $('#tablaVentas').data('filtro', 'todas');
         table.draw();

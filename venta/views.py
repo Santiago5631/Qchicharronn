@@ -25,7 +25,13 @@ class VentaListView(RolRequeridoMixin, ListView):
     ordering = ['-fecha_venta']  # más recientes primero
 
     def get_queryset(self):
-        return Venta.objects.select_related('pedido').all()
+        queryset = Venta.objects.select_related('pedido', 'mesero')
+
+        # 🔐 Si es mesero, solo ve sus ventas
+        if self.request.user.cargo == 'mesero':
+            queryset = queryset.filter(mesero=self.request.user)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -82,8 +88,8 @@ class VentaFacturaView(RolRequeridoMixin, DetailView):
 
     def get_object(self, queryset=None):
         venta = super().get_object(queryset)
-        if venta.estado != 'pagado' and venta.estado != 'pendiente':
-            raise Http404("Estado inválido")
+        if venta.estado != 'pagado':
+            raise Http404("La venta aún no está pagada")
         return venta
 
     def get_context_data(self, **kwargs):
@@ -129,6 +135,7 @@ class VentaFinalizarView(RolRequeridoMixin, View):
             return redirect('apl:venta:venta_list')
 
         metodo_pago = request.POST.get('metodo_pago')
+
         if not metodo_pago:
             messages.error(request, 'Debe seleccionar un método de pago.')
             return redirect('apl:venta:venta_detail', pk=venta.pk)

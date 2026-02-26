@@ -9,14 +9,15 @@
 
         {% if venta.estado == 'pendiente' %}
             <span class="badge bg-warning">Pendiente</span>
-        {% else %}
-            <span class="badge bg-success">Pagado</span>
+          {% elif venta.estado == 'pagado' %}
+       <span class="badge bg-success">Pagado</span>
+       {% elif venta.estado == 'anulado' %}
+            <span class="badge bg-danger">Anulada</span>
         {% endif %}
+
     </div>
 
     <div class="card-body">
-
-        <!-- Datos del cliente -->
         <!-- Datos del cliente -->
 <div class="row mb-4">
     <div class="col-md-6">
@@ -36,23 +37,7 @@
 {% else %}
     <span class="text-muted">Sin cliente asignado</span>
 {% endif %}
-    <strong>Cliente Facturación:</strong><br>
 
-<!-- DEBUG TEMPORAL -->
-<small class="text-danger">
-    cliente_display: {{ cliente_display }}<br>
-    venta.cliente_factura_id: {{ venta.cliente_factura_id }}<br>
-    venta.cliente_id: {{ venta.cliente_id }}
-</small>
-
-{% if cliente_display %}
-    {{ cliente_display.nombre }}
-    {% if cliente_display.numero_documento %}
-        - {{ cliente_display.numero_documento }}
-    {% endif %}
-{% else %}
-    <span class="text-muted">Sin cliente asignado</span>
-{% endif %}
 
         <strong>Tipo pedido:</strong> {{ venta.tipo_pedido }}<br>
         {% if venta.mesa %}
@@ -62,7 +47,15 @@
 
     <div class="col-md-6 text-end">
         <strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}<br>
-        <strong>Pedido:</strong> #{{ venta.pedido.numero_pedido }}
+<strong>Pedido:</strong> #{{ venta.pedido.numero_pedido }}<br>
+
+<strong>Mesero:</strong>
+{% if venta.mesero %}
+    {{ venta.mesero.get_full_name|default:venta.mesero.username }}
+{% else %}
+    <span class="text-muted">No asignado</span>
+{% endif %}
+
     </div>
 </div>
 
@@ -102,80 +95,102 @@
 
         {% if venta.estado == 'pendiente' %}
 
-        <!-- ===================== -->
-        <!-- FORM CAMBIAR CLIENTE -->
-        <!-- ===================== -->
-        <h4 class="mt-4">Seleccionar Cliente para Factura</h4>
+<form method="post" action="{% url 'apl:venta:venta_finalizar' venta.pk %}">
+    {% csrf_token %}
 
-        <a href="{% url 'apl:clientes:crear_cliente' %}"
-   class="btn btn-info mt-2">
-    Registrar Nuevo Cliente
-</a>
+    <div class="col-md-6 mt-3">
+        <label><strong>Cliente para Factura</strong></label>
+        <select name="cliente_factura" class="form-control">
+            <option value="">-- Sin cliente --</option>
+            {% for cliente in clientes %}
+                <option value="{{ cliente.id }}"
+                    {% if venta.cliente_factura and venta.cliente_factura.id == cliente.id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ cliente.nombre }}
+                    {% if cliente.numero_documento %}
+                        - {{ cliente.numero_documento }}
+                    {% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <label>Método de Pago</label>
+            <select name="metodo_pago" class="form-control" required>
+                <option value="">Seleccione...</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="transferencia">Transferencia</option>
+            </select>
+        </div>
+    </div>
 
-        <!-- ===================== -->
-        <!-- FORM FINALIZAR VENTA -->
-        <!-- ===================== -->
-        <form method="post" action="{% url 'apl:venta:venta_finalizar' venta.pk %}">
-            {% csrf_token %}
-            <div class="col-md-6 mt-3">
-    <label><strong>Cliente para Factura</strong></label>
+    <!-- 🔹 BOTONES EN FILA -->
+    <div class="mt-4 d-flex gap-2 flex-wrap">
 
-    <select name="cliente_factura" class="form-control">
-        <option value="">-- Sin cliente --</option>
+        <a href="{% url 'apl:menu:pedido_editar' venta.pedido.pk %}?from=venta"
+           class="btn btn-warning">
+            Editar Pedido
+        </a>
 
-        {% for cliente in clientes %}
-            <option value="{{ cliente.id }}"
-                {% if venta.cliente_factura and venta.cliente_factura.id == cliente.id %}
-                    selected
-                {% endif %}
-            >
-                {{ cliente.nombre }}
-                {% if cliente.numero_documento %}
-                    - {{ cliente.numero_documento }}
-                {% endif %}
-            </option>
-        {% endfor %}
-    </select>
+        <button type="submit" class="btn btn-success">
+            Finalizar Venta
+        </button>
+
+        <a href="{% url 'apl:venta:venta_list' %}"
+           class="btn btn-secondary">
+            Volver
+        </a>
+
+    </div>
+
+</form>
+
+{% elif venta.estado == 'pagado' %}
+
+<div class="mt-4 d-flex gap-2">
+
+    <a href="{% url 'apl:venta:factura' venta.pk %}"
+       class="btn btn-dark">
+        Ver Factura
+    </a>
+
+    <a href="{% url 'apl:venta:venta_list' %}"
+       class="btn btn-secondary">
+        Volver
+    </a>
+
 </div>
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <label>Método de Pago</label>
-                    <select name="metodo_pago" class="form-control" required>
-                        <option value="">Seleccione...</option>
-                        <option value="efectivo">Efectivo</option>
-                        <option value="tarjeta">Tarjeta</option>
-                        <option value="transferencia">Transferencia</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="mt-4">
-                <a href="{% url 'apl:menu:pedido_editar' venta.pedido.pk %}?from=venta"
-                   class="btn btn-warning">
-                    Editar Pedido
-                </a>
+{% elif venta.estado == 'anulada' %}
 
-                <button type="submit" class="btn btn-success">
-                    Finalizar Venta
-                </button>
+<div class="mt-4">
+    <a href="{% url 'apl:venta:venta_list' %}"
+       class="btn btn-secondary">
+        Volver
+    </a>
+</div>
 
-                <a href="{% url 'apl:venta:venta_list' %}"
-                   class="btn btn-secondary">
-                    Volver
-                </a>
-            </div>
-        </form>
+{% endif %}
 
-        {% else %}
-            <a href="{% url 'apl:venta:factura' venta.pk %}"
-               class="btn btn-dark mt-3">
-                Ver Factura
-            </a>
-        {% endif %}
+
 
     </div>
 </div>
+    Estado actual: {{ venta.estado }}
+
+{% if venta.estado == 'anulado' %}
+<div class="mt-4">
+    <a href="{% url 'apl:venta:venta_list' %}"
+       class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+{% endif %}
 
 
 
