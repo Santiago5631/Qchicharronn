@@ -1,16 +1,13 @@
 {% extends "dashboard/layout.html" %}
 {% block content %}
 <div class="card shadow mb-4">
-
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
     </div>
 
     <div class="card-body">
         <div class="table-responsive">
-
             <table class="table table-bordered datatable" width="100%" cellspacing="0">
-
                 <thead class="text-center">
                     <tr>
                         <th>ID</th>
@@ -29,12 +26,9 @@
                         </th>
                     </tr>
                 </thead>
-
                 <tbody>
-
                     {% for u in usuarios %}
                     <tr>
-
                         <td>{{ u.id }}</td>
                         <td>{{ u.nombre }}</td>
                         <td>{{ u.cedula }}</td>
@@ -42,92 +36,300 @@
                         <td>{{ u.email }}</td>
                         <td>{{ u.numero_celular }}</td>
                         <td>{{ u.estado }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
+                                <button type="button" class="btn btn-warning btn-sm mb-1" title="Editar Usuario">
+                                    <i class="bi bi-pen-fill"></i>
+                                </button>
+                            </a>
 
-                      <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-info btn-sm mb-1 btn-reset-password"
+                                    data-url="{% url 'apl:usuario:admin_forzar_reset' u.id %}"
+                                    data-name="{{ u.nombre }}"
+                                    title="Resetear Contraseña">
+                                <i class="bi bi-key-fill text-white"></i>
+                            </button>
 
-    <a href="{% url 'apl:usuario:editar_usuario' u.id %}">
-        <button type="button" class="btn btn-warning btn-sm mb-1" title="Editar Usuario">
-            <i class="bi bi-pen-fill"></i>
-        </button>
-    </a>
-
-    <button type="button"
-            class="btn btn-info btn-sm mb-1 btn-reset-password"
-            data-url="{% url 'apl:usuario:usuario_reset_password' u.id %}"
-            data-name="{{ u.nombre }}"
-            title="Resetear Contraseña">
-        <i class="bi bi-key-fill text-white"></i>
-    </button>
-
-    <button type="button"
-            class="btn btn-danger btn-sm mb-1 btn-delete"
-            data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
-            data-name="{{ u.nombre }}"
-            title="Eliminar Usuario">
-        <i class="bi bi-trash3-fill"></i>
-    </button>
-
-</td>
-                    </tr>
-
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center">
-                            No hay usuarios registrados.
+                            <button type="button"
+                                    class="btn btn-danger btn-sm mb-1 btn-delete"
+                                    data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
+                                    data-name="{{ u.nombre }}"
+                                    title="Eliminar Usuario">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
                         </td>
                     </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No hay usuarios registrados.</td>
+                    </tr>
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
     </div>
 </div>
-<!-- CSRF oculto para AJAX -->
-<form style="display:none;">
-    {% csrf_token %}
-</form>
 
-{% endblock %}
-{% block js %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Confirmar reseteo de contraseña        -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal fade" id="modalConfirmReset" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-key-fill me-2"></i> Resetear Contraseña
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-shield-lock text-info" style="font-size: 2.5rem;"></i>
+                <p class="mt-3 mb-0 fs-6">
+                    ¿Estás seguro de resetear la contraseña de <strong id="confirm-reset-nombre"></strong>?
+                </p>
+                <p class="text-muted small mt-1 mb-0">
+                    Se generará una nueva contraseña temporal y se enviará al correo del usuario.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4 gap-2">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-info px-4 text-white" id="btn-confirmar-reset">
+                    <i class="bi bi-key-fill me-1"></i> Sí, resetear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Confirmar eliminación de usuario       -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash3-fill me-2"></i> Eliminar Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2.5rem;"></i>
+                <p class="mt-3 mb-0 fs-6">
+                    ¿Estás seguro de eliminar al usuario <strong id="confirm-delete-nombre"></strong>?
+                </p>
+                <p class="text-muted small mt-1 mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4 gap-2">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger px-4" id="btn-confirmar-delete">
+                    <i class="bi bi-trash3-fill me-1"></i> Sí, eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Contraseña restablecida con éxito      -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle-fill me-2"></i> Contraseña Restablecida
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="mb-1 text-muted">
+                    La nueva contraseña de <strong id="modal-nombre"></strong> es:
+                </p>
+                <div class="d-flex align-items-center justify-content-center gap-2 my-3">
+                    <span id="modal-password"
+                          class="fs-4 fw-bold font-monospace bg-light border rounded px-4 py-2 text-dark">
+                    </span>
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-copiar" title="Copiar contraseña">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Dicta esta contraseña al usuario para que pueda ingresar.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-check2 me-1"></i> Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Error                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal fade" id="modalError" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-x-circle-fill me-2"></i> Error
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-exclamation-circle text-danger" style="font-size: 2.5rem;"></i>
+                <p id="modal-error-msg" class="mt-3 mb-0 fw-semibold text-danger"></p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Seleccionamos todos los botones que tengan la clase .btn-reset-password
-    const resetButtons = document.querySelectorAll('.btn-reset-password');
+document.addEventListener('DOMContentLoaded', function () {
+    const modalConfirmReset  = new bootstrap.Modal(document.getElementById('modalConfirmReset'));
+    const modalConfirmDelete = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+    const modalResetPassword = new bootstrap.Modal(document.getElementById('modalResetPassword'));
+    const modalError         = new bootstrap.Modal(document.getElementById('modalError'));
 
-    // IMPORTANTE: Busca el token CSRF que ya tienes en tu form oculto
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    // Variables para guardar estado entre modales
+    let resetUrl  = null;
+    let resetBtn  = null;
+    let deleteUrl = null;
+    let deleteBtn = null;
 
-    resetButtons.forEach(button => {
-        button.onclick = function() { // Cambié a .onclick para asegurar captura
-            const url = this.getAttribute('data-url');
-            const nombre = this.getAttribute('data-name');
+    function mostrarError(msg) {
+        document.getElementById('modal-error-msg').textContent = msg;
+        modalError.show();
+    }
 
-            if (confirm(`¿Estás seguro de resetear la contraseña de ${nombre}?`)) {
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`✅ ÉXITO\n\n${data.message}\n\nNUEVA CONTRASEÑA: ${data.password_visible}`);
-                    } else {
-                        alert("❌ Error: " + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("Error de conexión al servidor.");
-                });
+    // ══════════════════════════════════════════════
+    // Capturar clicks en la tabla
+    // ══════════════════════════════════════════════
+    document.addEventListener('click', function (e) {
+
+        // — Botón reset: abrir modal de confirmación —
+        const btnReset = e.target.closest('.btn-reset-password');
+        if (btnReset) {
+            resetUrl = btnReset.getAttribute('data-url');
+            resetBtn = btnReset;
+            document.getElementById('confirm-reset-nombre').textContent = btnReset.getAttribute('data-name');
+            modalConfirmReset.show();
+        }
+
+        // — Botón eliminar: abrir modal de confirmación —
+        const btnDelete = e.target.closest('.btn-delete');
+        if (btnDelete) {
+            deleteUrl = btnDelete.getAttribute('data-url');
+            deleteBtn = btnDelete;
+            document.getElementById('confirm-delete-nombre').textContent = btnDelete.getAttribute('data-name');
+            modalConfirmDelete.show();
+        }
+
+        // — Copiar contraseña al portapapeles —
+        if (e.target.closest('#btn-copiar')) {
+            const pwd = document.getElementById('modal-password').textContent.trim();
+            navigator.clipboard.writeText(pwd).then(() => {
+                const btn = document.getElementById('btn-copiar');
+                btn.innerHTML = '<i class="bi bi-clipboard-check text-success"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard"></i>', 2000);
+            });
+        }
+    });
+
+    // ══════════════════════════════════════════════
+    // Confirmar reset → ejecutar petición
+    // ══════════════════════════════════════════════
+    document.getElementById('btn-confirmar-reset').addEventListener('click', function () {
+        if (!resetUrl || !resetBtn) return;
+
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const icon = resetBtn.querySelector('i');
+        const originalClass = icon.className;
+
+        modalConfirmReset.hide();
+        icon.className = 'spinner-border spinner-border-sm text-white';
+        resetBtn.disabled = true;
+
+        fetch(resetUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        };
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('modal-nombre').textContent   = resetBtn.getAttribute('data-name');
+                document.getElementById('modal-password').textContent = data.password_visible;
+                modalResetPassword.show();
+            } else {
+                mostrarError(data.error || 'No se pudo cambiar la contraseña.');
+            }
+        })
+        .catch(() => mostrarError('Error de conexión al servidor.'))
+        .finally(() => {
+            icon.className = originalClass;
+            resetBtn.disabled = false;
+            resetUrl = null;
+            resetBtn = null;
+        });
+    });
+
+    // ══════════════════════════════════════════════
+    // Confirmar eliminar → ejecutar petición
+    // ══════════════════════════════════════════════
+    document.getElementById('btn-confirmar-delete').addEventListener('click', function () {
+        if (!deleteUrl || !deleteBtn) return;
+
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const icon = deleteBtn.querySelector('i');
+        const originalClass = icon.className;
+
+        modalConfirmDelete.hide();
+        icon.className = 'spinner-border spinner-border-sm text-white';
+        deleteBtn.disabled = true;
+
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                deleteBtn.closest('tr').remove();
+            } else {
+                mostrarError(data.error || 'No se pudo eliminar el usuario.');
+            }
+        })
+        .catch(() => mostrarError('Error de conexión al servidor.'))
+        .finally(() => {
+            icon.className = originalClass;
+            deleteBtn.disabled = false;
+            deleteUrl = null;
+            deleteBtn = null;
+        });
     });
 });
 </script>
+
 {% endblock %}

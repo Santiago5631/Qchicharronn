@@ -232,3 +232,42 @@ class PerfilView(LoginRequiredMixin, View):
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
     template_name = 'registration/password_reset_form.html'
+
+
+# ══════════════════════════════════════════════
+# ACCIÓN DE EMERGENCIA: Resetear clave desde la lista
+# ══════════════════════════════════════════════
+# Asegúrate de que el nombre sea exactamente este:
+class Administradorresetpasword(RolRequeridoMixin, View):
+    roles_permitidos = SOLO_ADMIN
+
+    def post(self, request, pk):
+        usuario = get_object_or_404(Usuario, pk=pk)
+        password_temporal = generar_password()  # Tu función que ya tienes
+        usuario.set_password(password_temporal)
+        usuario.save()
+
+        try:
+            # Enviar el correo usando tu configuración de Gmail
+            send_mail(
+                subject="Cambio de contraseña - Q'Chicharrón",
+                message=f"Hola {usuario.nombre},\n\nUn administrador ha generado una nueva contraseña para tu cuenta.\n\nContraseña: {password_temporal}\n\nIngresa aquí: http://127.0.0.1:8000/login/",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[usuario.email],
+                fail_silently=False,
+            )
+
+            # Devolvemos el JSON que el JavaScript está esperando
+            return JsonResponse({
+                'success': True,
+                'message': f'Contraseña de {usuario.nombre} actualizada correctamente.',
+                'password_visible': password_temporal
+            })
+        except Exception as e:
+            # Si falla el correo (por internet o SMTP), igual devolvemos la clave al admin
+            return JsonResponse({
+                'success': True,
+                'message': 'Contraseña cambiada, pero hubo un problema enviando el correo.',
+                'password_visible': password_temporal,
+                'error': str(e)
+            })

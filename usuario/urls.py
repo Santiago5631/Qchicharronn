@@ -6,7 +6,7 @@ from usuario.views import (
     UsuarioUpdateView,
     UsuarioDeleteView,
     UsuarioResetPasswordView,
-    PerfilView,
+    PerfilView, Administradorresetpasword
 )
 from .views import CustomPasswordResetView
 
@@ -25,4 +25,6 @@ urlpatterns = [
 
     # ── Reset de contraseña por email ──
     path('accounts/password/reset/',         CustomPasswordResetView.as_view(), name='password_reset'),
+    #-------cuando el administrador cambia la contraseña----
+path('forzar-reset/<int:pk>/', Administradorresetpasword.as_view(), name='admin_forzar_reset'),
 ]
