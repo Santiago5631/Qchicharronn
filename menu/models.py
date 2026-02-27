@@ -255,3 +255,42 @@ class PedidoItem(models.Model):
     def get_total(self):
         """Calcula el total con descuento"""
         return self.get_subtotal() - self.get_descuento()
+
+    # ============================================================
+    # AGREGAR AL FINAL DE menu/models.py
+    # ============================================================
+
+
+# ============================================================
+# AGREGAR AL FINAL DE menu/models.py
+# ============================================================
+
+class VistaConfig(models.Model):
+    """
+    Configuración de qué categorías muestra cada vista de cocina.
+    Parrilla y Cocina tienen sus propias categorías activas.
+    """
+    AREA_CHOICES = [
+        ('parrilla', 'Parrilla'),
+        ('cocina', 'Cocina'),
+    ]
+
+    area = models.CharField(
+        max_length=20,
+        choices=AREA_CHOICES,
+        unique=True,
+        verbose_name='Área de Cocina'
+    )
+    categorias_activas = models.ManyToManyField(
+        'categoria.Categoria',
+        blank=True,
+        related_name='vistas_config',
+        verbose_name='Categorías visibles en esta vista'
+    )
+
+    class Meta:
+        verbose_name = "Configuración de Vista"
+        verbose_name_plural = "Configuraciones de Vista"
+
+    def __str__(self):
+        return f"Vista {self.get_area_display()}"
