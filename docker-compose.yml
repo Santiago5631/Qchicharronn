@@ -5,7 +5,9 @@ services:
   web:
     build: .
     container_name: qchicharron_app
-    command: python manage.py runserver 0.0.0.0:8000
+    command: daphne -b 0.0.0.0 -p 8000 configuracion.asgi:application
+    environment:
+      - DJANGO_SETTINGS_MODULE=configuracion.settings
     volumes:
       - .:/app
     ports:
@@ -14,6 +16,7 @@ services:
       - .env
     depends_on:
       - db
+      - redis  # 👈 agregar dependencia
 
   db:
     image: mysql:8.0
@@ -29,6 +32,13 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  redis:  # 👈 servicio nuevo
+    image: redis:7-alpine
+    container_name: qchicharron_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: qchicharron_phpmyadmin
@@ -43,3 +53,4 @@ services:
 
 volumes:
   mysql_data:
+

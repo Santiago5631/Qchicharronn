@@ -19,6 +19,7 @@ urlpatterns = [
     path('pedidos/cancelar/<int:pk>/', PedidoDeleteView.as_view(), name='pedido_delete'),
     path('pedidos/limpiar-carrito/', LimpiarCarritoView.as_view(), name='limpiar_carrito'),
     path('pedidos/<int:pk>/editar/', PedidoUpdate.as_view(), name='pedido_editar'),
+    path('vista/<str:area>/', vista_cocina, name='vista_cocina'),
 
 
 ]
