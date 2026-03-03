@@ -56,6 +56,12 @@ class MenuListView(RolRequeridoMixin, ListView):
             for choice in choices
             if choice[0] in categorias_con_menus
         ]
+        # ── AGREGAR ESTAS 3 LÍNEAS ──────────────────────────
+        from producto.models import Producto
+        context['menus_disponibles'] = menus.filter(disponible=True).count()
+        context['total_categorias'] = Categoria.objects.count()
+        context['total_productos'] = Producto.objects.count()
+
         return context
 
 
