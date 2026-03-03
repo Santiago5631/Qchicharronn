@@ -13,6 +13,9 @@ urlpatterns = [
     path('detalle/<int:pk>/', views.InventarioDetalleView.as_view(), name='detalle'),
     path('lista/', views.InventarioListView.as_view(), name='lista'),
 
+    # ← NUEVA RUTA
+    path('detalle/<int:pk>/agregar-producto/', views.AgregarProductoInventarioView.as_view(), name='agregar_producto'),
+
     # Ajustes y movimientos
     path('ajuste/', views.AjusteInventarioView.as_view(), name='ajuste'),
 

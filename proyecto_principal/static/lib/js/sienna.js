@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="asw-menu-header">Accesibilidad
                 <div>
                     <div role="button" class="asw-menu-reset" title="Restablecer Configuracion">
-                        <span class="material-icons">reiniciar</span>
+                        <span class="material-icons">restart_alt</span>
                     </div>
                     <div role="button" class="asw-menu-close" title="Cerrar Menu de Accesibilidad">
-                        <span class="material-icons">cerrar</span>
+                        <span class="material-icons">close</span>
                     </div>
                 </div>
             </div>

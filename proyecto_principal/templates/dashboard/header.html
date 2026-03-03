@@ -1,26 +1,245 @@
-<nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container-fluid">
+{% load static %}
+{% load permisos_tags %}
 
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title">Logo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-            </div>
+<nav class="navbar navbar-expand-lg" id="main-navbar">
+    <div class="container-fluid px-3">
 
-            <div class="offcanvas-body">
-                <ul class="navbar-nav justify-content-center flex-grow-1 pe-3">
-                    <!-- perfil y modo oscuro -->
-                </ul>
-            </div>
-        </div>
+        <!-- Logo visible solo en móvil -->
+        <a class="navbar-brand d-lg-none" href="{% url 'apl:dashboard' %}">
+            <img src="{% static 'lib/img/Logo.png' %}" alt="Logo" height="36">
+        </a>
 
-
-        <button class="navbar-toggler pe-0"
+        <!-- Botón hamburguesa (solo móvil) -->
+        <button class="navbar-toggler ms-auto me-0 d-lg-none"
                 type="button"
                 data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvasNavbar">
+                data-bs-target="#offcanvasMenu"
+                aria-controls="offcanvasMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
 
+        <!-- Contenido desktop (derecha de la navbar) -->
+        <div class="d-none d-lg-flex align-items-center ms-auto gap-3">
+
+            <!-- Nombre del usuario -->
+            <span class="small" style="color: var(--text-color);">
+                <i class='bx bx-user me-1'></i>
+                {{ request.user.nombre|default:request.user.email }}
+            </span>
+
+            <!-- Switch modo oscuro -->
+            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded-pill"
+                 style="background: var(--primary-color-light); cursor: pointer;"
+                 id="navbar-mode-switch">
+                <i class='bx bx-moon' id="navbar-icon-moon" style="color: var(--text-color); font-size: 1rem;"></i>
+                <i class='bx bx-sun'  id="navbar-icon-sun"  style="color: var(--text-color); font-size: 1rem; display:none;"></i>
+                <span class="small" id="navbar-mode-text" style="color: var(--text-color);">Modo Oscuro</span>
+            </div>
+
+            <!-- Botón perfil -->
+            <a href="{% url 'apl:usuario:perfil' %}"
+               class="btn btn-sm rounded-pill px-3"
+               style="background: var(--primary-color); color: #fff; font-size: 0.8rem;">
+                <i class='bx bxs-user-circle me-1'></i> Mi Perfil
+            </a>
+
+        </div>
+
     </div>
 </nav>
+
+
+<!-- ══════════════════════════════════════════════════
+     OFFCANVAS — Menú móvil con módulos por rol
+     Solo visible en pantallas menores a lg (992px)
+══════════════════════════════════════════════════ -->
+<div class="offcanvas offcanvas-start d-lg-none"
+     tabindex="-1"
+     id="offcanvasMenu"
+     style="width: 280px; background: var(--sidebar-color);">
+
+    <!-- Header del offcanvas -->
+    <div class="offcanvas-header border-bottom"
+         style="border-color: var(--primary-color-light) !important;">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'lib/img/Logo.png' %}" alt="Logo" height="36">
+            <div>
+                <p class="mb-0 fw-semibold small" style="color: var(--text-color);">
+                    {{ request.user.nombre|default:"Usuario" }}
+                </p>
+                <span class="badge rounded-pill px-2 py-1"
+                      style="background: var(--primary-color); color: #fff; font-size: 0.7rem;">
+                    {{ request.user.cargo|capfirst|default:"Sin rol" }}
+                </span>
+            </div>
+        </div>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+                aria-label="Cerrar">
+        </button>
+    </div>
+
+    <!-- Cuerpo del offcanvas -->
+    <div class="offcanvas-body p-0">
+        <ul class="list-unstyled px-3 pt-2">
+
+            <!-- Dashboard — todos -->
+            <li class="mb-1">
+                <a href="{% url 'apl:dashboard' %}" class="offcanvas-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Panel de Control</span>
+                </a>
+            </li>
+
+            {# ── SOLO ADMINISTRADOR ── #}
+            {% if request.user|tiene_cargo:"administrador" %}
+
+            <li class="offcanvas-section-title">Administración</li>
+
+            <li class="mb-1">
+                <a href="{% url 'apl:usuario:usuario_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-user-rectangle'></i><span>Usuarios</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:categoria:listar_categoria' %}" class="offcanvas-link">
+                    <i class='bx bxs-bar-chart-alt-2'></i><span>Categorías</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:compra:compra_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-wallet'></i><span>Compras</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:producto:producto_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-bowl-hot'></i><span>Productos</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:proveedor:proveedor_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-user-badge'></i><span>Proveedores</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:nomina:nomina_list' %}" class="offcanvas-link">
+                    <i class='bx bx-money-withdraw'></i><span>Nómina</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:unidad:unidad_list' %}" class="offcanvas-link">
+                    <i class='bx bx-tag'></i><span>Unidades</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:informe:informe_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-notepad'></i><span>Informes</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:backups:generar_backup' %}" class="offcanvas-link">
+                    <i class='bx bx-cloud-upload'></i><span>Copias de Seguridad</span>
+                </a>
+            </li>
+
+            {% endif %}
+
+            {# ── ADMIN + MESERO + CAJERA ── #}
+            {% if request.user|cargo_en:"administrador,mesero,cajera" %}
+
+            <li class="offcanvas-section-title">Atención</li>
+
+            <li class="mb-1">
+                <a href="{% url 'apl:mesa:mesa_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-pin'></i><span>Mesas</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:venta:venta_list' %}" class="offcanvas-link">
+                    <i class='bx bxs-cart-alt'></i><span>Ventas</span>
+                </a>
+            </li>
+
+            {% endif %}
+
+            {# ── ADMIN + COCINERO + PARRILLA ── #}
+            {% if request.user|cargo_en:"administrador,cocinero,parrilla" %}
+
+            <li class="offcanvas-section-title">Cocina</li>
+
+            <li class="mb-1">
+                <a href="{% url 'apl:inventario:dashboard' %}" class="offcanvas-link">
+                    <i class='bx bxs-archive-out'></i><span>Inventario</span>
+                </a>
+            </li>
+
+            {% endif %}
+
+            {# ── TODOS ── #}
+            <li class="offcanvas-section-title">General</li>
+
+            <li class="mb-1">
+                <a href="{% url 'apl:menu:menu_list' %}" class="offcanvas-link">
+                    <i class='bx bx-restaurant'></i><span>Menú</span>
+                </a>
+            </li>
+            <li class="mb-1">
+                <a href="{% url 'apl:menu:pedido_list' %}" class="offcanvas-link">
+                    <i class='bx bx-receipt'></i><span>Pedidos</span>
+                </a>
+            </li>
+
+            {% if request.user|cargo_en:"administrador,cocinero" %}
+            <li class="mb-1">
+                <a href="{% url 'apl:pedido:listar_pedido' %}" class="offcanvas-link">
+                    <i class='bx bx-fire'></i><span>Comandas Cocina</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user|cargo_en:"administrador,parrilla" %}
+            <li class="mb-1">
+                <a href="{% url 'apl:pedido:listar_pedido' %}" class="offcanvas-link">
+                    <i class='bx bx-dish'></i><span>Comandas Parrilla</span>
+                </a>
+            </li>
+            {% endif %}
+
+        </ul>
+    </div>
+
+    <!-- Footer del offcanvas -->
+    <div class="offcanvas-footer px-3 py-3 border-top"
+         style="border-color: var(--primary-color-light) !important;">
+
+        <!-- Mi perfil -->
+        <a href="{% url 'apl:usuario:perfil' %}" class="offcanvas-link mb-2">
+            <i class='bx bxs-user-circle'></i><span>Mi Perfil</span>
+        </a>
+
+        <!-- Modo oscuro -->
+        <div class="d-flex align-items-center justify-content-between px-2 py-2 rounded mb-2"
+             style="background: var(--primary-color-light); cursor: pointer;"
+             id="mobile-mode-switch">
+            <div class="d-flex align-items-center gap-2">
+                <i class='bx bx-moon' style="color: var(--text-color); font-size: 1.1rem;"></i>
+                <span class="small" id="mobile-mode-text" style="color: var(--text-color);">Modo Oscuro</span>
+            </div>
+            <div style="position:relative;">
+                <span class="switch"></span>
+            </div>
+        </div>
+
+        <!-- Cerrar sesión -->
+        <form method="post" action="{% url 'login:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="offcanvas-link w-100 border-0"
+                    style="background: none; text-align: left; cursor: pointer;">
+                <i class='bx bx-log-out' style="color: #e74a3b;"></i>
+                <span style="color: #e74a3b;">Cerrar Sesión</span>
+            </button>
+        </form>
+
+    </div>
+</div>
