@@ -7,310 +7,307 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4 no-print">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'apl:menu:pedido_list' %}">Pedidos</a></li>
-            <li class="breadcrumb-item active">Pedido #{{ pedido.numero_pedido }}</li>
-        </ol>
-    </nav>
 
-    <!-- Header del pedido -->
-    <div class="pedido-header-detail">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1 class="mb-3">
-                    <i class="bi bi-receipt me-2"></i>
-                    Pedido #{{ pedido.numero_pedido }}
-                </h1>
-                <p class="lead mb-0">
-                    <i class="bi bi-calendar me-2"></i>
-                    {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}
-                </p>
-            </div>
-            <div class="col-md-6 text-end">
-                <span class="estado-badge-large badge bg-light text-dark">
-                    <i class="bi bi-clock-history me-2"></i>
-                    {{ pedido.get_estado_display }}
-                </span>
-            </div>
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4 no-print">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'apl:menu:pedido_list' %}">Pedidos</a></li>
+      <li class="breadcrumb-item active">Pedido #{{ pedido.numero_pedido }}</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="pedido-header-detail mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1 class="mb-2"><i class="bi bi-receipt me-2"></i>Pedido #{{ pedido.numero_pedido }}</h1>
+        <p class="lead mb-0"><i class="bi bi-calendar me-2"></i>{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+      </div>
+      <div class="col-md-6 text-md-end mt-2 mt-md-0">
+        <span class="estado-badge-large badge bg-light text-dark fs-6">
+          <i class="bi bi-clock-history me-2"></i>{{ pedido.get_estado_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Columna Principal -->
+    <div class="col-lg-8">
+
+      <!-- Datos del Pedido -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-person me-2"></i>Información del Pedido</h5>
         </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <small class="text-muted d-block"><i class="bi bi-person-circle me-1"></i>Cliente</small>
+              <strong>{{ pedido.cliente_nombre }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block"><i class="bi bi-person-badge me-1"></i>Mesero</small>
+              <strong>{{ pedido.mesero.get_full_name|default:"Sin asignar" }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block"><i class="bi bi-tag me-1"></i>Tipo de pedido</small>
+              <span class="badge {% if pedido.tipo_pedido == 'mesa' %}bg-primary{% else %}bg-secondary{% endif %}">
+                {{ pedido.get_tipo_pedido_display }}
+              </span>
+            </div>
+            <div class="col-sm-6">
+              <small class="text-muted d-block"><i class="bi bi-grid-3x3 me-1"></i>Mesa</small>
+              {% if pedido.mesa %}
+                <span class="badge bg-primary fs-6">{{ pedido.mesa }}</span>
+              {% else %}
+                <span class="text-muted">Para llevar</span>
+              {% endif %}
+            </div>
+            {% if pedido.observaciones %}
+            <div class="col-12">
+              <small class="text-muted d-block"><i class="bi bi-chat-left-text me-1"></i>Observaciones</small>
+              <p class="mb-0 text-muted">{{ pedido.observaciones }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-bag me-2"></i>Items del Pedido
+            <span class="badge bg-light text-dark ms-2">{{ items.count }}</span>
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if items %}
+            {% for item in items %}
+            <div class="item-card mb-3">
+              <div class="row align-items-center g-2">
+                <div class="col-2 col-md-1 text-center">
+                  <h4 class="text-primary mb-0">{{ forloop.counter }}</h4>
+                </div>
+                <div class="col-10 col-md-5">
+                  <h5 class="mb-1">{{ item.menu.nombre }}</h5>
+                  {% if item.menu.categoria_menu %}
+                  <small class="text-muted"><i class="bi bi-tag me-1"></i>{{ item.menu.categoria_menu.nombre }}</small>
+                  {% endif %}
+                  {% if item.observaciones %}
+                  <div class="mt-1">
+                    <small class="text-info"><i class="bi bi-chat-dots me-1"></i>{{ item.observaciones }}</small>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="col-4 col-md-2 text-center">
+                  <small class="text-muted d-block">Cantidad</small>
+                  <strong class="fs-5">{{ item.cantidad }}</strong>
+                </div>
+                <div class="col-4 col-md-2 text-center">
+                  <small class="text-muted d-block">Precio Unit.</small>
+                  <strong>${{ item.precio_unitario|floatformat:2 }}</strong>
+                  {% if item.descuento_aplicado > 0 %}
+                  <small class="text-danger d-block">(-{{ item.descuento_aplicado|floatformat:0 }}%)</small>
+                  {% endif %}
+                </div>
+                <div class="col-4 col-md-2 text-end">
+                  <small class="text-muted d-block">Subtotal</small>
+                  <h5 class="text-success mb-0">${{ item.get_total|floatformat:2 }}</h5>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            <!-- Totales -->
+            <div class="mt-4 p-3 bg-light rounded">
+              <div class="row">
+                <div class="col-8 text-end"><h6>Subtotal:</h6></div>
+                <div class="col-4 text-end"><h6>${{ pedido.subtotal|floatformat:2 }}</h6></div>
+              </div>
+              {% if pedido.descuento_total > 0 %}
+              <div class="row text-success">
+                <div class="col-8 text-end"><h6>Descuento:</h6></div>
+                <div class="col-4 text-end"><h6>-${{ pedido.descuento_total|floatformat:2 }}</h6></div>
+              </div>
+              {% endif %}
+              <hr>
+              <div class="row">
+                <div class="col-8 text-end"><h4>Total:</h4></div>
+                <div class="col-4 text-end"><h3 class="text-success">${{ pedido.total|floatformat:2 }}</h3></div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-inbox" style="font-size:3rem;opacity:0.3;"></i>
+              <p class="mt-2">No hay items en este pedido</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
     </div>
 
-    <!-- Mensajes -->
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show no-print" role="alert">
-            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Panel Lateral -->
+    <div class="col-lg-4">
+
+      <!-- Total -->
+      <div class="total-box mb-4">
+        <h6 class="mb-2">Total del Pedido</h6>
+        <h1 class="mb-0">${{ pedido.total|floatformat:2 }}</h1>
+        <small>{{ items.count }} item(s)</small>
+      </div>
+
+      <!-- Estado actual con badges visuales -->
+      <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0"><i class="bi bi-activity me-2"></i>Estado Actual</h6>
         </div>
-        {% endfor %}
-    {% endif %}
+        <div class="card-body">
+          <div class="d-flex flex-column gap-2">
 
-    <div class="row">
-        <!-- Información del Pedido -->
-        <div class="col-lg-8">
-            <!-- Datos del Cliente -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-person me-2"></i>
-                        Información del Cliente
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <strong><i class="bi bi-person-circle me-2"></i>Cliente:</strong>
-                            <p class="mb-0">{{ pedido.cliente_nombre }}</p>
-                        </div>
-                        {% if pedido.mesa_numero %}
-                        <div class="col-md-6 mb-3">
-                            <strong><i class="bi bi-grid-3x3 me-2"></i>Mesa:</strong>
-                            <p class="mb-0">
-                                <span class="badge bg-primary fs-6">{{ pedido.mesa_numero }}</span>
-                            </p>
-                        </div>
-                        {% endif %}
-                        {% if pedido.observaciones %}
-                        <div class="col-12">
-                            <strong><i class="bi bi-chat-left-text me-2"></i>Observaciones:</strong>
-                            <p class="mb-0 text-muted">{{ pedido.observaciones }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-2 p-2 rounded
+              {% if pedido.estado == 'pendiente' %}bg-warning bg-opacity-25 border border-warning{% endif %}">
+              <i class="bi bi-hourglass-split fs-5
+                {% if pedido.estado == 'pendiente' %}text-warning{% else %}text-muted{% endif %}"></i>
+              <div>
+                <div class="fw-bold {% if pedido.estado != 'pendiente' %}text-muted{% endif %}">Pendiente</div>
+                <small class="text-muted">Pedido recibido</small>
+              </div>
+              {% if pedido.estado == 'pendiente' %}
+              <span class="badge bg-warning text-dark ms-auto">Actual</span>
+              {% endif %}
             </div>
 
-            <!-- Items del Pedido -->
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-bag me-2"></i>
-                        Items del Pedido
-                        <span class="badge bg-light text-dark ms-2">{{ items.count }}</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if items %}
-                        {% for item in items %}
-                        <div class="item-card">
-                            <div class="row align-items-center">
-                                <div class="col-md-1 text-center">
-                                    <h3 class="text-primary mb-0">{{ forloop.counter }}</h3>
-                                </div>
-                                <div class="col-md-5">
-                                    <h5 class="mb-1">{{ item.menu.nombre }}</h5>
-                                    <small class="text-muted">
-                                        <i class="bi bi-tag me-1"></i>
-                                        {{ item.menu.get_categoria_menu_display }}
-                                    </small>
-                                    {% if item.observaciones %}
-                                    <div class="mt-2">
-                                        <small class="text-info">
-                                            <i class="bi bi-chat-dots me-1"></i>
-                                            {{ item.observaciones }}
-                                        </small>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-2 text-center">
-                                    <small class="text-muted d-block">Cantidad</small>
-                                    <strong class="fs-5">{{ item.cantidad }}</strong>
-                                </div>
-                                <div class="col-md-2 text-center">
-                                    <small class="text-muted d-block">Precio Unit.</small>
-                                    <strong>${{ item.precio_unitario|floatformat:2 }}</strong>
-                                    {% if item.descuento_aplicado > 0 %}
-                                    <small class="text-danger d-block">
-                                        (-{{ item.descuento_aplicado|floatformat:0 }}%)
-                                    </small>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-2 text-end">
-                                    <small class="text-muted d-block">Subtotal</small>
-                                    <h5 class="text-success mb-0">
-                                        ${{ item.get_total|floatformat:2 }}
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        <!-- Resumen de totales -->
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <div class="row">
-                                <div class="col-md-8 text-end">
-                                    <h6>Subtotal:</h6>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <h6>${{ pedido.subtotal|floatformat:2 }}</h6>
-                                </div>
-                            </div>
-                            {% if pedido.descuento_total > 0 %}
-                            <div class="row text-success">
-                                <div class="col-md-8 text-end">
-                                    <h6>Descuento Total:</h6>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <h6>-${{ pedido.descuento_total|floatformat:2 }}</h6>
-                                </div>
-                            </div>
-                            {% endif %}
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-8 text-end">
-                                    <h4>Total:</h4>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <h3 class="text-success">${{ pedido.total|floatformat:2 }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
-                            <p class="mt-2">No hay items en este pedido</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel Lateral -->
-        <div class="col-lg-4">
-            <!-- Total -->
-            <div class="total-box mb-4">
-                <h6 class="mb-2">Total del Pedido</h6>
-                <h1 class="mb-0">${{ pedido.total|floatformat:2 }}</h1>
-                <small>{{ items.count }} item(s)</small>
+            <div class="d-flex align-items-center gap-2 p-2 rounded
+              {% if pedido.estado == 'preparando' %}bg-info bg-opacity-25 border border-info{% endif %}">
+              <i class="bi bi-fire fs-5
+                {% if pedido.estado == 'preparando' %}text-info{% else %}text-muted{% endif %}"></i>
+              <div>
+                <div class="fw-bold {% if pedido.estado != 'preparando' %}text-muted{% endif %}">En Preparación</div>
+                <small class="text-muted">Cocinando...</small>
+              </div>
+              {% if pedido.estado == 'preparando' %}
+              <span class="badge bg-info ms-auto">Actual</span>
+              {% endif %}
             </div>
 
-            <!-- Línea de tiempo del estado -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        Estado del Pedido
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-dot {% if pedido.estado == 'pendiente' or pedido.estado == 'preparando' or pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
-                            <strong>Pendiente</strong>
-                            <p class="text-muted small mb-0">Pedido recibido</p>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot {% if pedido.estado == 'preparando' or pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
-                            <strong>En Preparación</strong>
-                            <p class="text-muted small mb-0">Cocinando...</p>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot {% if pedido.estado == 'listo' or pedido.estado == 'entregado' %}active{% endif %}"></div>
-                            <strong>Listo</strong>
-                            <p class="text-muted small mb-0">Para recoger</p>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot {% if pedido.estado == 'entregado' %}active{% endif %}"></div>
-                            <strong>Entregado</strong>
-                            <p class="text-muted small mb-0">Pedido completado</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-2 p-2 rounded
+              {% if pedido.estado == 'listo' %}bg-success bg-opacity-25 border border-success{% endif %}">
+              <i class="bi bi-check-circle fs-5
+                {% if pedido.estado == 'listo' %}text-success{% else %}text-muted{% endif %}"></i>
+              <div>
+                <div class="fw-bold {% if pedido.estado != 'listo' %}text-muted{% endif %}">Listo</div>
+                <small class="text-muted">Para recoger</small>
+              </div>
+              {% if pedido.estado == 'listo' %}
+              <span class="badge bg-success ms-auto">Actual</span>
+              {% endif %}
             </div>
 
-            <!-- Actualizar Estado -->
-            {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
-            <div class="card mb-4 no-print">
-                <div class="card-header bg-warning">
-                    <h6 class="mb-0">
-                        <i class="bi bi-pencil me-2"></i>
-                        Actualizar Estado
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <form method="post" action="{% url 'apl:menu:pedido_update_estado' pedido.pk %}">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{{ form_estado.estado.label }}</label>
-                            {{ form_estado.estado }}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{{ form_estado.observaciones.label }}</label>
-                            {{ form_estado.observaciones }}
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-check-circle me-1"></i>
-                            Actualizar
-                        </button>
-                    </form>
-                </div>
+            <div class="d-flex align-items-center gap-2 p-2 rounded
+              {% if pedido.estado == 'entregado' %}bg-primary bg-opacity-25 border border-primary{% endif %}">
+              <i class="bi bi-box-arrow-right fs-5
+                {% if pedido.estado == 'entregado' %}text-primary{% else %}text-muted{% endif %}"></i>
+              <div>
+                <div class="fw-bold {% if pedido.estado != 'entregado' %}text-muted{% endif %}">Entregado</div>
+                <small class="text-muted">Pedido completado</small>
+              </div>
+              {% if pedido.estado == 'entregado' %}
+              <span class="badge bg-primary ms-auto">Actual</span>
+              {% endif %}
+            </div>
+
+            {% if pedido.estado == 'cancelado' %}
+            <div class="d-flex align-items-center gap-2 p-2 rounded bg-danger bg-opacity-25 border border-danger">
+              <i class="bi bi-x-circle fs-5 text-danger"></i>
+              <div>
+                <div class="fw-bold">Cancelado</div>
+                <small class="text-muted">Pedido cancelado</small>
+              </div>
+              <span class="badge bg-danger ms-auto">Actual</span>
             </div>
             {% endif %}
 
-            <!-- Información adicional -->
-            <div class="info-box">
-                <h6 class="mb-3">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Información
-                </h6>
-                <div class="mb-2">
-                    <small class="text-muted">Creado:</small>
-                    <p class="mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Última actualización:</small>
-                    <p class="mb-0">{{ pedido.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
-                </div>
-                <div>
-                    <small class="text-muted">Tiempo transcurrido:</small>
-                    <p class="mb-0">{{ pedido.fecha_creacion|timesince }}</p>
-                </div>
-            </div>
-
-            <!-- Botones de Acción -->
-            <div class="d-grid gap-2 no-print">
-                {% if pedido.estado not in 'entregado cancelado' %}
-    <a href="{% url 'apl:menu:pedido_editar' pedido.id %}"
-       class="btn btn-warning">
-        ✏️ Editar Pedido
-    </a>
-{% endif %}
-
-                {% if pedido.estado == 'entregado' %}
-    <button onclick="window.print()" class="btn btn-info print-button">
-        <i class="bi bi-printer me-2"></i>
-        Imprimir Ticket
-    </button>
-{% endif %}
-
-                
-                <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>
-                    Volver a la Lista
-                </a>
-                
-                {% if pedido.estado != 'cancelado' %}
-                <button onclick="cancelarPedido({{ pedido.pk }})" class="btn btn-danger">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancelar Pedido
-                </button>
-                {% endif %}
-            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Actualizar Estado -->
+      {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
+      <div class="card mb-4 no-print">
+        <div class="card-header bg-warning">
+          <h6 class="mb-0"><i class="bi bi-pencil me-2"></i>Actualizar Estado</h6>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'apl:menu:pedido_update_estado' pedido.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-bold">{{ form_estado.estado.label }}</label>
+              {{ form_estado.estado }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">{{ form_estado.observaciones.label }}</label>
+              {{ form_estado.observaciones }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-check-circle me-1"></i>Actualizar
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Información -->
+      <div class="info-box mb-4">
+        <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Información</h6>
+        <div class="mb-2">
+          <small class="text-muted">Creado:</small>
+          <p class="mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+        </div>
+        <div class="mb-2">
+          <small class="text-muted">Última actualización:</small>
+          <p class="mb-0">{{ pedido.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
+        </div>
+        <div>
+          <small class="text-muted">Tiempo transcurrido:</small>
+          <p class="mb-0">{{ pedido.fecha_creacion|timesince }}</p>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="d-grid gap-2 no-print">
+        {% if pedido.estado != 'entregado' and pedido.estado != 'cancelado' %}
+        <a href="{% url 'apl:menu:pedido_editar' pedido.id %}" class="btn btn-warning">
+          <i class="bi bi-pencil me-2"></i>Editar Pedido
+        </a>
+        {% endif %}
+        {% if pedido.estado == 'entregado' %}
+        <button onclick="window.print()" class="btn btn-info print-button">
+          <i class="bi bi-printer me-2"></i>Imprimir Ticket
+        </button>
+        {% endif %}
+        <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Volver a la Lista
+        </a>
+        {% if pedido.estado != 'cancelado' %}
+        <button onclick="cancelarPedido({{ pedido.pk }})" class="btn btn-danger">
+          <i class="bi bi-x-circle me-2"></i>Cancelar Pedido
+        </button>
+        {% endif %}
+      </div>
+
     </div>
+  </div>
 </div>
 
 <script>
-    function cancelarPedido(pedidoId) {
-        if (confirm('¿Está seguro de cancelar este pedido?\n\nEsta acción no se puede deshacer.')) {
-            window.location.href = `/apl/menu/pedidos/cancelar/${pedidoId}/`;
-        }
-    }
+function cancelarPedido(pedidoId) {
+  if (confirm('¿Está seguro de cancelar este pedido?\n\nEsta acción no se puede deshacer.')) {
+    window.location.href = `/apl/menu/pedidos/cancelar/${pedidoId}/`;
+  }
+}
 </script>
 {% endblock %}
