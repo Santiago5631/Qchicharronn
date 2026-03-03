@@ -1,95 +1,389 @@
-{% extends 'dashboard/layout.html' %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 
+{% block title %}Apertura de Inventario{% endblock %}
+
 {% block content %}
-<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
-<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+<div class="container-fluid px-4">
 
-<div class="form-container">
-    <h1 class="form-title">{{ titulo }}</h1>
-
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle-fill"></i>
-        <strong>Instrucciones:</strong> Registre el inventario inicial de cada producto.
-        Los productos marcados como <strong>"Por Peso"</strong> se descontarán al cierre del día.
-        Los productos <strong>"Por Unidad"</strong> se descontarán automáticamente en cada venta.
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Apertura de Inventario</h2>
+            <p class="text-muted small mb-0">Selecciona los productos e ingresa el stock inicial del día</p>
+        </div>
+        <a href="{% url 'apl:inventario:dashboard' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class='bx bx-arrow-back me-1'></i> Volver
+        </a>
     </div>
 
-    <form method="post" novalidate>
+    <form method="post" id="form-apertura">
         {% csrf_token %}
-        {{ form.as_p }}
 
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Inventario Inicial de Productos</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Unidad</th>
-                                <th>Tipo Control</th>
-                                <th>Stock Actual</th>
-                                <th>Inventario Inicial</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in productos %}
-                            <tr>
-                                <td>{{ p.nombre }}</td>
-                                <td>{{ p.unidad }}</td>
-                                <td>
-                                    <span class="badge badge-{% if p.tipo_inventario == 'peso' %}warning{% else %}info{% endif %}">
-                                        {{ p.get_tipo_inventario_display }}
-                                    </span>
-                                </td>
-                                <td>{{ p.stock }}</td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        name="producto_{{ p.id }}"
-                                        class="form-control"
-                                        step="0.01"
-                                        min="0"
-                                        value="{{ p.stock }}"
-                                        placeholder="0.00"
-                                    >
-                                </td>
-                            </tr>
+        <div class="row g-3">
+
+            <!-- Panel izquierdo: Selección de productos -->
+            <div class="col-xl-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-2"><i class='bx bx-package me-2'></i>Productos disponibles</h6>
+
+                        <!-- Buscador -->
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class='bx bx-search text-muted'></i>
+                            </span>
+                            <input type="text"
+                                   id="buscador-productos"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Buscar producto por nombre...">
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    id="btn-seleccionar-todos"
+                                    title="Seleccionar todos los visibles">
+                                <i class='bx bx-check-square'></i> Todos
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    id="btn-deseleccionar-todos"
+                                    title="Deseleccionar todos">
+                                <i class='bx bx-square'></i> Ninguno
+                            </button>
+                        </div>
+
+                        <!-- Filtros por categoría -->
+                        <div class="mt-2 d-flex gap-2 flex-wrap" id="filtros-categoria">
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill filtro-cat active"
+                                    data-cat="todos">Todos</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill filtro-cat"
+                                    data-cat="peso">Por Peso</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill filtro-cat"
+                                    data-cat="unidad">Por Unidad</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill filtro-cat"
+                                    data-cat="agotado">Sin Stock</button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de productos -->
+                    <div class="card-body p-0" style="max-height: 520px; overflow-y: auto;">
+                        <div id="lista-productos">
+                            {% for producto in productos %}
+                            <div class="producto-item border-bottom px-3 py-2 d-flex align-items-center gap-3"
+                                 data-nombre="{{ producto.nombre|lower }}"
+                                 data-tipo="{{ producto.tipo_inventario }}"
+                                 data-stock="{{ producto.stock }}">
+
+                                <!-- Checkbox -->
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input producto-checkbox"
+                                           type="checkbox"
+                                           id="check_{{ producto.id }}"
+                                           value="{{ producto.id }}"
+                                           data-producto-id="{{ producto.id }}">
+                                </div>
+
+                                <!-- Info del producto -->
+                                <label class="flex-grow-1 mb-0" for="check_{{ producto.id }}" style="cursor:pointer;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fw-semibold small">{{ producto.nombre }}</span>
+                                            <div class="d-flex gap-2 mt-1">
+                                                <span class="badge rounded-pill"
+                                                      style="background:#4e73df22;color:#4e73df;font-size:0.7rem;">
+                                                    {{ producto.get_tipo_inventario_display }}
+                                                </span>
+                                                {% if producto.categoria %}
+                                                <span class="badge rounded-pill bg-light text-muted" style="font-size:0.7rem;">
+                                                    {{ producto.categoria }}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="small fw-bold
+                                                {% if producto.stock == 0 %}text-danger
+                                                {% elif producto.stock < 10 %}text-warning
+                                                {% else %}text-success{% endif %}">
+                                                {{ producto.stock }}
+                                            </div>
+                                            <div class="text-muted" style="font-size:0.7rem;">stock actual</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <!-- Input stock inicial (oculto hasta seleccionar) -->
+                                <div class="input-stock" id="input_{{ producto.id }}"
+                                     style="display:none; min-width: 110px;">
+                                    <input type="number"
+                                           name="producto_{{ producto.id }}"
+                                           class="form-control form-control-sm text-center stock-input"
+                                           placeholder="Stock"
+                                           min="0"
+                                           step="0.01"
+                                           value="{{ producto.stock }}">
+                                </div>
+
+                            </div>
                             {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">No hay productos disponibles</td>
-                            </tr>
+                            <div class="text-center py-5 text-muted">
+                                <i class='bx bx-package d-block' style="font-size:3rem;opacity:0.3;"></i>
+                                No hay productos disponibles
+                            </div>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </div>
+
+                        <!-- Sin resultados de búsqueda -->
+                        <div id="sin-resultados" class="text-center py-5 text-muted" style="display:none;">
+                            <i class='bx bx-search d-block' style="font-size:2rem;opacity:0.3;"></i>
+                            <small>No se encontraron productos</small>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-success btn-lg btn-block">
-            <i class="bi bi-check-circle-fill"></i> Abrir Inventario
-        </button>
+            <!-- Panel derecho: Resumen y confirmar -->
+            <div class="col-xl-5">
 
-        <div class="back-link">
-            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
-                Volver
-            </button>
+                <!-- Observaciones -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0"><i class='bx bx-notepad me-2'></i>Datos de apertura</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if form %}
+                            {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Observaciones</label>
+                                <textarea name="observaciones"
+                                          class="form-control form-control-sm"
+                                          rows="3"
+                                          placeholder="Observaciones del día (opcional)..."></textarea>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Resumen selección -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0"><i class='bx bx-list-check me-2'></i>Resumen de selección</h6>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded"
+                             style="background: var(--primary-color-light);">
+                            <span class="small fw-semibold">Productos seleccionados</span>
+                            <span class="badge rounded-pill fs-6 px-3"
+                                  style="background: var(--primary-color); color:#fff;"
+                                  id="contador-seleccionados">0</span>
+                        </div>
+
+                        <!-- Lista de seleccionados -->
+                        <div id="resumen-seleccionados" style="max-height:280px; overflow-y:auto;">
+                            <p class="text-muted small text-center py-3" id="texto-vacio">
+                                Selecciona productos del panel izquierdo
+                            </p>
+                            <ul class="list-unstyled mb-0" id="lista-seleccionados"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón confirmar -->
+                <button type="submit"
+                        class="btn btn-success w-100 py-3 rounded-3 fw-semibold"
+                        id="btn-abrir"
+                        disabled>
+                    <i class='bx bx-door-open me-2'></i>
+                    Abrir Inventario
+                    <span class="badge bg-white text-success ms-2" id="badge-btn">0</span>
+                </button>
+
+                <p class="text-muted small text-center mt-2">
+                    <i class='bx bx-info-circle me-1'></i>
+                    Debes seleccionar al menos 1 producto
+                </p>
+
+            </div>
         </div>
     </form>
 </div>
+{% endblock %}
 
+{% block js_custom %}
 <script>
-    // Script para seleccionar todos los inputs automáticamente
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input[type="number"]');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.select();
+document.addEventListener('DOMContentLoaded', function() {
+
+    const checkboxes       = document.querySelectorAll('.producto-checkbox');
+    const buscador         = document.getElementById('buscador-productos');
+    const btnSelTodos      = document.getElementById('btn-seleccionar-todos');
+    const btnDeselTodos    = document.getElementById('btn-deseleccionar-todos');
+    const contador         = document.getElementById('contador-seleccionados');
+    const badgeBtn         = document.getElementById('badge-btn');
+    const btnAbrir         = document.getElementById('btn-abrir');
+    const listaSelec       = document.getElementById('lista-seleccionados');
+    const textoVacio       = document.getElementById('texto-vacio');
+    const filtrosBtns      = document.querySelectorAll('.filtro-cat');
+
+    // ── Actualizar resumen lateral ──
+    function actualizarResumen() {
+        const seleccionados = document.querySelectorAll('.producto-checkbox:checked');
+        const total = seleccionados.length;
+
+        contador.textContent = total;
+        badgeBtn.textContent = total;
+        btnAbrir.disabled = total === 0;
+
+        // Limpiar lista
+        listaSelec.innerHTML = '';
+
+        if (total === 0) {
+            textoVacio.style.display = '';
+        } else {
+            textoVacio.style.display = 'none';
+            seleccionados.forEach(cb => {
+                const item     = cb.closest('.producto-item');
+                const nombre   = item.querySelector('.fw-semibold').textContent;
+                const inputEl  = item.querySelector('.stock-input');
+                const stockVal = inputEl ? inputEl.value : '0';
+
+                const li = document.createElement('li');
+                li.className = 'd-flex justify-content-between align-items-center mb-2 px-2 py-1 rounded';
+                li.style.background = 'var(--primary-color-light)';
+                li.innerHTML = `
+                    <span class="small fw-semibold text-truncate" style="max-width:140px;">${nombre}</span>
+                    <span class="badge rounded-pill" style="background:var(--primary-color);color:#fff;">
+                        ${stockVal}
+                    </span>
+                `;
+                listaSelec.appendChild(li);
             });
+        }
+    }
+
+    // ── Checkbox: mostrar/ocultar input de stock ──
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const productoId = this.dataset.productoId;
+            const inputDiv   = document.getElementById(`input_${productoId}`);
+            const inputNum   = inputDiv.querySelector('input');
+
+            if (this.checked) {
+                inputDiv.style.display = '';
+                inputNum.required = true;
+                inputNum.focus();
+            } else {
+                inputDiv.style.display = 'none';
+                inputNum.required = false;
+            }
+            actualizarResumen();
         });
     });
+
+    // ── Actualizar resumen cuando cambia el stock ──
+    document.querySelectorAll('.stock-input').forEach(input => {
+        input.addEventListener('input', actualizarResumen);
+    });
+
+    // ── Buscador ──
+    buscador.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        let hayResultados = false;
+
+        document.querySelectorAll('.producto-item').forEach(item => {
+            const nombre = item.dataset.nombre;
+            const visible = nombre.includes(query);
+            item.style.display = visible ? '' : 'none';
+            if (visible) hayResultados = true;
+        });
+
+        document.getElementById('sin-resultados').style.display =
+            hayResultados ? 'none' : '';
+    });
+
+    // ── Filtros por tipo ──
+    filtrosBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filtrosBtns.forEach(b => {
+                b.classList.remove('btn-primary', 'btn-danger');
+                b.classList.add('btn-outline-secondary');
+            });
+            this.classList.remove('btn-outline-secondary');
+            if (this.dataset.cat === 'agotado') {
+                this.classList.add('btn-danger');
+            } else {
+                this.classList.add('btn-primary');
+            }
+
+            const filtro = this.dataset.cat;
+            document.querySelectorAll('.producto-item').forEach(item => {
+                if (filtro === 'todos') {
+                    item.style.display = '';
+                } else if (filtro === 'agotado') {
+                    item.style.display = parseFloat(item.dataset.stock) === 0 ? '' : 'none';
+                } else {
+                    item.style.display = item.dataset.tipo === filtro ? '' : 'none';
+                }
+            });
+            buscador.value = '';
+        });
+    });
+
+    // ── Seleccionar todos los visibles ──
+    btnSelTodos.addEventListener('click', function() {
+        document.querySelectorAll('.producto-item').forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('.producto-checkbox');
+                if (!cb.checked) {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+    });
+
+    // ── Deseleccionar todos ──
+    btnDeselTodos.addEventListener('click', function() {
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // ── Validar antes de enviar ──
+    document.getElementById('form-apertura').addEventListener('submit', function(e) {
+        const seleccionados = document.querySelectorAll('.producto-checkbox:checked');
+        if (seleccionados.length === 0) {
+            e.preventDefault();
+            alert('Debes seleccionar al menos un producto');
+            return;
+        }
+        // Verificar que todos los seleccionados tienen stock ingresado
+        let hayError = false;
+        seleccionados.forEach(cb => {
+            const productoId = cb.dataset.productoId;
+            const inputEl    = document.querySelector(`#input_${productoId} input`);
+            if (!inputEl || inputEl.value === '') {
+                inputEl.classList.add('is-invalid');
+                hayError = true;
+            }
+        });
+        if (hayError) {
+            e.preventDefault();
+            alert('Ingresa el stock inicial para todos los productos seleccionados');
+        }
+    });
+
+});
 </script>
 {% endblock %}

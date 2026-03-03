@@ -1,151 +1,116 @@
-{% extends 'dashboard/layout.html' %}
+{% extends "dashboard/layout.html" %}
 {% load static %}
 
+{% block title %}Cierre de Inventario{% endblock %}
+
 {% block content %}
-<link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
-<link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
+<div class="container-fluid px-4">
 
-<div class="form-container">
-    <h1 class="form-title">{{ titulo }}</h1>
-
-    <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <strong>Importante:</strong> Registre el inventario físico real al final del día.
-        El sistema calculará automáticamente el consumo y las diferencias.
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Cierre de Inventario</h2>
+            <p class="text-muted small mb-0">
+                {{ inventario.fecha|date:"l, d \d\e F \d\e Y" }} —
+                Apertura: {{ inventario.fecha_apertura|date:"H:i" }}
+            </p>
+        </div>
+        <a href="{% url 'apl:inventario:detalle' inventario.pk %}"
+           class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class='bx bx-arrow-back me-1'></i> Volver
+        </a>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>Fecha: {{ inventario.fecha|date:"d/m/Y" }}</h5>
-            <p>Estado: <span class="badge badge-primary">{{ inventario.get_estado_display }}</span></p>
+    <!-- Alerta -->
+    <div class="alert border-0 rounded-3 mb-4 d-flex align-items-center gap-3"
+         style="background:#fff3cd;">
+        <i class='bx bx-error' style="font-size:1.5rem;color:#f6c23e;"></i>
+        <div>
+            <strong>Instrucciones de cierre:</strong>
+            Para productos <strong>por unidad</strong> ingresa cuántas unidades quedan físicamente —
+            el sistema calculará la diferencia vs ventas registradas.
+            Para productos <strong>por peso</strong> ingresa cuántos kg quedan al pesarlos físicamente.
         </div>
     </div>
 
-    <form method="post" novalidate>
+    <form method="post">
         {% csrf_token %}
 
-        <!-- Productos por PESO -->
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-warning">
-                <h6 class="m-0 font-weight-bold text-white">
-                    <i class="bi bi-thermometer-half"></i> Productos por PESO (kg)
-                </h6>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    <small>Pese estos productos y registre el inventario final real</small>
-                </p>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Inicial</th>
-                                <th>Inventario Final (Pesado)</th>
-                                <th>Consumo Calculado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for mov in movimientos %}
-                            {% if mov.tipo_control == 'peso' %}
-                            <tr>
-                                <td>{{ mov.producto.nombre }}</td>
-                                <td>{{ mov.inventario_inicial }} kg</td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        name="inventario_final_{{ mov.id }}"
-                                        class="form-control inventario-final-peso"
-                                        step="0.01"
-                                        min="0"
-                                        max="{{ mov.inventario_inicial }}"
-                                        placeholder="0.00"
-                                        data-inicial="{{ mov.inventario_inicial }}"
-                                        data-target="consumo_{{ mov.id }}"
-                                        required
-                                    >
-                                </td>
-                                <td>
-                                    <span id="consumo_{{ mov.id }}" class="badge badge-info">-</span>
-                                </td>
-                            </tr>
-                            {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center">No hay productos por peso</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        {# Tabla productos por UNIDAD #}
+        {% with hay_unidad=False %}
+        {% for mov in movimientos %}{% if mov.tipo_control == 'unidad' %}{% with hay_unidad=True %}{% endwith %}{% endif %}{% endfor %}
+        {% endwith %}
 
-        <!-- Productos por UNIDAD -->
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-info">
-                <h6 class="m-0 font-weight-bold text-white">
-                    <i class="bi bi-box-seam"></i> Productos por UNIDAD
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class='bx bx-cube me-2'></i>
+                    Productos por Unidad
+                    <span class="badge bg-secondary ms-2">
+                        {% for mov in movimientos %}{% if mov.tipo_control == 'unidad' %}{{ forloop.counter }}{% endif %}{% endfor %}
+                    </span>
                 </h6>
+                <small class="text-muted">
+                    Cuenta físicamente cuántas unidades quedan de cada producto
+                </small>
             </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    <small>Cuente estos productos físicamente y ajuste si hay diferencias</small>
-                </p>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Producto</th>
-                                <th>Inicial</th>
-                                <th>Vendido (Sistema)</th>
-                                <th>Debería Quedar</th>
-                                <th>Inventario Final (Conteo)</th>
-                                <th>Diferencia</th>
-                                <th>Motivo Ajuste</th>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center">Inicial</th>
+                                <th class="text-center">Consumo por ventas</th>
+                                <th class="text-center">Teórico</th>
+                                <th class="text-center">
+                                    Unidades reales
+                                    <i class='bx bx-info-circle text-muted'
+                                       title="Lo que cuentas físicamente ahora"></i>
+                                </th>
+                                <th>Motivo ajuste</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for mov in movimientos %}
                             {% if mov.tipo_control == 'unidad' %}
                             <tr>
-                                <td>{{ mov.producto.nombre }}</td>
-                                <td>{{ mov.inventario_inicial }}</td>
-                                <td>
-                                    <span class="badge badge-danger">{{ mov.consumo_automatico }}</span>
+                                <td class="ps-3">
+                                    <div class="fw-semibold small">{{ mov.producto.nombre }}</div>
                                 </td>
-                                <td>
-                                    <span class="badge badge-success">{{ mov.inventario_teorico }}</span>
+                                <td class="text-center fw-semibold">{{ mov.inventario_inicial }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">{{ mov.consumo_automatico }}</span>
                                 </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        name="inventario_final_{{ mov.id }}"
-                                        class="form-control inventario-final-unidad"
-                                        step="1"
-                                        min="0"
-                                        placeholder="0"
-                                        data-teorico="{{ mov.inventario_teorico }}"
-                                        data-target="diferencia_{{ mov.id }}"
-                                        required
-                                    >
+                                <td class="text-center fw-semibold text-primary">
+                                    {{ mov.inventario_teorico }}
                                 </td>
-                                <td>
-                                    <span id="diferencia_{{ mov.id }}" class="badge badge-secondary">-</span>
+                                <td class="text-center" style="min-width:130px;">
+                                    <input type="number"
+                                           name="inventario_final_{{ mov.id }}"
+                                           class="form-control form-control-sm text-center stock-final"
+                                           placeholder="0"
+                                           min="0"
+                                           step="1"
+                                           data-teorico="{{ mov.inventario_teorico }}"
+                                           data-movid="{{ mov.id }}">
                                 </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        name="motivo_ajuste_{{ mov.id }}"
-                                        class="form-control form-control-sm"
-                                        placeholder="Ej: Merma, rotura..."
-                                    >
+                                <td style="min-width:160px;">
+                                    <input type="text"
+                                           name="motivo_ajuste_{{ mov.id }}"
+                                           class="form-control form-control-sm motivo-ajuste"
+                                           id="motivo_{{ mov.id }}"
+                                           placeholder="Opcional..."
+                                           style="display:none;">
+                                    <small class="diferencia-label" id="dif_{{ mov.id }}"></small>
                                 </td>
                             </tr>
                             {% endif %}
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center">No hay productos por unidad</td>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No hay productos por unidad en este inventario
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -154,69 +119,173 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-warning btn-lg btn-block">
-            <i class="bi bi-lock-fill"></i> Cerrar Inventario
-        </button>
-
-        <div class="back-link">
-            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
-                Volver
-            </button>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class='bx bx-dumbbell me-2'></i>
+                    Productos por Peso (kg)
+                    <span class="badge bg-secondary ms-2">
+                        {% for mov in movimientos %}{% if mov.tipo_control == 'peso' %}{{ forloop.counter }}{% endif %}{% endfor %}
+                    </span>
+                </h6>
+                <small class="text-muted">
+                    Pesa físicamente lo que queda e ingresa el resultado en kg
+                </small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center">Inicial (kg)</th>
+                                <th class="text-center">
+                                    Kg restantes (físico)
+                                    <i class='bx bx-info-circle text-muted'
+                                       title="Pesa lo que queda e ingresa el valor"></i>
+                                </th>
+                                <th class="text-center">Consumo calculado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimientos %}
+                            {% if mov.tipo_control == 'peso' %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-semibold small">{{ mov.producto.nombre }}</div>
+                                </td>
+                                <td class="text-center fw-semibold">{{ mov.inventario_inicial }} kg</td>
+                                <td class="text-center" style="min-width:160px;">
+                                    <div class="input-group input-group-sm justify-content-center" style="max-width:160px;margin:auto;">
+                                        <input type="number"
+                                               name="inventario_final_{{ mov.id }}"
+                                               class="form-control text-center stock-peso"
+                                               placeholder="0.00"
+                                               min="0"
+                                               step="0.01"
+                                               data-inicial="{{ mov.inventario_inicial }}"
+                                               data-movid="{{ mov.id }}">
+                                        <span class="input-group-text">kg</span>
+                                    </div>
+                                    <small class="consumo-peso-label text-muted" id="consumo_{{ mov.id }}"></small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-semibold text-primary consumo-calculado" id="calc_{{ mov.id }}">—</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No hay productos por peso en este inventario
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <!-- Observaciones -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <label class="form-label fw-semibold small">Observaciones del cierre (opcional)</label>
+                <textarea name="observaciones_cierre"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Novedades del día..."></textarea>
+            </div>
+        </div>
+
+        <!-- Botón confirmar -->
+        <div class="card border-0 shadow-sm mb-4"
+             style="border-left:4px solid #f6c23e !important;">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="fw-bold mb-1">¿Confirmar cierre del inventario?</h6>
+                        <p class="text-muted small mb-0">
+                            Esta acción actualizará el stock de todos los productos
+                            con los valores ingresados y no podrá deshacerse.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'apl:inventario:detalle' inventario.pk %}"
+                           class="btn btn-outline-secondary rounded-pill me-2">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="btn btn-warning rounded-pill px-4 fw-semibold">
+                            <i class='bx bx-lock-alt me-1'></i> Cerrar Inventario
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </form>
 </div>
+{% endblock %}
 
+{% block js_custom %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Calcular consumo para productos por PESO
-    const inputsPeso = document.querySelectorAll('.inventario-final-peso');
-    inputsPeso.forEach(input => {
+
+    // ── Productos por UNIDAD: calcula diferencia en tiempo real ──
+    document.querySelectorAll('.stock-final').forEach(input => {
         input.addEventListener('input', function() {
-            const inicial = parseFloat(this.dataset.inicial);
-            const final = parseFloat(this.value) || 0;
-            const consumo = inicial - final;
-            const targetId = this.dataset.target;
-            const badge = document.getElementById(targetId);
+            const teorico  = parseFloat(this.dataset.teorico) || 0;
+            const real     = parseFloat(this.value);
+            const movId    = this.dataset.movid;
+            const difLabel = document.getElementById(`dif_${movId}`);
+            const motivoEl = document.getElementById(`motivo_${movId}`);
 
-            if (badge) {
-                badge.textContent = consumo.toFixed(2) + ' kg';
-                badge.className = consumo > 0 ? 'badge badge-success' : 'badge badge-secondary';
-            }
-        });
-    });
+            if (!isNaN(real)) {
+                const dif = real - teorico;
 
-    // Calcular diferencia para productos por UNIDAD
-    const inputsUnidad = document.querySelectorAll('.inventario-final-unidad');
-    inputsUnidad.forEach(input => {
-        input.addEventListener('input', function() {
-            const teorico = parseFloat(this.dataset.teorico);
-            const real = parseFloat(this.value) || 0;
-            const diferencia = real - teorico;
-            const targetId = this.dataset.target;
-            const badge = document.getElementById(targetId);
-
-            if (badge) {
-                const signo = diferencia > 0 ? '+' : '';
-                badge.textContent = signo + diferencia;
-
-                if (diferencia === 0) {
-                    badge.className = 'badge badge-success';
-                } else if (diferencia < 0) {
-                    badge.className = 'badge badge-danger';
+                if (Math.abs(dif) > 0.001) {
+                    difLabel.innerHTML = `
+                        <span class="fw-semibold ${dif > 0 ? 'text-success' : 'text-danger'}">
+                            ${dif > 0 ? '+' : ''}${dif.toFixed(2)}
+                            ${dif > 0 ? '(sobran)' : '(faltan)'}
+                        </span>`;
+                    motivoEl.style.display = '';
                 } else {
-                    badge.className = 'badge badge-warning';
+                    difLabel.innerHTML = '<span class="text-success">✓ Cuadra exacto</span>';
+                    motivoEl.style.display = 'none';
                 }
+            } else {
+                difLabel.textContent = '';
+                motivoEl.style.display = 'none';
             }
         });
     });
 
-    // Autoseleccionar inputs al hacer focus
-    const allInputs = document.querySelectorAll('input[type="number"]');
-    allInputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.select();
+    // ── Productos por PESO: calcula consumo en tiempo real ──
+    document.querySelectorAll('.stock-peso').forEach(input => {
+        input.addEventListener('input', function() {
+            const inicial  = parseFloat(this.dataset.inicial) || 0;
+            const final_kg = parseFloat(this.value);
+            const movId    = this.dataset.movid;
+            const calcEl   = document.getElementById(`calc_${movId}`);
+
+            if (!isNaN(final_kg)) {
+                const consumo = inicial - final_kg;
+                if (consumo >= 0) {
+                    calcEl.textContent = consumo.toFixed(2) + ' kg';
+                    calcEl.className = 'fw-semibold text-primary consumo-calculado';
+                } else {
+                    calcEl.textContent = 'Valor mayor al inicial';
+                    calcEl.className = 'fw-semibold text-danger consumo-calculado';
+                }
+            } else {
+                calcEl.textContent = '—';
+                calcEl.className = 'fw-semibold text-muted consumo-calculado';
+            }
         });
     });
+
 });
 </script>
 {% endblock %}

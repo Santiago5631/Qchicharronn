@@ -5,6 +5,81 @@
 <link rel="stylesheet" href="{% static 'lib/css/forms.css' %}">
 <link rel="stylesheet" href="{% static 'lib/css/custom.css' %}">
 
+<!-- TOAST STYLES -->
+<style>
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+    pointer-events: none;
+}
+.toast-item {
+    pointer-events: all;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    font-size: 14px;
+    line-height: 1.4;
+    background: #fff;
+    border-left: 5px solid #ccc;
+    animation: toast-in 0.35s cubic-bezier(.21,1.02,.73,1) forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.toast-item.toast-error   { border-left-color: #e53e3e; background: #fff5f5; color: #742a2a; }
+.toast-item.toast-success { border-left-color: #38a169; background: #f0fff4; color: #1c4532; }
+.toast-item.toast-warning { border-left-color: #d69e2e; background: #fffff0; color: #744210; }
+.toast-item.toast-info    { border-left-color: #3182ce; background: #ebf8ff; color: #1a365d; }
+.toast-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.toast-body { flex: 1; }
+.toast-title { font-weight: 700; font-size: 12px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+.toast-close { background: none; border: none; font-size: 16px; cursor: pointer; opacity: 0.5; flex-shrink: 0; padding: 0; color: inherit; transition: opacity 0.2s; }
+.toast-close:hover { opacity: 1; }
+.toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; transform-origin: left; animation: toast-progress 4500ms linear forwards; }
+.toast-item.toast-error   .toast-progress { background: #e53e3e; }
+.toast-item.toast-success .toast-progress { background: #38a169; }
+.toast-item.toast-warning .toast-progress { background: #d69e2e; }
+.toast-item.toast-info    .toast-progress { background: #3182ce; }
+.toast-item.toast-out { opacity: 0; transform: translateX(60px) scale(0.95); }
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(60px) scale(0.95); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toast-progress {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+ul.errorlist { display: none !important; }
+</style>
+
+<!-- CONTENEDOR DE TOASTS -->
+<div id="toast-container"></div>
+
+<!-- ✅ ERRORES SERIALIZADOS DESDE DJANGO DIRECTAMENTE EN EL HTML -->
+{% if form.errors %}
+<div id="form-errors" style="display:none;">
+    {% for field in form %}
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <span data-label="{{ field.label }}" data-msg="{{ error }}"></span>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        <span data-label="" data-msg="{{ error }}"></span>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="form-container">
     <h1 class="form-title">{{ titulo }}</h1>
     <form method="post">
@@ -13,11 +88,9 @@
 
         {% if formset %}
             {{ formset.management_form }}
-            
-            <!-- Mostrar solo los productos que ya existen -->
             <div class="formset-container">
                 {% for f in formset %}
-                    {% if f.instance.pk %}  {# solo los que ya están guardados #}
+                    {% if f.instance.pk %}
                         <div class="producto-form">
                             {{ f.as_p }}
                         </div>
@@ -27,15 +100,50 @@
         {% endif %}
 
         <button type="submit" class="btn btn-primary">Actualizar</button>
-
         {% block actu %}{% endblock %}
-        
-        
     </form>
-    
+
     <div class="back-link">
         <button type="button" onclick="window.history.back();">Volver</button>
     </div>
 </div>
+
+<!-- TOAST JS -->
+<script>
+const TOAST_ICONS  = { error: '❌', success: '✅', warning: '⚠️', info: 'ℹ️' };
+const TOAST_TITLES = { error: 'Error', success: 'Éxito', warning: 'Advertencia', info: 'Información' };
+
+function showToast(message, type = 'info', duration = 4500) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${TOAST_ICONS[type] || 'ℹ️'}</span>
+        <div class="toast-body">
+            <div class="toast-title">${TOAST_TITLES[type] || type}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.closest('.toast-item').remove()">✕</button>
+        <div class="toast-progress" style="animation-duration:${duration}ms;"></div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 350);
+    }, duration);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const errContainer = document.getElementById('form-errors');
+    if (errContainer) {
+        errContainer.querySelectorAll('span[data-msg]').forEach(span => {
+            const label = span.dataset.label;
+            const msg   = span.dataset.msg;
+            const text  = label ? `${label}: ${msg}` : msg;
+            showToast(text, 'error');
+        });
+    }
+});
+</script>
 
 {% endblock %}

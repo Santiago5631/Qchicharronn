@@ -31,8 +31,8 @@ class Producto(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.stock})"
 
-@property
-def tipo_inventario(self):
-    if self.unidad:
-        return self.unidad.tipo
-    return 'unidad'
+    @property
+    def tipo_inventario(self):
+        if self.unidad:
+            return self.unidad.tipo
+        return 'unidad'

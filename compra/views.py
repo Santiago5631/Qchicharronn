@@ -68,10 +68,13 @@ class CompraDeleteView(RolRequeridoMixin, DeleteView):
     template_name = 'forms/confirmar_eliminacion.html'
     success_url = '/apps/compras/listar/'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['titulo'] = 'Eliminar Compra'
-        return context
+    def post(self, request, *args, **kwargs):
+        from django.http import JsonResponse
+        try:
+            self.get_object().delete()
+            return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 # ──────────────────────────────────────────────

@@ -371,3 +371,79 @@ class HistorialStockView(RolRequeridoMixin, ListView):
         context['productos']            = Producto.objects.filter(disponible=True)
         context['producto_seleccionado'] = self.request.GET.get('producto', '')
         return context
+
+class AgregarProductoInventarioView(RolRequeridoMixin, View):
+    """Agregar un producto a un inventario ya abierto."""
+    roles_permitidos = COCINAS
+    template_name = 'inventario/agregar_producto.html'
+
+    def get(self, request, pk):
+        inventario = get_object_or_404(InventarioDiario, pk=pk)
+
+        if inventario.estado == 'cerrado':
+            messages.error(request, 'No se pueden agregar productos a un inventario cerrado')
+            return redirect('apl:inventario:detalle', pk=pk)
+
+        # Productos que ya están en este inventario
+        productos_ya_registrados = inventario.movimientos.values_list('producto_id', flat=True)
+
+        # Solo mostrar productos que NO están ya en el inventario
+        productos_disponibles = Producto.objects.filter(
+            disponible=True
+        ).exclude(
+            id__in=productos_ya_registrados
+        ).order_by('nombre')
+
+        context = {
+            'titulo': f'Agregar Producto — Inventario {inventario.fecha.strftime("%d/%m/%Y")}',
+            'inventario': inventario,
+            'productos_disponibles': productos_disponibles,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        inventario = get_object_or_404(InventarioDiario, pk=pk)
+
+        if inventario.estado == 'cerrado':
+            messages.error(request, 'No se pueden agregar productos a un inventario cerrado')
+            return redirect('apl:inventario:detalle', pk=pk)
+
+        producto_id     = request.POST.get('producto_id')
+        stock_inicial   = request.POST.get('stock_inicial')
+
+        if not producto_id or not stock_inicial:
+            messages.error(request, 'Debes seleccionar un producto e ingresar el stock inicial')
+            return redirect('apl:inventario:agregar_producto', pk=pk)
+
+        try:
+            with transaction.atomic():
+                producto = get_object_or_404(Producto, id=producto_id)
+
+                # Verificar que no esté ya registrado
+                if inventario.movimientos.filter(producto=producto).exists():
+                    messages.warning(
+                        request,
+                        f'"{producto.nombre}" ya está registrado en este inventario'
+                    )
+                    return redirect('apl:inventario:detalle', pk=pk)
+
+                MovimientoInventario.objects.create(
+                    inventario_diario=inventario,
+                    producto=producto,
+                    tipo_control=producto.tipo_inventario,
+                    inventario_inicial=Decimal(stock_inicial),
+                )
+
+                # Actualizar stock del producto
+                producto.stock = Decimal(stock_inicial)
+                producto.save()
+
+                messages.success(
+                    request,
+                    f'"{producto.nombre}" agregado al inventario con stock inicial de {stock_inicial}'
+                )
+                return redirect('apl:inventario:detalle', pk=pk)
+
+        except Exception as e:
+            messages.error(request, f'Error al agregar producto: {str(e)}')
+            return redirect('apl:inventario:agregar_producto', pk=pk)

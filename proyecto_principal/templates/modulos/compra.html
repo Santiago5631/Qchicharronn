@@ -2,9 +2,6 @@
 {% load static %}
 {% block content %}
 
-<!-- ✅ INCLUIR CSS -->
-<link rel="stylesheet" href="{% static 'css/baucher.css' %}">
-
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
@@ -53,10 +50,14 @@
                         <a href="{% url 'apl:compra:editar_compra' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
                             <i class="bi bi-pen-fill"></i>
                         </a>
-                        <button type="button" onclick="eliminarCompra({{ c.id_factura }})" class="btn btn-danger btn-sm" title="Eliminar Compra">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm mb-1 btn-delete"
+                            data-url="{% url 'apl:compra:eliminar_compra' c.id_factura %}"
+                            data-name="{{ c.producto.nombre }}"
+                            title="Eliminar Compra">
                             <i class="bi bi-trash3-fill"></i>
                         </button>
-
                     </td>
                 </tr>
                 {% empty %}
@@ -66,15 +67,5 @@
         </table>
     </div>
 </div>
-
-<!-- ✅ MODAL -->
-<div id="baucher-modal">
-    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 90mm; margin: 0 auto;">
-        <div id="baucher-container"></div>
-    </div>
-</div>
-
-<!-- ✅ INCLUIR JS -->
-<script src="{% static 'js/baucher.js' %}"></script>
 
 {% endblock %}
