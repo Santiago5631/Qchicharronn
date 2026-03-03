@@ -14,12 +14,12 @@
         <div class="menu">
             <li class="search-box">
                 <i class='bx bx-search icon'></i>
-                <input type="text" placeholder="Buscar...">
+                <input type="text" id="sidebar-search" placeholder="Buscar...">
             </li>
 
             <ul class="menu-links">
 
-                {# ── Dashboard — todos los roles ── #}
+                {# ── Dashboard — todos ── #}
                 <li class="nav-link">
                     <a href="{% url 'apl:dashboard' %}">
                         <i class='bx bx-home-alt icon'></i>
@@ -27,9 +27,7 @@
                     </a>
                 </li>
 
-                {# ════════════════════════════════════════════ #}
-                {# SOLO ADMINISTRADOR                          #}
-                {# ════════════════════════════════════════════ #}
+                {# ════════════ SOLO ADMINISTRADOR ════════════ #}
                 {% if request.user|tiene_cargo:"administrador" %}
 
                 <li class="nav-link">
@@ -38,56 +36,48 @@
                         <span class="text nav-text">Usuarios</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:categoria:listar_categoria' %}">
                         <i class='bx bxs-bar-chart-alt-2 icon'></i>
                         <span class="text nav-text">Categorias</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:compra:compra_list' %}">
                         <i class='bx bxs-wallet icon'></i>
                         <span class="text nav-text">Compra</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:producto:producto_list' %}">
                         <i class='bx bxs-bowl-hot icon'></i>
                         <span class="text nav-text">Producto</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:proveedor:proveedor_list' %}">
                         <i class='bx bxs-user-badge icon'></i>
                         <span class="text nav-text">Proveedor</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:nomina:nomina_list' %}">
                         <i class='bx bx-money-withdraw icon'></i>
                         <span class="text nav-text">Nomina</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:unidad:unidad_list' %}">
                         <i class='bx bx-tag icon'></i>
                         <span class="text nav-text">Unidad</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:informe:informe_list' %}">
                         <i class='bx bxs-notepad icon'></i>
                         <span class="text nav-text">Informes</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:backups:generar_backup' %}">
                         <i class='bx bx-cloud-upload icon'></i>
@@ -96,12 +86,8 @@
                 </li>
 
                 {% endif %}
-                {# ── fin solo administrador ── #}
 
-
-                {# ════════════════════════════════════════════ #}
-                {# ADMINISTRADOR + MESERO + CAJERA             #}
-                {# ════════════════════════════════════════════ #}
+                {# ════════════ ADMIN + MESERO + CAJERA ════════════ #}
                 {% if request.user|cargo_en:"administrador,mesero,cajera" %}
 
                 <li class="nav-link">
@@ -110,7 +96,6 @@
                         <span class="text nav-text">Mesa</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:venta:venta_list' %}">
                         <i class='bx bxs-cart-alt icon'></i>
@@ -119,12 +104,8 @@
                 </li>
 
                 {% endif %}
-                {# ── fin admin + mesero + cajera ── #}
 
-
-                {# ════════════════════════════════════════════ #}
-                {# ADMINISTRADOR + COCINERO + PARRILLA         #}
-                {# ════════════════════════════════════════════ #}
+                {# ════════════ ADMIN + COCINERO + PARRILLA ════════════ #}
                 {% if request.user|cargo_en:"administrador,cocinero,parrilla" %}
 
                 <li class="nav-link">
@@ -135,19 +116,14 @@
                 </li>
 
                 {% endif %}
-                {# ── fin admin + cocinas ── #}
 
-
-                {# ════════════════════════════════════════════ #}
-                {# TODOS LOS ROLES                             #}
-                {# ════════════════════════════════════════════ #}
+                {# ════════════ TODOS ════════════ #}
                 <li class="nav-link">
                     <a href="{% url 'apl:menu:menu_list' %}">
                         <i class='bx bx-restaurant icon'></i>
                         <span class="text nav-text">Menu</span>
                     </a>
                 </li>
-
                 <li class="nav-link">
                     <a href="{% url 'apl:menu:pedido_list' %}">
                         <i class='bx bx-receipt icon'></i>
@@ -155,7 +131,7 @@
                     </a>
                 </li>
 
-                {# Comanda Cocina — admin y cocinero #}
+                {# Comandas #}
                 {% if request.user|cargo_en:"administrador,cocinero" %}
                 <li class="nav-link">
                     <a href="{% url 'apl:pedido:listar_pedido' %}">
@@ -165,7 +141,6 @@
                 </li>
                 {% endif %}
 
-                {# Comanda Parrilla — admin y parrilla #}
                 {% if request.user|cargo_en:"administrador,parrilla" %}
                 <li class="nav-link">
                     <a href="{% url 'apl:pedido:listar_pedido' %}">
@@ -178,16 +153,8 @@
             </ul>
         </div>
 
+        <!-- Solo cerrar sesión en el footer de la sidebar -->
         <div class="bottom-content">
-
-            {# ── Enlace al perfil propio — todos los roles ── #}
-            <li class="nav-link">
-                <a href="{% url 'apl:usuario:perfil' %}">
-                    <i class='bx bxs-user-circle icon'></i>
-                    <span class="text nav-text">Mi Perfil</span>
-                </a>
-            </li>
-
             <li>
                 <form method="post" action="{% url 'login:logout' %}" id="logout-form">
                     {% csrf_token %}
@@ -197,17 +164,7 @@
                     </a>
                 </form>
             </li>
-
-            <li class="mode">
-                <div class="moon-sun">
-                    <i class='bx bx-moon icon moon'></i>
-                    <i class='bx bx-sun icon sun'></i>
-                </div>
-                <span class="mode-text text">Modo Oscuro</span>
-                <div class="toggle-switch">
-                    <span class="switch"></span>
-                </div>
-            </li>
         </div>
+
     </div>
 </nav>

@@ -1,0 +1,262 @@
+{% extends "dashboard/layout.html" %}
+{% load static %}
+
+{% block title %}Agregar Producto al Inventario{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Agregar Producto</h2>
+            <p class="text-muted small mb-0">{{ titulo }}</p>
+        </div>
+        <a href="{% url 'apl:inventario:detalle' inventario.pk %}"
+           class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class='bx bx-arrow-back me-1'></i> Volver al inventario
+        </a>
+    </div>
+
+    <!-- Alerta informativa -->
+    <div class="alert border-0 rounded-3 mb-4 d-flex align-items-center gap-3"
+         style="background: #d1ecf122;">
+        <i class='bx bx-info-circle' style="font-size:1.5rem;color:#36b9cc;"></i>
+        <div>
+            Solo se muestran los productos que <strong>no están registrados</strong> en este inventario.
+            El stock que ingreses se establecerá como el inventario inicial del producto para hoy.
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Panel izquierdo: lista de productos disponibles -->
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-2">
+                        <i class='bx bx-package me-2'></i>
+                        Productos disponibles para agregar
+                        <span class="badge bg-secondary ms-2">{{ productos_disponibles|length }}</span>
+                    </h6>
+
+                    <!-- Buscador -->
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class='bx bx-search text-muted'></i>
+                        </span>
+                        <input type="text"
+                               id="buscador-productos"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar producto por nombre...">
+                    </div>
+                </div>
+
+                <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                    <div id="lista-productos">
+                        {% for producto in productos_disponibles %}
+                        <div class="producto-item border-bottom px-3 py-3 d-flex align-items-center gap-3"
+                             data-nombre="{{ producto.nombre|lower }}"
+                             style="cursor: pointer; transition: background 0.2s;"
+                             onclick="seleccionarProducto({{ producto.id }}, '{{ producto.nombre|escapejs }}', '{{ producto.get_tipo_inventario_display|escapejs }}', {{ producto.stock }})">
+
+                            <!-- Icono tipo -->
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:40px;height:40px;
+                                 background:{% if producto.tipo_inventario == 'peso' %}#36b9cc22{% else %}#4e73df22{% endif %}">
+                                <i class='bx {% if producto.tipo_inventario == "peso" %}bx-dumbbell{% else %}bx-cube{% endif %}'
+                                   style="color:{% if producto.tipo_inventario == 'peso' %}#36b9cc{% else %}#4e73df{% endif %}"></i>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">{{ producto.nombre }}</div>
+                                <div class="d-flex gap-2 mt-1">
+                                    <span class="badge rounded-pill"
+                                          style="background:{% if producto.tipo_inventario == 'peso' %}#36b9cc22;color:#36b9cc{% else %}#4e73df22;color:#4e73df{% endif %};font-size:0.7rem;">
+                                        {{ producto.get_tipo_inventario_display }}
+                                    </span>
+                                    {% if producto.categoria %}
+                                    <span class="badge rounded-pill bg-light text-muted" style="font-size:0.7rem;">
+                                        {{ producto.categoria }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Stock actual -->
+                            <div class="text-end flex-shrink-0">
+                                <div class="fw-bold small
+                                    {% if producto.stock == 0 %}text-danger
+                                    {% elif producto.stock < 10 %}text-warning
+                                    {% else %}text-success{% endif %}">
+                                    {{ producto.stock }}
+                                </div>
+                                <div class="text-muted" style="font-size:0.7rem;">stock actual</div>
+                            </div>
+
+                            <!-- Indicador selección -->
+                            <div class="flex-shrink-0">
+                                <i class='bx bx-chevron-right text-muted'></i>
+                            </div>
+
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5 text-muted">
+                            <i class='bx bx-check-circle d-block' style="font-size:3rem;color:#1cc88a;opacity:0.5;"></i>
+                            <p class="mt-2">Todos los productos ya están en este inventario</p>
+                            <a href="{% url 'apl:inventario:detalle' inventario.pk %}"
+                               class="btn btn-sm btn-outline-secondary rounded-pill">
+                                Volver al detalle
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Sin resultados búsqueda -->
+                    <div id="sin-resultados" class="text-center py-4 text-muted" style="display:none;">
+                        <i class='bx bx-search d-block' style="font-size:2rem;opacity:0.3;"></i>
+                        <small>No se encontraron productos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: formulario de confirmación -->
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class='bx bx-edit me-2'></i>Confirmar y agregar
+                    </h6>
+                </div>
+                <div class="card-body">
+
+                    <!-- Estado vacío -->
+                    <div id="panel-vacio" class="text-center py-4 text-muted">
+                        <i class='bx bx-left-arrow-circle d-block' style="font-size:3rem;opacity:0.2;"></i>
+                        <p class="small mt-2">Selecciona un producto de la lista</p>
+                    </div>
+
+                    <!-- Formulario (oculto hasta seleccionar) -->
+                    <form method="post" id="form-agregar" style="display:none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="producto_id" id="input-producto-id">
+
+                        <!-- Card producto seleccionado -->
+                        <div class="p-3 rounded-3 mb-4"
+                             style="background: var(--primary-color-light); border: 2px solid var(--primary-color);">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:48px;height:48px;background:var(--primary-color);">
+                                    <i class='bx bx-package' style="color:#fff;font-size:1.3rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold" id="nombre-seleccionado">—</div>
+                                    <small class="text-muted" id="tipo-seleccionado">—</small>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-top d-flex justify-content-between">
+                                <span class="small text-muted">Stock actual del sistema</span>
+                                <span class="fw-bold" id="stock-actual-seleccionado">—</span>
+                            </div>
+                        </div>
+
+                        <!-- Input stock inicial -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                Stock inicial para hoy
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   name="stock_inicial"
+                                   id="input-stock-inicial"
+                                   class="form-control form-control-lg text-center"
+                                   placeholder="0.00"
+                                   min="0"
+                                   step="0.01"
+                                   required>
+                            <div class="form-text">
+                                Ingresa la cantidad real que tienes disponible ahora mismo.
+                            </div>
+                        </div>
+
+                        <!-- Botón agregar -->
+                        <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-semibold">
+                            <i class='bx bx-plus-circle me-2'></i>
+                            Agregar al Inventario
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-outline-secondary w-100 mt-2 rounded-3"
+                                onclick="limpiarSeleccion()">
+                            Cancelar selección
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block js_custom %}
+<script>
+// ── Seleccionar producto ──
+function seleccionarProducto(id, nombre, tipo, stockActual) {
+    // Actualizar campos del formulario
+    document.getElementById('input-producto-id').value   = id;
+    document.getElementById('nombre-seleccionado').textContent       = nombre;
+    document.getElementById('tipo-seleccionado').textContent         = tipo;
+    document.getElementById('stock-actual-seleccionado').textContent = stockActual;
+    document.getElementById('input-stock-inicial').value            = stockActual;
+
+    // Mostrar formulario
+    document.getElementById('panel-vacio').style.display  = 'none';
+    document.getElementById('form-agregar').style.display = '';
+
+    // Resaltar fila seleccionada
+    document.querySelectorAll('.producto-item').forEach(item => {
+        item.style.background = '';
+    });
+    event.currentTarget.style.background = 'var(--primary-color-light)';
+
+    // Hacer foco en el input
+    document.getElementById('input-stock-inicial').focus();
+    document.getElementById('input-stock-inicial').select();
+}
+
+// ── Limpiar selección ──
+function limpiarSeleccion() {
+    document.getElementById('panel-vacio').style.display  = '';
+    document.getElementById('form-agregar').style.display = 'none';
+    document.querySelectorAll('.producto-item').forEach(item => {
+        item.style.background = '';
+    });
+}
+
+// ── Buscador ──
+document.addEventListener('DOMContentLoaded', function() {
+    const buscador = document.getElementById('buscador-productos');
+    if (!buscador) return;
+
+    buscador.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        let hayResultados = false;
+
+        document.querySelectorAll('.producto-item').forEach(item => {
+            const nombre  = item.dataset.nombre;
+            const visible = nombre.includes(query);
+            item.style.display = visible ? '' : 'none';
+            if (visible) hayResultados = true;
+        });
+
+        document.getElementById('sin-resultados').style.display =
+            hayResultados ? 'none' : '';
+    });
+});
+</script>
+{% endblock %}
