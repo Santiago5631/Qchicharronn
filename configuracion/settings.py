@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     # Apps del proyecto
     'proyecto_principal.apps.ProyectoPrincipalConfig',
     'categoria.apps.CategoriaConfig',
+    'asistente.apps.AsistenteConfig',
     'compra.apps.CompraConfig',
     'informe.apps.InformeConfig',
     'marca.apps.MarcaConfig',
@@ -214,3 +215,4 @@ CHANNEL_LAYERS = {
         },
     },
 }
+GROQ_API_KEY = config('GROQ_API_KEY')
