@@ -192,7 +192,7 @@
 
             {% if request.user|cargo_en:"administrador,cocinero" %}
             <li class="mb-1">
-                <a href="{% url 'apl:pedido:listar_pedido' %}" class="offcanvas-link">
+                <a href="{% url 'apl:menu:vista_cocina' area='cocina' %}" class="offcanvas-link">
                     <i class='bx bx-fire'></i><span>Comandas Cocina</span>
                 </a>
             </li>
@@ -200,7 +200,7 @@
 
             {% if request.user|cargo_en:"administrador,parrilla" %}
             <li class="mb-1">
-                <a href="{% url 'apl:pedido:listar_pedido' %}" class="offcanvas-link">
+                <a href="{% url 'apl:menu:vista_cocina' area='parrilla' %}" class="offcanvas-link">
                     <i class='bx bx-dish'></i><span>Comandas Parrilla</span>
                 </a>
             </li>

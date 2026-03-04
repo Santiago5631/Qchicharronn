@@ -131,24 +131,37 @@
                     </a>
                 </li>
 
-                {# Comandas #}
                 {% if request.user|cargo_en:"administrador,cocinero" %}
-                <li class="nav-link">
-                    <a href="{% url 'apl:pedido:listar_pedido' %}">
-                        <i class='bx bx-fire icon'></i>
-                        <span class="text nav-text">Comandas Cocina</span>
-                    </a>
-                </li>
+                    <li class="nav-link">
+                        <a href="{% url 'apl:menu:vista_cocina' area='cocina' %}">
+                            <i class='bx bx-fire icon'></i>
+                            <span class="text nav-text">Comandas Cocina</span>
+                        </a>
+                    </li>
                 {% endif %}
 
                 {% if request.user|cargo_en:"administrador,parrilla" %}
-                <li class="nav-link">
-                    <a href="{% url 'apl:pedido:listar_pedido' %}">
-                        <i class='bx bx-dish icon'></i>
-                        <span class="text nav-text">Comandas Parrilla</span>
-                    </a>
-                </li>
+                    <li class="nav-link">
+                        <a href="{% url 'apl:menu:vista_cocina' area='parrilla' %}">
+                            <i class='bx bx-dish icon'></i>
+                            <span class="text nav-text">Comandas Parrilla</span>
+                        </a>
+                    </li>
                 {% endif %}
+            {# ── ASISTENTE IA — solo admin y mesero ── #}
+{% if request.user|cargo_en:"administrador,mesero" %}
+<li class="mb-1">
+    <a href="{% url 'apl:asistente:chat' %}" class="offcanvas-link"
+       style="background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(234,88,12,0.1)); border-radius: 10px;">
+        <i class='bx bx-bot' style="color: #f97316;"></i>
+        <span style="color: #f97316; font-weight: 700;">Asistente IA</span>
+        <span class="badge ms-auto"
+              style="background: #f97316; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px;">
+            IA
+        </span>
+    </a>
+</li>
+{% endif %}
 
             </ul>
         </div>
