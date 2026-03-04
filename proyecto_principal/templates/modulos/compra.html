@@ -3,68 +3,69 @@
 {% block content %}
 
 <div class="card shadow mb-4">
+    <!-- Header con título y botones -->
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
-        <a href="{% url 'apl:compra:crear_compra' %}">
-            <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill" title="Nueva Compra"></i> Nueva</button>
-        </a>
-        <a href="{% url 'apl:compra:exportar_pdf' %}">
-            <button class="btn btn-danger btn-sm me-2">
-                <i class="bi bi-file-earmark-pdf-fill" title="Exportar a PDF"></i> Exportar PDF
-            </button>
-        </a>
-        <a href="{% url 'apl:compra:exportar_excel' %}">
-            <button class="btn btn-success btn-sm">
-                <i class="bi bi-file-earmark-excel-fill" title="Exportar a Excel"></i> Exportar Excel
-            </button>
-        </a>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{% url 'apl:compra:exportar_pdf' %}">
+                <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
+                </button>
+            </a>
+            <a href="{% url 'apl:compra:exportar_excel' %}">
+                <button class="btn btn-success btn-sm">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+                </button>
+            </a>
+            <a href="{% url 'apl:compra:crear_compra' %}">
+                <button class="btn btn-success btn-sm"><i class="bi bi-plus-circle-fill"></i> Nueva</button>
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="card-body">
-    <div class="table-responsive">
-        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Producto</th>
-                    <th>Fecha</th>
-                    <th>Precio</th>
-                    <th>Proveedor</th>
-                    <th>Cantidad</th>
-                    <th>Unidad</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in compras %}
-                <tr>
-                    <td>{{ c.id_factura }}</td>
-                    <td>{{ c.producto.nombre }}</td>
-                    <td>{{ c.fecha }}</td>
-                    <td>S/. {{ c.precio }}</td>
-                    <td>{{ c.proveedor }}</td>
-                    <td>{{ c.cantidad }}</td>
-                    <td>{{ c.unidad }}</td>
-                    <td>
-                        <a href="{% url 'apl:compra:editar_compra' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
-                            <i class="bi bi-pen-fill"></i>
-                        </a>
-                        <button
-                            type="button"
-                            class="btn btn-danger btn-sm mb-1 btn-delete"
-                            data-url="{% url 'apl:compra:eliminar_compra' c.id_factura %}"
-                            data-name="{{ c.producto.nombre }}"
-                            title="Eliminar Compra">
-                            <i class="bi bi-trash3-fill"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="8">No hay compras registradas.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Body con la tabla (sin card-body adicional si no lo necesitas) -->
+    <div class="card-body p-0">  <!-- p-0 para eliminar padding si quieres que quede totalmente pegado -->
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Fecha</th>
+                        <th>Precio</th>
+                        <th>Proveedor</th>
+                        <th>Cantidad</th>
+                        <th>Unidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in compras %}
+                    <tr>
+                        <td>{{ c.id_factura }}</td>
+                        <td>{{ c.producto.nombre }}</td>
+                        <td>{{ c.fecha }}</td>
+                        <td>S/. {{ c.precio }}</td>
+                        <td>{{ c.proveedor }}</td>
+                        <td>{{ c.cantidad }}</td>
+                        <td>{{ c.unidad }}</td>
+                        <td>
+                            <a href="{% url 'apl:compra:editar_compra' c.id_factura %}" class="btn btn-warning btn-sm" title="Editar Compra">
+                                <i class="bi bi-pen-fill"></i>
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm mb-1 btn-delete"
+                                    data-url="{% url 'apl:compra:eliminar_compra' c.id_factura %}"
+                                    data-name="{{ c.producto.nombre }}" title="Eliminar Compra">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center">No hay compras registradas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
