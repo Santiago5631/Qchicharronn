@@ -125,7 +125,7 @@ MenuProductoFormSet = inlineformset_factory(
     Menu,
     MenuProducto,
     form=MenuProductoInlineForm,
-    extra=3,  # 3 filas vacías por defecto
+    extra=0,  # 3 filas vacías por defecto
     can_delete=True,
     min_num=1,  # Al menos 1 producto requerido
     validate_min=True,

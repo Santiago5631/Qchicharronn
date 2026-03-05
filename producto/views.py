@@ -121,6 +121,16 @@ class ProductoDeleteView(RolRequeridoMixin, DeleteView):
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        # Verificar si está asociado a algún menú
+        menus_asociados = obj.menus_asociados.select_related('menu').all()
+        if menus_asociados.exists():
+            nombres_menus = ', '.join([mp.menu.nombre for mp in menus_asociados])
+            return JsonResponse({
+                "status": "error",
+                "message": f'No se puede eliminar "{obj.nombre}" porque está asociado a: {nombres_menus}. Elimínalo primero del menú.'
+            })
+
         obj.delete()
         return JsonResponse({"status": "ok"})
 
