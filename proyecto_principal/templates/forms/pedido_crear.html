@@ -3,251 +3,710 @@
 
 {% block title %}Crear Pedido{% endblock %}
 
+{% block css_plugins %}
+<style>
+  /* ── FILTROS ── */
+  .filtros-bar {
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .search-input-wrap {
+    position: relative;
+  }
+  .search-input-wrap i {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: #a8a29e;
+    font-size: 15px;
+  }
+  .search-input-wrap input {
+    padding-left: 36px;
+    border-radius: 10px;
+    border: 1.5px solid #e7e5e4;
+    font-size: 13px;
+    height: 38px;
+  }
+  .search-input-wrap input:focus {
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    outline: none;
+  }
+
+  /* Category tabs */
+  .cat-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cat-tab {
+    background: #f5f5f4;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #78716c;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .cat-tab:hover  { border-color: #f97316; color: #f97316; background: #fff7ed; }
+  .cat-tab.active { background: #f97316; border-color: #f97316; color: #fff; }
+
+  /* Filtro descuento */
+  .descuento-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #f5f5f4;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #78716c;
+    transition: all 0.2s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .descuento-toggle.active { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
+  .descuento-toggle i { font-size: 14px; }
+
+  /* Precio range */
+  .precio-range-wrap { min-width: 180px; }
+  .precio-range-wrap label { font-size: 11px; color: #78716c; font-weight: 600; }
+  .precio-range-wrap input[type=range] {
+    accent-color: #f97316;
+    width: 100%;
+  }
+  .precio-badge {
+    font-size: 11px;
+    background: #fff7ed;
+    color: #f97316;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #fed7aa;
+  }
+
+  /* Contador resultados */
+  .resultados-count {
+    font-size: 12px;
+    color: #a8a29e;
+    font-weight: 500;
+  }
+  .resultados-count strong { color: #f97316; }
+
+  /* ── MENU CARDS ── */
+  .menu-grid { display: flex; flex-direction: column; gap: 20px; }
+
+  .cat-section { }
+  .cat-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #a8a29e;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e7e5e4;
+  }
+
+  .menu-items-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+
+  .menu-card {
+    background: #fff;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-card:hover { border-color: #f97316; box-shadow: 0 4px 16px rgba(249,115,22,0.12); transform: translateY(-2px); }
+  .menu-card.hidden { display: none !important; }
+
+  .menu-card-img {
+    height: 110px;
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  .menu-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .menu-card-img .no-img { font-size: 2rem; opacity: 0.3; }
+  .menu-card-img .descuento-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: #dc2626; color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px;
+  }
+
+  .menu-card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+  .menu-card-name { font-weight: 700; font-size: 13px; color: #1c1917; margin-bottom: 4px; line-height: 1.3; }
+  .menu-card-precio { margin-bottom: 10px; }
+  .precio-original { font-size: 11px; color: #a8a29e; text-decoration: line-through; }
+  .precio-final { font-size: 16px; font-weight: 800; color: #16a34a; }
+
+  .add-form { margin-top: auto; }
+  .add-form .input-group { gap: 4px; }
+  .add-form input[type=number] {
+    border-radius: 8px !important;
+    border: 1.5px solid #e7e5e4;
+    font-size: 13px;
+    text-align: center;
+    width: 60px;
+    padding: 6px 4px;
+  }
+  .add-form input[type=number]:focus { border-color: #f97316; outline: none; box-shadow: none; }
+  .add-form .obs-input {
+    border-radius: 8px;
+    border: 1.5px solid #e7e5e4;
+    font-size: 11px;
+    padding: 5px 8px;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .add-form .obs-input:focus { border-color: #f97316; outline: none; }
+  .btn-add {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    flex: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-add:hover { transform: scale(1.03); box-shadow: 0 3px 10px rgba(249,115,22,0.35); }
+
+  /* Sin resultados */
+  .no-results {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    color: #a8a29e;
+  }
+  .no-results i { font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 12px; }
+
+  /* ── CARRITO ── */
+  .carrito-card {
+    background: #fff;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 16px;
+    overflow: hidden;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .carrito-header {
+    background: linear-gradient(135deg, #1c1917, #292524);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .carrito-header h5 { color: #fff; margin: 0; font-weight: 700; font-size: 15px; }
+  .carrito-count {
+    background: #f97316; color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    margin-left: auto;
+  }
+  .carrito-body { max-height: 320px; overflow-y: auto; padding: 16px; }
+  .carrito-item {
+    display: flex; align-items: flex-start;
+    gap: 8px; padding: 10px 0;
+    border-bottom: 1px solid #f5f5f4;
+    font-size: 13px;
+  }
+  .carrito-item:last-child { border-bottom: none; }
+  .carrito-item-name { flex: 1; font-weight: 600; color: #1c1917; line-height: 1.3; }
+  .carrito-item-obs  { font-size: 11px; color: #a8a29e; }
+  .carrito-item-precio { font-weight: 700; color: #16a34a; white-space: nowrap; }
+  .btn-remove {
+    background: none; border: none; color: #dc2626;
+    font-size: 14px; cursor: pointer; padding: 0 2px;
+    transition: transform 0.2s;
+  }
+  .btn-remove:hover { transform: scale(1.2); }
+  .carrito-empty { text-align: center; padding: 30px; color: #a8a29e; font-size: 13px; }
+  .carrito-empty i { font-size: 2.5rem; opacity: 0.2; display: block; margin-bottom: 8px; }
+
+  /* Temporal */
+  .temporal-section {
+    border-top: 1px solid #f5f5f4;
+    padding: 12px 16px;
+    background: #fafaf9;
+  }
+  .temporal-section summary {
+    font-size: 12px; font-weight: 600; color: #78716c;
+    cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .temporal-section summary::before { content: '＋'; font-size: 14px; color: #f97316; }
+  .temporal-form { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .temporal-form input {
+    border: 1.5px solid #e7e5e4; border-radius: 8px;
+    padding: 7px 10px; font-size: 12px;
+  }
+  .temporal-form input:focus { border-color: #f97316; outline: none; }
+  .btn-temporal {
+    background: #fef3c7; color: #b45309;
+    border: 1.5px solid #fde68a;
+    border-radius: 8px; padding: 7px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-temporal:hover { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+  /* Footer carrito */
+  .carrito-footer { padding: 16px; border-top: 1px solid #e7e5e4; background: #fafaf9; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .total-label { font-size: 13px; color: #78716c; font-weight: 600; }
+  .total-valor { font-size: 22px; font-weight: 800; color: #16a34a; }
+
+  /* Formulario cliente */
+  .form-cliente { display: flex; flex-direction: column; gap: 10px; }
+  .form-cliente .form-control, .form-cliente .form-select {
+    border: 1.5px solid #e7e5e4; border-radius: 10px;
+    font-size: 13px; padding: 9px 12px;
+  }
+  .form-cliente .form-control:focus, .form-cliente .form-select:focus {
+    border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.15); outline: none;
+  }
+  .form-cliente label { font-size: 12px; font-weight: 600; color: #78716c; margin-bottom: 3px; }
+
+  .btn-confirmar {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 12px; font-weight: 800; font-size: 14px;
+    width: 100%; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(22,163,74,0.3);
+  }
+  .btn-confirmar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,0.4); }
+  .btn-confirmar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-actualizar {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+  }
+  .btn-actualizar:hover { box-shadow: 0 6px 20px rgba(249,115,22,0.4); }
+
+  /* Usuario badge */
+  .usuario-badge {
+    background: #f5f5f4; border: 1px solid #e7e5e4;
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 12px; color: #78716c;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .usuario-badge strong { color: #1c1917; }
+  .usuario-badge .badge { font-size: 10px; }
+
+  /* ── DARK MODE ── */
+  body.dark .filtros-bar { background: #242526; border-color: #3A3B3C; }
+  body.dark .search-input-wrap input { background: #2f3031; border-color: #3A3B3C; color: #CCC; }
+  body.dark .search-input-wrap input:focus { border-color: #f97316; }
+  body.dark .search-input-wrap input::placeholder { color: #666; }
+  body.dark .cat-tab { background: #2f3031; border-color: #3A3B3C; color: #999; }
+  body.dark .cat-tab:hover { background: rgba(249,115,22,0.1); color: #f97316; border-color: #f97316; }
+  body.dark .cat-tab.active { background: #f97316; color: #fff; }
+  body.dark .descuento-toggle { background: #2f3031; border-color: #3A3B3C; color: #999; }
+  body.dark .descuento-toggle.active { background: #3a2a00; border-color: #f59e0b; color: #fcd34d; }
+  body.dark .cat-section-title { color: #666; }
+  body.dark .cat-section-title::after { background: #3A3B3C; }
+  body.dark .menu-card { background: #242526; border-color: #3A3B3C; }
+  body.dark .menu-card:hover { border-color: #f97316; }
+  body.dark .menu-card-img { background: linear-gradient(135deg, #2a1a08, #3a2010); }
+  body.dark .menu-card-name { color: #CCC; }
+  body.dark .add-form input[type=number] { background: #2f3031; border-color: #3A3B3C; color: #CCC; }
+  body.dark .add-form .obs-input { background: #2f3031; border-color: #3A3B3C; color: #CCC; }
+  body.dark .carrito-card { background: #242526; border-color: #3A3B3C; }
+  body.dark .carrito-item { border-color: #3A3B3C; }
+  body.dark .carrito-item-name { color: #CCC; }
+  body.dark .carrito-footer { background: #1c1917; border-color: #3A3B3C; }
+  body.dark .temporal-section { background: #1c1917; border-color: #3A3B3C; }
+  body.dark .temporal-form input { background: #2f3031; border-color: #3A3B3C; color: #CCC; }
+  body.dark .form-cliente .form-control,
+  body.dark .form-cliente .form-select { background: #2f3031; border-color: #3A3B3C; color: #CCC; }
+  body.dark .form-cliente label { color: #999; }
+  body.dark .usuario-badge { background: #2f3031; border-color: #3A3B3C; color: #999; }
+  body.dark .usuario-badge strong { color: #CCC; }
+  body.dark .resultados-count { color: #666; }
+  body.dark .no-results { color: #555; }
+  body.dark .precio-range-wrap label { color: #999; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid py-3">
+<div class="row g-3">
 
-        <!-- Menús disponibles -->
-        <div class="col-lg-8">
-            <h2 class="mb-4 text-primary">
-                <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Pedido
-            </h2>
-            <div class="alert alert-light border-start border-4 border-primary py-2 px-3 mb-4">
-    <strong>Usuario:</strong>
-    {{ request.user.get_full_name|default:request.user.username }}
-    <span class="badge bg-secondary ms-2">
-        {{ request.user.cargo|title }}
-    </span>
-</div>
+  <!-- ═══ IZQUIERDA: Menús ═══ -->
+  <div class="col-lg-8">
 
+    <!-- Título -->
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <h4 class="mb-0 fw-bold" style="color: var(--text-color);">
+        <i class="bi bi-plus-circle me-2" style="color:#f97316;"></i>
+        {% if editando %}Editar Pedido{% else %}Nuevo Pedido{% endif %}
+      </h4>
+    </div>
 
-            {% for categoria, menus in menus_por_categoria.items %}
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white fw-bold">
-                    Productos
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for menu in menus %}
-                        <div class="col-md-6 mb-3">
-                            <div class="border rounded p-3 h-100 d-flex flex-column bg-light">
-                                <h6 class="fw-bold text-dark">{{ menu.nombre }}</h6>
+    <!-- Usuario -->
+    <div class="usuario-badge">
+      <i class="bi bi-person-circle" style="color:#f97316;font-size:16px;"></i>
+      <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+      <span class="badge bg-secondary">{{ request.user.cargo|title }}</span>
+    </div>
 
-                                {% if menu.descuento > 0 %}
-                                <p class="mb-2">
-                                    <del class="text-muted">${{ menu.precio_base }}</del>
-                                    <strong class="text-success fs-5"> ${{ menu.get_precio_final }}</strong>
-                                    <span class="badge bg-danger">-{{ menu.descuento }}%</span>
-                                </p>
-                                {% else %}
-                                <p class="text-success fw-bold fs-4 mb-2">${{ menu.get_precio_final }}</p>
-                                {% endif %}
+    <!-- ═══ FILTROS ═══ -->
+    <div class="filtros-bar">
 
-                                <form method="post" class="mt-auto">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="accion" value="agregar">
-                                    <input type="hidden" name="menu_id" value="{{ menu.id }}">
-                                    <div class="input-group">
-                                        <input type="number" name="cantidad" value="1" min="1" class="form-control">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="bi bi-plus-lg"></i> Agregar
-                                        </button>
-                                    </div>
-                                    <input type="text" name="observaciones" placeholder="Ej: Sin cebolla" class="form-control form-control-sm mt-2">
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="alert alert-info text-center">
-                <i class="bi bi-emoji-frown"></i> No hay menús disponibles.
-            </div>
-            {% endfor %}
+      <div class="row g-2 align-items-center mb-3">
+
+        <!-- Búsqueda -->
+        <div class="col-12 col-sm-5">
+          <div class="search-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="buscar-menu" placeholder="Buscar plato..." autocomplete="off">
+          </div>
         </div>
 
-        <!-- Carrito + Formulario Cliente -->
-        <div class="col-lg-4">
-            <div class="card border-primary shadow sticky-top" style="top: 20px;">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0">
-                        <i class="bi bi-cart4"></i> Carrito
-                        <span class="badge bg-light text-dark">{{ items_carrito|length }}</span>
-                    </h4>
+        <!-- Precio máximo -->
+        <div class="col-12 col-sm-4 precio-range-wrap">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Precio máx.</label>
+            <span class="precio-badge" id="precio-label">Todos</span>
+          </div>
+          <input type="range" id="precio-range" min="0" max="200000" step="1000" value="200000">
+        </div>
+
+        <!-- Solo descuento -->
+        <div class="col-12 col-sm-3 d-flex justify-content-end">
+          <div class="descuento-toggle" id="descuento-toggle">
+            <i class="bi bi-tag-fill"></i> Solo oferta
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabs categorías -->
+      <div class="cat-tabs" id="cat-tabs">
+        <div class="cat-tab active" data-cat="todas">🍽 Todas</div>
+        {% for categoria in menus_por_categoria.keys %}
+        <div class="cat-tab" data-cat="{{ categoria }}">{{ categoria }}</div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Contador resultados -->
+    <div class="resultados-count mb-3" id="resultados-count"></div>
+
+    <!-- ═══ MENÚS ═══ -->
+    <div class="menu-grid" id="menu-grid">
+      {% for categoria, menus in menus_por_categoria.items %}
+      <div class="cat-section" data-seccion="{{ categoria }}">
+        <div class="cat-section-title">{{ categoria }}</div>
+        <div class="menu-items-row">
+          {% for menu in menus %}
+          <div class="menu-card"
+               data-nombre="{{ menu.nombre|lower }}"
+               data-cat="{{ categoria }}"
+               data-precio="{{ menu.get_precio_final }}"
+               data-descuento="{{ menu.descuento|default:0 }}">
+
+            <div class="menu-card-img">
+              {% if menu.imagen %}
+                <img src="{{ menu.imagen.url }}" alt="{{ menu.nombre }}">
+              {% else %}
+                <i class="bi bi-egg-fried no-img"></i>
+              {% endif %}
+              {% if menu.descuento > 0 %}
+                <span class="descuento-badge">-{{ menu.descuento }}%</span>
+              {% endif %}
+            </div>
+
+            <div class="menu-card-body">
+              <div class="menu-card-name">{{ menu.nombre }}</div>
+              <div class="menu-card-precio">
+                {% if menu.descuento > 0 %}
+                  <div class="precio-original">${{ menu.precio_base }}</div>
+                {% endif %}
+                <div class="precio-final">${{ menu.get_precio_final }}</div>
+              </div>
+
+              <form method="post" class="add-form">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="agregar">
+                <input type="hidden" name="menu_id" value="{{ menu.id }}">
+                <div class="d-flex gap-1">
+                  <input type="number" name="cantidad" value="1" min="1">
+                  <button type="submit" class="btn-add">
+                    <i class="bi bi-plus-lg me-1"></i>Agregar
+                  </button>
                 </div>
+                <input type="text" name="observaciones" placeholder="Ej: Sin cebolla" class="obs-input">
+              </form>
+            </div>
 
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="alert alert-info text-center">
+        <i class="bi bi-emoji-frown"></i> No hay menús disponibles.
+      </div>
+      {% endfor %}
+    </div>
 
-    <!-- 🔸 PRODUCTO TEMPORAL (AQUÍ VA) -->
-    <div class="mb-3">
-        <h6 class="text-muted">Producto temporal</h6>
+    <!-- Sin resultados -->
+    <div class="no-results" id="no-results">
+      <i class="bi bi-search"></i>
+      No se encontraron platos con ese filtro.
+      <br><small>Intenta con otro nombre o categoría.</small>
+    </div>
 
-        <form method="post" class="border p-2 rounded bg-light">
+  </div>
+
+  <!-- ═══ DERECHA: Carrito ═══ -->
+  <div class="col-lg-4">
+    <div class="carrito-card">
+
+      <!-- Header -->
+      <div class="carrito-header">
+        <i class="bi bi-cart4" style="color:#f97316;font-size:18px;"></i>
+        <h5>Carrito</h5>
+        <span class="carrito-count">{{ items_carrito|length }} item(s)</span>
+      </div>
+
+      <!-- Items carrito -->
+      <div class="carrito-body">
+        {% if items_carrito %}
+          {% for item in items_carrito %}
+          <div class="carrito-item">
+            <div class="flex-grow-1">
+              <div class="carrito-item-name">
+                <span style="color:#f97316;font-weight:800;">{{ item.cantidad }}×</span>
+                {% if item.tipo == 'menu' %}{{ item.menu.nombre }}
+                {% else %}{{ item.nombre }} <span style="font-size:10px;color:#a8a29e;">(temporal)</span>
+                {% endif %}
+              </div>
+              {% if item.tipo == 'menu' and item.observaciones %}
+              <div class="carrito-item-obs">{{ item.observaciones }}</div>
+              {% endif %}
+            </div>
+            <div class="carrito-item-precio">${{ item.subtotal|floatformat:2 }}</div>
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="eliminar">
+              <input type="hidden" name="key" value="{{ item.key }}">
+              <button class="btn-remove" title="Quitar">✖</button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="carrito-empty">
+            <i class="bi bi-cart-x"></i>
+            El carrito está vacío
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Producto temporal -->
+      <div class="temporal-section">
+        <details>
+          <summary>Agregar producto temporal</summary>
+          <form method="post" class="temporal-form">
             {% csrf_token %}
             <input type="hidden" name="accion" value="agregar_temporal">
+            <input type="text" name="nombre" placeholder="Nombre del producto" required>
+            <input type="number" name="precio" step="0.01" placeholder="Precio" required>
+            <input type="number" name="cantidad" value="1" min="1" placeholder="Cantidad">
+            <button type="submit" class="btn-temporal">＋ Agregar temporal</button>
+          </form>
+        </details>
+      </div>
 
-            <input type="text" name="nombre"
-                   class="form-control mb-2"
-                   placeholder="Ej: Adicional de pollo" required>
+      <!-- Footer: total + formulario -->
+      <div class="carrito-footer">
 
-            <input type="number" name="precio" step="0.01"
-                   class="form-control mb-2"
-                   placeholder="Precio" required>
-
-            <input type="number" name="cantidad" value="1"
-                   class="form-control mb-2" min="1">
-
-            <button class="btn btn-warning w-100">
-                + Agregar producto temporal
-            </button>
-        </form>
-    </div>
-                        {% if items_carrito %}
-    {% for item in items_carrito %}
-
-        {% if item.tipo == 'menu' %}
-            <div class="border-bottom pb-2 mb-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>{{ item.cantidad }}×</strong> {{ item.menu.nombre }}
-
-                        {% if item.observaciones %}
-                            <br><small class="text-muted">{{ item.observaciones }}</small>
-                        {% endif %}
-                    </div>
-                            <form method="post" class="mt-1">
-                        {% csrf_token %}
-                        <input type="hidden" name="accion" value="eliminar">
-                        <input type="hidden" name="key" value="{{ item.key }}">
-                        <button class="btn btn-sm btn-outline-danger">
-                            ✖
-                        </button>
-                    </form>
-
-
-                    <div class="text-end">
-                        <strong>${{ item.subtotal|floatformat:2 }}</strong>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <div class="border-bottom pb-2 mb-2 bg-light rounded p-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>{{ item.cantidad }}×</strong> {{ item.nombre }}
-                        <br><small class="text-muted">Producto temporal</small>
-                    </div>
-                         <form method="post" class="mt-1">
-    {% csrf_token %}
-    <input type="hidden" name="accion" value="eliminar">
-    <input type="hidden" name="key" value="{{ item.key }}">
-    <button class="btn btn-sm btn-outline-danger">✖</button>
-</form>
-
-
-                    <div class="text-end">
-                        <strong>${{ item.subtotal|floatformat:2 }}</strong>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-    {% endfor %}
-{% else %}
-    <p class="text-center text-muted my-5">El carrito está vacío</p>
-{% endif %}
-                </div>
-
-                <div class="card-footer bg-light">
-                    <div class="text-end mb-3">
-                        <h3 class="text-success">Total: ${{ total|floatformat:2 }}</h3>
-                    </div>
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="accion" value="confirmar">
-
-                        {% if form.errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                <strong>{{ error }}</strong><br>
-                            {% endfor %}
-                            {% for field in form %}
-                                {% for error in field.errors %}
-                                    <strong>{{ field.label }}:</strong> {{ error }}<br>
-                                {% endfor %}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nombre del Cliente *</label>
-                            {{ form.cliente_nombre }}
-                        </div>
-                        <div class="mb-3">
-    <label class="form-label fw-bold">Tipo de pedido</label>
-    {{ form.tipo_pedido }}
-</div>
-
-<div class="mb-3" id="mesa-container">
-    <label class="form-label fw-bold">Mesa</label>
-    {{ form.mesa }}
-    <small class="text-muted">
-        Solo mesas disponibles
-    </small>
-</div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Observaciones</label>
-                            {{ form.observaciones }}
-                        </div>
-
-                        {% if editando %}
-    <button type="submit"
-            class="btn btn-warning btn-lg w-100"
-            {% if not items_carrito %}disabled{% endif %}>
-        🔄 Actualizar Pedido
-    </button>
-{% else %}
-    <button type="submit"
-            class="btn btn-success btn-lg w-100"
-            {% if not items_carrito %}disabled{% endif %}>
-        ✅ Confirmar Pedido
-    </button>
-{% endif %}
-                    </form>
-                </div>
-            </div>
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-valor">${{ total|floatformat:2 }}</span>
         </div>
 
+        {% if form.errors %}
+        <div class="alert alert-danger mb-3" style="font-size:12px;border-radius:10px;">
+          {% for field in form %}{% for error in field.errors %}<strong>{{ field.label }}:</strong> {{ error }}<br>{% endfor %}{% endfor %}
+          {% for error in form.non_field_errors %}<strong>{{ error }}</strong><br>{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="form-cliente">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="confirmar">
+
+          <div>
+            <label>Cliente *</label>
+            {{ form.cliente_nombre }}
+          </div>
+          <div>
+            <label>Tipo de pedido</label>
+            {{ form.tipo_pedido }}
+          </div>
+          <div id="mesa-container">
+            <label>Mesa</label>
+            {{ form.mesa }}
+          </div>
+          <div>
+            <label>Observaciones</label>
+            {{ form.observaciones }}
+          </div>
+
+          {% if editando %}
+          <button type="submit" class="btn-confirmar btn-actualizar"
+                  {% if not items_carrito %}disabled{% endif %}>
+            🔄 Actualizar Pedido
+          </button>
+          {% else %}
+          <button type="submit" class="btn-confirmar"
+                  {% if not items_carrito %}disabled{% endif %}>
+            ✅ Confirmar Pedido
+          </button>
+          {% endif %}
+        <button onclick="history.back()" class="btn btn-sm btn-outline-secondary">
+  <i class="bi bi-arrow-left me-1"></i>Volver
+</button>
+        </form>
+
+      </div>
     </div>
+  </div>
+
 </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const tipoPedido = document.getElementById('id_tipo_pedido');
-    const mesaContainer = document.getElementById('mesa-container');
 
-    function toggleMesa() {
-        if (!tipoPedido) return;
+  // ── Mesa toggle ──
+  const tipoPedido = document.getElementById('id_tipo_pedido');
+  const mesaCont   = document.getElementById('mesa-container');
+  function toggleMesa() {
+    if (!tipoPedido) return;
+    mesaCont.style.display = tipoPedido.value === 'llevar' ? 'none' : 'block';
+  }
+  toggleMesa();
+  if (tipoPedido) tipoPedido.addEventListener('change', toggleMesa);
 
-        if (tipoPedido.value === 'llevar') {
-            mesaContainer.style.display = 'none';
-        } else {
-            mesaContainer.style.display = 'block';
-        }
-    }
+  // ── Variables filtro ──
+  const cards      = document.querySelectorAll('.menu-card');
+  const secciones  = document.querySelectorAll('.cat-section');
+  const buscarInp  = document.getElementById('buscar-menu');
+  const precioInp  = document.getElementById('precio-range');
+  const precioLbl  = document.getElementById('precio-label');
+  const descToggle = document.getElementById('descuento-toggle');
+  const catTabs    = document.querySelectorAll('.cat-tab');
+  const noResults  = document.getElementById('no-results');
+  const resCount   = document.getElementById('resultados-count');
 
-    toggleMesa();
-    tipoPedido.addEventListener('change', toggleMesa);
+  let catActiva     = 'todas';
+  let soloDescuento = false;
+  let precioMax     = 200000;
+
+  // Calcular precio máximo real
+  let maxPrecioReal = 0;
+  cards.forEach(c => {
+    const p = parseFloat(c.dataset.precio) || 0;
+    if (p > maxPrecioReal) maxPrecioReal = p;
+  });
+  if (maxPrecioReal > 0) {
+    precioInp.max   = maxPrecioReal;
+    precioInp.value = maxPrecioReal;
+    precioMax       = maxPrecioReal;
+  }
+
+  function formatPrecio(v) {
+    return '$' + parseInt(v).toLocaleString('es-CO');
+  }
+
+  function filtrar() {
+    const texto  = buscarInp.value.toLowerCase().trim();
+    precioMax    = parseFloat(precioInp.value);
+    let visibles = 0;
+
+    cards.forEach(card => {
+      const nombre    = card.dataset.nombre || '';
+      const cat       = card.dataset.cat    || '';
+      const precio    = parseFloat(card.dataset.precio) || 0;
+      const descuento = parseInt(card.dataset.descuento) || 0;
+
+      const okNombre    = !texto || nombre.includes(texto);
+      const okCat       = catActiva === 'todas' || cat === catActiva;
+      const okPrecio    = precio <= precioMax;
+      const okDescuento = !soloDescuento || descuento > 0;
+
+      if (okNombre && okCat && okPrecio && okDescuento) {
+        card.classList.remove('hidden');
+        visibles++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    // Ocultar secciones vacías
+    secciones.forEach(sec => {
+      const tieneVisibles = sec.querySelectorAll('.menu-card:not(.hidden)').length > 0;
+      const catSec = sec.dataset.seccion;
+      sec.style.display = (catActiva === 'todas' || catSec === catActiva) && tieneVisibles ? '' : 'none';
+    });
+
+    noResults.style.display  = visibles === 0 ? 'block' : 'none';
+    resCount.innerHTML = visibles === cards.length
+      ? `<strong>${cards.length}</strong> platos disponibles`
+      : `<strong>${visibles}</strong> de <strong>${cards.length}</strong> platos`;
+  }
+
+  // ── Eventos ──
+  buscarInp.addEventListener('input', filtrar);
+
+  precioInp.addEventListener('input', function () {
+    const v = parseFloat(this.value);
+    precioLbl.textContent = v >= parseFloat(this.max) ? 'Todos' : formatPrecio(v);
+    filtrar();
+  });
+
+  descToggle.addEventListener('click', function () {
+    soloDescuento = !soloDescuento;
+    this.classList.toggle('active', soloDescuento);
+    filtrar();
+  });
+
+  catTabs.forEach(tab => {
+    tab.addEventListener('click', function () {
+      catTabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      catActiva = this.dataset.cat;
+      filtrar();
+    });
+  });
+
+  filtrar();
 });
 </script>
-
-
-
-
 {% endblock %}
-

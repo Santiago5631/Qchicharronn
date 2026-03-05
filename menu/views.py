@@ -540,14 +540,9 @@ class PedidoUpdateEstadoView(RolRequeridoMixin, View):
         pedido.save()
 
         if pedido.estado == 'entregado' and estado_anterior != 'entregado':
-            if hasattr(pedido, 'venta'):
-                venta = pedido.venta
-                venta.estado = 'pagado'
-                venta.save()
-
             messages.success(
                 request,
-                f'Pedido #{pedido.numero_pedido} entregado y facturado correctamente.'
+                f'Pedido #{pedido.numero_pedido} marcado como entregado. La venta debe cerrarse desde el módulo de ventas.'
             )
         else:
             messages.success(

@@ -17,7 +17,73 @@ def consultar_stock(nombre_producto: str = None):
     if nombre_producto:
         qs = qs.filter(nombre__icontains=nombre_producto)
 
-    productos = []
+    productos = [    {
+        "type": "function",
+        "function": {
+            "name": "mesas_ocupadas",
+            "description": "Muestra qué mesas tienen pedidos activos ahora mismo y cuántas están libres.",
+            "parameters": {"type": "object", "properties": {}, "required": []}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "consultar_pedido",
+            "description": "Consulta el estado y detalle de un pedido específico por su número (ej: PED-00015).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "numero_pedido": {"type": "string", "description": "Número del pedido a consultar"}
+                },
+                "required": ["numero_pedido"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cambiar_estado_pedido",
+            "description": "Cambia el estado de un pedido. Estados válidos: pendiente, preparando, listo, entregado, cancelado.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "numero_pedido": {"type": "string", "description": "Número del pedido"},
+                    "nuevo_estado": {"type": "string", "description": "Nuevo estado: pendiente, preparando, listo, entregado, cancelado"}
+                },
+                "required": ["numero_pedido", "nuevo_estado"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "top_ventas",
+            "description": "Retorna los productos más vendidos en los últimos N días.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dias": {"type": "integer", "description": "Número de días hacia atrás. Default: 7"},
+                    "limite": {"type": "integer", "description": "Cuántos productos mostrar. Default: 10"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "ventas_por_mesero",
+            "description": "Muestra el total de ventas agrupado por mesero en los últimos N días.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dias": {"type": "integer", "description": "Número de días hacia atrás. Default: 7"}
+                },
+                "required": []
+            }
+        }
+    },
+]
     for p in qs:
         productos.append({
             'id': p.id,
@@ -324,10 +390,182 @@ TOOLS_GROQ = [
 ]
 
 # Mapa nombre → función Python
+
+# ── NUEVAS TOOLS ───────────────────────────────────────────────────────────────
+
+def mesas_ocupadas():
+    """Retorna mesas con pedidos activos en este momento."""
+    from menu.models import Pedido
+    from mesa.models import Mesa
+
+    pedidos_activos = Pedido.objects.filter(
+        estado__in=['pendiente', 'preparando', 'listo'],
+        mesa__isnull=False
+    ).select_related('mesa', 'mesero').prefetch_related('items__menu')
+
+    mesas = []
+    for p in pedidos_activos:
+        items = [f"{i.cantidad}x {i.menu.nombre}" for i in p.items.all() if i.menu]
+        mesas.append({
+            'mesa': str(p.mesa),
+            'pedido': p.numero_pedido,
+            'estado': p.get_estado_display(),
+            'mesero': p.mesero.get_full_name() if p.mesero else 'Sin asignar',
+            'items': items,
+            'total': float(p.total),
+            'tiempo': p.fecha_creacion.strftime('%H:%M'),
+        })
+
+    mesas_libres = Mesa.objects.exclude(
+        pedido__estado__in=['pendiente', 'preparando', 'listo']
+    ).count()
+
+    return {
+        'mesas_ocupadas': len(mesas),
+        'mesas_libres': mesas_libres,
+        'detalle': mesas,
+    }
+
+
+def consultar_pedido(numero_pedido: str):
+    """Consulta el estado y detalle de un pedido específico por número."""
+    from menu.models import Pedido
+
+    try:
+        pedido = Pedido.objects.prefetch_related(
+            'items__menu'
+        ).select_related('mesa', 'mesero').get(numero_pedido__icontains=numero_pedido)
+    except Pedido.DoesNotExist:
+        return {'error': f'No se encontró el pedido {numero_pedido}'}
+    except Pedido.MultipleObjectsReturned:
+        return {'error': f'Hay múltiples pedidos con ese número, sé más específico'}
+
+    items = [
+        f"{i.cantidad}x {i.menu.nombre} (${float(i.get_total())})"
+        for i in pedido.items.all() if i.menu
+    ]
+
+    return {
+        'numero': pedido.numero_pedido,
+        'estado': pedido.get_estado_display(),
+        'cliente': pedido.cliente_nombre,
+        'mesa': str(pedido.mesa) if pedido.mesa else 'Para llevar',
+        'mesero': pedido.mesero.get_full_name() if pedido.mesero else 'Sin asignar',
+        'items': items,
+        'total': float(pedido.total),
+        'creado': pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
+        'actualizado': pedido.fecha_actualizacion.strftime('%d/%m/%Y %H:%M'),
+    }
+
+
+def cambiar_estado_pedido(numero_pedido: str, nuevo_estado: str):
+    """Cambia el estado de un pedido específico."""
+    from menu.models import Pedido
+
+    estados_validos = ['pendiente', 'preparando', 'listo', 'entregado', 'cancelado']
+    if nuevo_estado not in estados_validos:
+        return {'error': f'Estado inválido. Usa uno de: {", ".join(estados_validos)}'}
+
+    try:
+        pedido = Pedido.objects.select_related('mesero').get(
+            numero_pedido__icontains=numero_pedido
+        )
+    except Pedido.DoesNotExist:
+        return {'error': f'No se encontró el pedido {numero_pedido}'}
+
+    if pedido.estado == 'entregado':
+        return {'error': 'Este pedido ya fue entregado y no puede modificarse'}
+    if pedido.estado == 'cancelado':
+        return {'error': 'Este pedido ya fue cancelado y no puede modificarse'}
+
+    estado_anterior = pedido.get_estado_display()
+    pedido.estado = nuevo_estado
+    pedido.save()
+
+    # Si se entrega, cerrar la venta
+    if nuevo_estado == 'entregado' and hasattr(pedido, 'venta'):
+        pedido.venta.estado = 'pagado'
+        pedido.venta.save()
+
+    return {
+        'exito': True,
+        'numero': pedido.numero_pedido,
+        'estado_anterior': estado_anterior,
+        'estado_nuevo': pedido.get_estado_display(),
+        'venta_cerrada': nuevo_estado == 'entregado',
+    }
+
+
+def top_ventas(dias: int = 7, limite: int = 10):
+    """Retorna los productos más vendidos en los últimos N días."""
+    from venta.models import VentaItem
+    from django.utils import timezone
+    from django.db.models import Sum
+
+    desde = timezone.now() - timezone.timedelta(days=dias)
+
+    top = VentaItem.objects.filter(
+        venta__fecha_venta__gte=desde,
+        venta__estado='pagado'
+    ).values('nombre').annotate(
+        total_vendido=Sum('cantidad'),
+        total_ingresos=Sum('subtotal')
+    ).order_by('-total_vendido')[:limite]
+
+    return {
+        'periodo_dias': dias,
+        'desde': desde.strftime('%d/%m/%Y'),
+        'hasta': timezone.now().strftime('%d/%m/%Y'),
+        'top_productos': [
+            {
+                'nombre': t['nombre'],
+                'cantidad_vendida': t['total_vendido'],
+                'ingresos': float(t['total_ingresos'] or 0),
+            }
+            for t in top
+        ],
+    }
+
+
+def ventas_por_mesero(dias: int = 7):
+    """Retorna el resumen de ventas agrupado por mesero."""
+    from venta.models import Venta
+    from django.utils import timezone
+    from django.db.models import Sum, Count
+
+    desde = timezone.now() - timezone.timedelta(days=dias)
+
+    resultados = Venta.objects.filter(
+        fecha_venta__gte=desde,
+        estado='pagado',
+        mesero__isnull=False
+    ).values(
+        'mesero__nombre', 'mesero__email'
+    ).annotate(
+        total_ventas=Sum('total'),
+        cantidad_ventas=Count('id')
+    ).order_by('-total_ventas')
+
+    return {
+        'periodo_dias': dias,
+        'meseros': [
+            {
+                'mesero': r['mesero__nombre'] or r['mesero__email'],
+                'total_ventas': float(r['total_ventas'] or 0),
+                'cantidad_ventas': r['cantidad_ventas'],
+            }
+            for r in resultados
+        ],
+    }
 FUNCIONES = {
     'consultar_stock': consultar_stock,
     'productos_por_agotarse': productos_por_agotarse,
     'ver_pedidos_activos': ver_pedidos_activos,
     'crear_pedido': crear_pedido,
     'ventas_del_dia': ventas_del_dia,
+    'mesas_ocupadas': mesas_ocupadas,
+    'consultar_pedido': consultar_pedido,
+    'cambiar_estado_pedido': cambiar_estado_pedido,
+    'top_ventas': top_ventas,
+    'ventas_por_mesero': ventas_por_mesero,
 }

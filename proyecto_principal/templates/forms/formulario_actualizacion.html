@@ -84,6 +84,7 @@ ul.errorlist { display: none !important; }
     <h1 class="form-title">{{ titulo }}</h1>
     <form method="post">
         {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
         {{ form.as_p }}
 
         {% if formset %}

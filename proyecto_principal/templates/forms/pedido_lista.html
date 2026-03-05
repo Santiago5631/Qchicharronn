@@ -200,31 +200,22 @@
             </div>
 
             <!-- Acciones -->
-            <div class="mt-auto d-grid gap-2">
-              <a href="{% url 'apl:menu:pedido_detail' pedido.pk %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-eye me-1"></i>Ver Detalle
-              </a>
-              {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
-              <div class="btn-group" role="group">
-                {% if pedido.estado == 'pendiente' %}
-                <button onclick="cambiarEstado({{ pedido.pk }}, 'preparando')" class="btn btn-info btn-sm">
-                  <i class="bi bi-play me-1"></i>Preparar
-                </button>
-                {% elif pedido.estado == 'preparando' %}
-                <button onclick="cambiarEstado({{ pedido.pk }}, 'listo')" class="btn btn-success btn-sm">
-                  <i class="bi bi-check me-1"></i>Marcar Listo
-                </button>
-                {% elif pedido.estado == 'listo' %}
-                <button onclick="cambiarEstado({{ pedido.pk }}, 'entregado')" class="btn btn-primary btn-sm">
-                  <i class="bi bi-box-arrow-right me-1"></i>Entregar
-                </button>
-                {% endif %}
-                <button onclick="cancelarPedido({{ pedido.pk }})" class="btn btn-danger btn-sm">
-                  <i class="bi bi-x-circle me-1"></i>Cancelar
-                </button>
-              </div>
-              {% endif %}
-            </div>
+          <!-- Acciones -->
+<div class="mt-auto d-grid gap-2">
+  <a href="{% url 'apl:menu:pedido_detail' pedido.pk %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-eye me-1"></i>Ver Detalle
+  </a>
+  {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' %}
+  <div class="btn-group" role="group">
+    <button onclick="entregarPedido({{ pedido.pk }})" class="btn btn-success btn-sm">
+      <i class="bi bi-box-arrow-right me-1"></i>Entregar
+    </button>
+    <button onclick="cancelarPedido({{ pedido.pk }})" class="btn btn-danger btn-sm">
+      <i class="bi bi-x-circle me-1"></i>Cancelar
+    </button>
+  </div>
+  {% endif %}
+</div>
 
           </div>
         </div>
@@ -339,11 +330,44 @@ function cambiarEstado(pedidoId, nuevoEstado) {
     form.submit();
   }
 }
+function entregarPedido(pedidoId) {
+  Swal.fire({
+    title: '¿Entregar pedido?',
+    text: 'Se marcará como entregado y se cerrará la venta.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#198754',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, entregar',
+    cancelButtonText: 'Cancelar',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const form = document.getElementById('estadoForm');
+      form.action = `/apps/menus/pedidos/actualizar-estado/${pedidoId}/`;
+      document.getElementById('nuevo_estado').value = 'entregado';
+      form.submit();
+    }
+  });
+}
 
 function cancelarPedido(pedidoId) {
-  if (confirm('¿Está seguro de cancelar este pedido?\n\nEsta acción no se puede deshacer.')) {
-    window.location.href = `/apl/menu/pedidos/cancelar/${pedidoId}/`;
-  }
+  Swal.fire({
+    title: '¿Cancelar pedido?',
+    text: 'Esta acción no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, cancelar',
+    cancelButtonText: 'No, volver',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const form = document.getElementById('estadoForm');
+      form.action = `/apps/menus/pedidos/actualizar-estado/${pedidoId}/`;
+      document.getElementById('nuevo_estado').value = 'cancelado';
+      form.submit();
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', function () {

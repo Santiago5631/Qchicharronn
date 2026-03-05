@@ -1,330 +1,766 @@
 {% extends 'dashboard/layout.html' %}
 {% load static %}
 
+{% block title %}{{ title }} - Q'Chicharron{% endblock %}
+
+{% block css_plugins %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --fire: #f97316;
+    --fire-dark: #ea580c;
+    --fire-glow: rgba(249,115,22,0.15);
+    --charcoal: #1c1917;
+    --smoke: #292524;
+    --ash: #44403c;
+    --cream: #fafaf9;
+    --border: #e7e5e4;
+    --success: #16a34a;
+    --danger: #dc2626;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; }
+
+  /* ── PAGE HEADER ── */
+  .menu-form-header {
+    background: linear-gradient(135deg, var(--charcoal) 0%, var(--smoke) 60%, #3a1d0a 100%);
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu-form-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, var(--fire-glow) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .menu-form-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: #fff;
+    font-size: 1.6rem;
+    margin: 0;
+    position: relative;
+  }
+  .menu-form-header p {
+    color: rgba(255,255,255,0.5);
+    margin: 4px 0 0;
+    font-size: 13px;
+    position: relative;
+  }
+  .header-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--fire), var(--fire-dark));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 8px 24px rgba(249,115,22,0.4);
+    flex-shrink: 0;
+  }
+
+  /* ── SECTION CARDS ── */
+  .section-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
+  }
+  .section-card:focus-within {
+    box-shadow: 0 4px 20px rgba(249,115,22,0.1);
+    border-color: rgba(249,115,22,0.3);
+  }
+  .section-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header.orange { background: linear-gradient(135deg, #fff7ed, #ffedd5); }
+  .section-header.green  { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .section-icon.orange { background: var(--fire-glow); color: var(--fire); }
+  .section-icon.green  { background: rgba(22,163,74,0.1); color: var(--success); }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--charcoal);
+    margin: 0;
+  }
+  .section-body { padding: 24px; }
+
+  /* ── FORM CONTROLS ── */
+  .form-label {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ash);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .form-label .req { color: var(--fire); }
+
+  .form-control, .form-select {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--charcoal);
+    transition: all 0.2s;
+    background: var(--cream);
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--fire);
+    box-shadow: 0 0 0 3px var(--fire-glow);
+    background: #fff;
+    outline: none;
+  }
+  .input-group-text {
+    background: #f5f5f4;
+    border: 1.5px solid var(--border);
+    border-radius: 10px 0 0 10px;
+    color: var(--ash);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .input-group .form-control {
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+  }
+  .input-group:focus-within .input-group-text {
+    border-color: var(--fire);
+  }
+
+  /* Switch disponible */
+  .disponible-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f5f5f4;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    margin-top: 8px;
+  }
+  .form-check-input:checked { background-color: var(--success); border-color: var(--success); }
+
+  /* Textarea */
+  textarea.form-control { resize: vertical; min-height: 90px; }
+
+  /* Image upload */
+  .img-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    background: var(--cream);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .img-upload-area:hover { border-color: var(--fire); background: var(--fire-glow); }
+  .img-upload-area i { font-size: 2rem; color: var(--fire); opacity: 0.7; }
+  .img-upload-area p { font-size: 12px; color: #78716c; margin: 6px 0 0; }
+
+  /* ── FORMSET ── */
+  .formset-row {
+    background: #fafaf9;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .formset-row:hover { border-color: rgba(249,115,22,0.4); background: #fff; }
+  .formset-row .row-num {
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--fire);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* Botón agregar */
+  .btn-add-producto {
+    background: linear-gradient(135deg, var(--fire), var(--fire-dark));
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+  }
+  .btn-add-producto:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249,115,22,0.45);
+    color: #fff;
+  }
+  .btn-add-producto i { font-size: 16px; }
+
+  /* Botón quitar */
+  .btn-quitar {
+    background: #fff1f2;
+    color: var(--danger);
+    border: 1.5px solid #fecdd3;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-quitar:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+  /* Empty state */
+  .empty-formset {
+    text-align: center;
+    padding: 32px;
+    color: #a8a29e;
+  }
+  .empty-formset i { font-size: 3rem; opacity: 0.25; display: block; margin-bottom: 12px; }
+
+  /* ── FOOTER ACTIONS ── */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 8px;
+  }
+  .btn-cancel {
+    background: #f5f5f4;
+    color: var(--ash);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-cancel:hover { background: var(--border); color: var(--charcoal); }
+  .btn-save {
+    background: linear-gradient(135deg, var(--charcoal), var(--smoke));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 32px;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .btn-save:hover {
+    background: linear-gradient(135deg, var(--fire), var(--fire-dark));
+    box-shadow: 0 6px 20px rgba(249,115,22,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Alerts */
+  .alert { border-radius: 12px; border: none; font-size: 14px; }
+  .alert-success { background: #f0fdf4; color: #166534; border-left: 4px solid var(--success); }
+  .alert-danger  { background: #fef2f2; color: #991b1b; border-left: 4px solid var(--danger); }
+  .text-danger.small { font-size: 11px; margin-top: 4px; color: var(--danger) !important; }
+
+  /* Precio preview */
+  .precio-preview {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border: 1.5px solid #fed7aa;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .precio-preview span { font-size: 12px; color: #9a3412; font-weight: 500; }
+  .precio-final-preview { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--fire); }
+
+  /* ══════════════════════════════════════
+     MODO OSCURO
+  ══════════════════════════════════════ */
+  body.dark .menu-form-header {
+    background: linear-gradient(135deg, #0f0e0d 0%, #1c1917 60%, #2a1200 100%);
+  }
+  body.dark .section-card {
+    background: #242526 !important;
+    border-color: #3A3B3C !important;
+  }
+  body.dark .section-header.orange {
+    background: linear-gradient(135deg, #2a1a08, #3a2010) !important;
+  }
+  body.dark .section-header.green {
+    background: linear-gradient(135deg, #0a2a14, #0d3a1a) !important;
+  }
+  body.dark .section-title { color: #CCC !important; }
+  body.dark .section-body  { background: #242526 !important; }
+
+  body.dark .form-label { color: #CCC !important; }
+
+  body.dark .form-control,
+  body.dark .form-select {
+    background-color: #2f3031 !important;
+    border-color: #3A3B3C !important;
+    color: #CCC !important;
+  }
+  body.dark .form-control:focus,
+  body.dark .form-select:focus {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.2) !important;
+    background-color: #2f3031 !important;
+  }
+  body.dark .form-control::placeholder { color: #666 !important; }
+
+  body.dark .input-group-text {
+    background-color: #3A3B3C !important;
+    border-color: #3A3B3C !important;
+    color: #CCC !important;
+  }
+
+  body.dark .disponible-wrap {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+  }
+
+  body.dark .img-upload-area {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+  }
+  body.dark .img-upload-area:hover {
+    background: rgba(249,115,22,0.1) !important;
+    border-color: #f97316 !important;
+  }
+  body.dark .img-upload-area p { color: #888 !important; }
+
+  body.dark .formset-row {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+  }
+  body.dark .formset-row:hover {
+    background: #3A3B3C !important;
+    border-color: rgba(249,115,22,0.4) !important;
+  }
+
+  body.dark .precio-preview {
+    background: linear-gradient(135deg, #2a1a08, #3a2010) !important;
+    border-color: #7c3510 !important;
+  }
+  body.dark .precio-preview span { color: #fdba74 !important; }
+
+  body.dark .btn-cancel {
+    background: #3A3B3C !important;
+    color: #CCC !important;
+    border-color: #4a4b4c !important;
+  }
+  body.dark .btn-cancel:hover {
+    background: #4a4b4c !important;
+    color: #fff !important;
+  }
+
+  body.dark .btn-quitar {
+    background: #3a1a1a !important;
+    border-color: #5a2a2a !important;
+    color: #fca5a5 !important;
+  }
+  body.dark .btn-quitar:hover {
+    background: #dc2626 !important;
+    color: #fff !important;
+    border-color: #dc2626 !important;
+  }
+
+  body.dark .empty-formset { color: #666 !important; }
+
+  body.dark .alert-success {
+    background: #1a3a2a !important;
+    color: #6ee7b7 !important;
+  }
+  body.dark .alert-danger {
+    background: #3a1a1a !important;
+    color: #fca5a5 !important;
+  }
+  body.dark .text-danger.small { color: #f87171 !important; }
+
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <!-- Header -->
-                <div class="card-header text-white py-3">
-                    <h3 class="mb-0">
-                        <i class="bi bi-menu-button-wide me-2"></i>
-                        {{ title }}
-                    </h3>
-                </div>
+<div class="container-fluid py-3" style="max-width: 900px;">
 
-                <div class="card-body">
-                    {% if messages %}
-                        {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    <form method="post" enctype="multipart/form-data" id="menuForm">
-                        {% csrf_token %}
-
-                        <!-- INFORMACIÓN BÁSICA DEL MENÚ -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Menú</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <!-- Nombre -->
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">
-                                            {{ form.nombre.label }}
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        {{ form.nombre }}
-                                        {% if form.nombre.errors %}
-                                            <div class="text-danger small mt-1">{{ form.nombre.errors }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Categoría -->
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">
-                                            {{ form.categoria_menu.label }}
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        {{ form.categoria_menu }}
-                                        {% if form.categoria_menu.errors %}
-                                            <div class="text-danger small mt-1">{{ form.categoria_menu.errors }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Descripción -->
-                                    <div class="col-12 mb-3">
-                                        <label class="form-label fw-bold">{{ form.descripcion.label }}</label>
-                                        {{ form.descripcion }}
-                                        {% if form.descripcion.errors %}
-                                            <div class="text-danger small mt-1">{{ form.descripcion.errors }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Precio Base -->
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-bold">
-                                            {{ form.precio_base.label }}
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            {{ form.precio_base }}
-                                        </div>
-                                        {% if form.precio_base.errors %}
-                                            <div class="text-danger small mt-1">{{ form.precio_base.errors }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Descuento -->
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-bold">{{ form.descuento.label }}</label>
-                                        <div class="input-group">
-                                            {{ form.descuento }}
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                        {% if form.descuento.errors %}
-                                            <div class="text-danger small mt-1">{{ form.descuento.errors }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Disponible -->
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-bold">Estado</label>
-                                        <div class="form-check form-switch mt-2">
-                                            {{ form.disponible }}
-                                            <label class="form-check-label" for="{{ form.disponible.id_for_label }}">
-                                                {{ form.disponible.label }}
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Imagen -->
-                                    <div class="col-12 mb-3">
-                                        <label class="form-label fw-bold">{{ form.imagen.label }}</label>
-                                        {{ form.imagen }}
-                                        <div class="form-text">Formatos permitidos: JPG, PNG. Tamaño máximo: 5MB</div>
-                                        {% if form.imagen.errors %}
-                                            <div class="text-danger small mt-1">{{ form.imagen.errors }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- PRODUCTOS DEL MENÚ -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-basket me-2"></i>
-                                    Productos del Menú
-                                    <span class="badge bg-light text-dark ms-2" id="producto-count">0</span>
-                                </h5>
-                                <button type="button" class="btn btn-add-producto btn-sm" id="add-form">
-                                    <i class="bi bi-plus-circle me-1"></i>
-                                    Agregar Producto
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                {{ formset.management_form }}
-
-                                {% if formset.non_form_errors %}
-                                    <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
-                                {% endif %}
-
-                                <div id="formset-container">
-                                    {% for form in formset %}
-                                    <div class="formset-row" data-form-index="{{ forloop.counter0 }}">
-                                        <div class="row align-items-center">
-                                            {{ form.id }}
-
-                                            <!-- Producto -->
-                                            <div class="col-md-5 mb-3 mb-md-0">
-                                                <label class="form-label fw-bold">
-                                                    <i class="bi bi-box-seam me-1"></i>
-                                                    Producto
-                                                </label>
-                                                {{ form.producto }}
-                                                {% if form.producto.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.producto.errors }}</div>
-                                                {% endif %}
-                                            </div>
-
-                                            <!-- Cantidad -->
-                                            <div class="col-md-3 mb-3 mb-md-0">
-                                                <label class="form-label fw-bold">
-                                                    <i class="bi bi-123 me-1"></i>
-                                                    Cantidad
-                                                </label>
-                                                {{ form.cantidad }}
-                                                {% if form.cantidad.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.cantidad.errors }}</div>
-                                                {% endif %}
-                                            </div>
-
-                                            <!-- Orden -->
-                                            <div class="col-md-2 mb-3 mb-md-0">
-                                                <label class="form-label fw-bold">
-                                                    <i class="bi bi-sort-numeric-down me-1"></i>
-                                                    Orden
-                                                </label>
-                                                {{ form.orden }}
-                                                {% if form.orden.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.orden.errors }}</div>
-                                                {% endif %}
-                                            </div>
-
-                                            <!-- Eliminar -->
-                                            <div class="col-md-2 text-end">
-                                                {% if form.instance.pk %}
-                                                    {{ form.DELETE }}
-                                                    <label for="{{ form.DELETE.id_for_label }}" class="btn btn-danger btn-sm w-100">
-                                                        <i class="bi bi-trash me-1"></i> Eliminar
-                                                    </label>
-                                                {% else %}
-                                                    <button type="button" class="btn btn-danger btn-sm w-100 delete-empty-form">
-                                                        <i class="bi bi-x-circle me-1"></i> Quitar
-                                                    </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-
-                                <div class="empty-formset" id="empty-message" style="display: none;">
-                                    <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
-                                    <p class="mt-2">No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'apl:menu:menu_list' %}" class="btn btn-secondary">
-                                        <i class="bi bi-x-circle me-1"></i>
-                                        Cancelar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save me-1"></i>
-                                        Guardar Menú
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+  <!-- Header -->
+  <div class="menu-form-header">
+    <div class="d-flex align-items-center gap-3">
+      <div class="header-icon">🍽️</div>
+      <div>
+        <h2>{{ title }}</h2>
+        <p>Completa la información del menú y agrega los productos que lo componen</p>
+      </div>
     </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+      <i class="bi bi-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="menuForm">
+    {% csrf_token %}
+
+    <!-- Información básica -->
+    <div class="section-card">
+      <div class="section-header orange">
+        <div class="section-icon orange"><i class="bi bi-info-circle-fill"></i></div>
+        <h5 class="section-title">Información del Menú</h5>
+      </div>
+      <div class="section-body">
+        <div class="row g-3">
+
+          <!-- Nombre -->
+          <div class="col-md-8">
+            <label class="form-label">
+              <i class="bi bi-type"></i> Nombre del Menú <span class="req">*</span>
+            </label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}
+              <div class="text-danger small">{{ form.nombre.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Categoría -->
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-tag"></i> Categoría <span class="req">*</span>
+            </label>
+            {{ form.categoria_menu }}
+            {% if form.categoria_menu.errors %}
+              <div class="text-danger small">{{ form.categoria_menu.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Descripción -->
+          <div class="col-12">
+            <label class="form-label">
+              <i class="bi bi-chat-left-text"></i> Descripción
+            </label>
+            {{ form.descripcion }}
+          </div>
+
+          <!-- Precio -->
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-currency-dollar"></i> Precio Base <span class="req">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              {{ form.precio_base }}
+            </div>
+            {% if form.precio_base.errors %}
+              <div class="text-danger small">{{ form.precio_base.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Descuento -->
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-percent"></i> Descuento
+            </label>
+            <div class="input-group">
+              {{ form.descuento }}
+              <span class="input-group-text" style="border-radius:0 10px 10px 0; border-left:none;">%</span>
+            </div>
+          </div>
+
+          <!-- Disponible -->
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-toggle-on"></i> Estado</label>
+            <div class="disponible-wrap">
+              {{ form.disponible }}
+              <label class="form-check-label mb-0" for="{{ form.disponible.id_for_label }}" style="font-size:13px;font-weight:500;color:#44403c;">
+                {{ form.disponible.label }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Preview precio final -->
+          <div class="col-12">
+            <div class="precio-preview" id="precio-preview" style="display:none;">
+              <span>💰 Precio final con descuento:</span>
+              <span class="precio-final-preview" id="precio-final-val">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Imagen -->
+          <div class="col-12">
+            <label class="form-label"><i class="bi bi-image"></i> Imagen del Menú</label>
+            <div class="img-upload-area" onclick="document.getElementById('{{ form.imagen.id_for_label }}').click()">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <p>Haz clic para subir imagen · JPG, PNG · Máx 5MB</p>
+              <span id="img-name" style="font-size:11px;color:#f97316;font-weight:600;"></span>
+            </div>
+            <div style="display:none;">{{ form.imagen }}</div>
+            {% if form.imagen.errors %}
+              <div class="text-danger small">{{ form.imagen.errors }}</div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Productos -->
+    <div class="section-card">
+      <div class="section-header green">
+        <div class="section-icon green"><i class="bi bi-basket-fill"></i></div>
+        <h5 class="section-title">
+          Productos del Menú
+          <span class="badge ms-2" id="producto-count"
+                style="background:rgba(22,163,74,0.15);color:#166534;font-size:11px;padding:3px 10px;border-radius:20px;">
+            0
+          </span>
+        </h5>
+        <button type="button" class="btn-add-producto ms-auto" id="add-form">
+          <i class="bi bi-plus-circle-fill"></i> Agregar Producto
+        </button>
+      </div>
+      <div class="section-body">
+
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+          <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div id="formset-container">
+          {% for form in formset %}
+          <div class="formset-row" data-form-index="{{ forloop.counter0 }}">
+            <span class="row-num">#{{ forloop.counter }}</span>
+            <div class="row align-items-end g-2 mt-1">
+              {{ form.id }}
+
+              <div class="col-md-5">
+                <label class="form-label"><i class="bi bi-box-seam"></i> Producto</label>
+                {{ form.producto }}
+                {% if form.producto.errors %}
+                  <div class="text-danger small">{{ form.producto.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-123"></i> Cantidad</label>
+                {{ form.cantidad }}
+                {% if form.cantidad.errors %}
+                  <div class="text-danger small">{{ form.cantidad.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label"><i class="bi bi-sort-numeric-down"></i> Orden</label>
+                {{ form.orden }}
+              </div>
+
+              <div class="col-md-2">
+                {% if form.instance.pk %}
+                  {{ form.DELETE }}
+                  <label for="{{ form.DELETE.id_for_label }}" class="btn-quitar">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                  </label>
+                {% else %}
+                  <button type="button" class="btn-quitar delete-empty-form">
+                    <i class="bi bi-x-circle me-1"></i>Quitar
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="empty-formset" id="empty-message" style="display:none;">
+          <i class="bi bi-basket"></i>
+          <p>No hay productos agregados.<br>Haz clic en <strong>Agregar Producto</strong> para comenzar.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="form-actions">
+      <a href="{% url 'apl:menu:menu_list' %}" class="btn-cancel">
+        <i class="bi bi-x-circle"></i>Cancelar
+      </a>
+      <button type="submit" class="btn-save">
+        <i class="bi bi-check-circle-fill"></i>Guardar Menú
+      </button>
+    </div>
+
+  </form>
 </div>
+{% endblock %}
 
+{% block js_custom %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('formset-container');
-    const totalFormsInput = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
-    const addBtn = document.getElementById('add-form');
-    const emptyMessage = document.getElementById('empty-message');
-    const productoCount = document.getElementById('producto-count');
+document.addEventListener('DOMContentLoaded', function () {
+  const container      = document.getElementById('formset-container');
+  const totalForms     = document.querySelector('[name="menu_productos-TOTAL_FORMS"]');
+  const addBtn         = document.getElementById('add-form');
+  const emptyMsg       = document.getElementById('empty-message');
+  const productoCount  = document.getElementById('producto-count');
 
-    function updateProductoCount() {
-        const visibleForms = container.querySelectorAll('.formset-row:not([style*="display: none"])').length;
-        productoCount.textContent = visibleForms;
+  // Imagen — mostrar nombre del archivo
+  const imgInput = document.getElementById('{{ form.imagen.id_for_label }}');
+  if (imgInput) {
+    imgInput.addEventListener('change', function () {
+      const name = this.files[0]?.name || '';
+      document.getElementById('img-name').textContent = name ? `✓ ${name}` : '';
+    });
+  }
 
-        if (visibleForms === 0) {
-            emptyMessage.style.display = 'block';
-        } else {
-            emptyMessage.style.display = 'none';
-        }
+  // Preview precio final
+  const precioInput    = document.getElementById('{{ form.precio_base.id_for_label }}');
+  const descuentoInput = document.getElementById('{{ form.descuento.id_for_label }}');
+  const preview        = document.getElementById('precio-preview');
+  const precioFinalVal = document.getElementById('precio-final-val');
+
+  function actualizarPrecio() {
+    const precio    = parseFloat(precioInput?.value) || 0;
+    const descuento = parseFloat(descuentoInput?.value) || 0;
+    if (precio > 0) {
+      const final = precio * (1 - descuento / 100);
+      precioFinalVal.textContent = `$${final.toLocaleString('es-CO', {minimumFractionDigits: 2})}`;
+      preview.style.display = descuento > 0 ? 'flex' : 'none';
+    } else {
+      preview.style.display = 'none';
     }
+  }
+  precioInput?.addEventListener('input', actualizarPrecio);
+  descuentoInput?.addEventListener('input', actualizarPrecio);
 
-    // Agregar producto
-    if (addBtn) {
-        addBtn.addEventListener('click', function() {
-            const formsetRows = container.querySelectorAll('.formset-row');
+  function updateCount() {
+    const visible = container.querySelectorAll('.formset-row:not([style*="display: none"])').length;
+    productoCount.textContent = visible;
+    emptyMsg.style.display = visible === 0 ? 'block' : 'none';
+    // Actualizar números de fila
+    container.querySelectorAll('.formset-row .row-num').forEach((el, i) => {
+      el.textContent = `#${i + 1}`;
+    });
+  }
 
-            if (formsetRows.length === 0) {
-                alert('Error: No hay formularios base para clonar');
-                return;
-            }
+  // Agregar producto
+  addBtn?.addEventListener('click', function () {
+    const rows = container.querySelectorAll('.formset-row');
+    if (!rows.length) return;
+    const count   = parseInt(totalForms.value);
+    const newForm = rows[rows.length - 1].cloneNode(true);
+    const regex   = /menu_productos-(\d+)-/g;
 
-            const currentCount = parseInt(totalFormsInput.value);
-            const lastForm = formsetRows[formsetRows.length - 1];
-            const newForm = lastForm.cloneNode(true);
+    newForm.innerHTML = newForm.innerHTML.replace(regex, `menu_productos-${count}-`);
+    newForm.setAttribute('data-form-index', count);
 
-            // Reemplazar índices
-            const regex = new RegExp('menu_productos-(\\d+)-', 'g');
-            newForm.innerHTML = newForm.innerHTML.replace(regex, `menu_productos-${currentCount}-`);
-            newForm.setAttribute('data-form-index', currentCount);
-
-            // Limpiar valores
-            newForm.querySelectorAll('input, select, textarea').forEach(el => {
-                if (el.type === 'checkbox') {
-                    el.checked = false;
-                } else if (el.type !== 'hidden') {
-                    el.value = '';
-                }
-
-                // Actualizar name e id
-                if (el.name && el.name.includes('menu_productos-')) {
-                    el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${currentCount}-`);
-                }
-                if (el.id && el.id.includes('menu_productos-')) {
-                    el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${currentCount}-`);
-                }
-            });
-
-            // Agregar
-            container.appendChild(newForm);
-            totalFormsInput.value = currentCount + 1;
-            updateProductoCount();
-        });
-    }
-
-    // Eliminar producto
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-empty-form') ||
-            e.target.closest('.delete-empty-form')) {
-
-            const formRow = e.target.closest('.formset-row');
-            const remainingForms = container.querySelectorAll('.formset-row:not([style*="display: none"])').length;
-
-            if (remainingForms > 1) {
-                formRow.remove();
-                totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
-
-                // Reindexar
-                const forms = container.querySelectorAll('.formset-row');
-                forms.forEach((form, index) => {
-                    form.setAttribute('data-form-index', index);
-                    form.querySelectorAll('input, select, textarea').forEach(el => {
-                        if (el.name && el.name.includes('menu_productos-')) {
-                            el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${index}-`);
-                        }
-                        if (el.id && el.id.includes('menu_productos-')) {
-                            el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${index}-`);
-                        }
-                    });
-                });
-
-                updateProductoCount();
-            } else {
-                alert('Debe mantener al menos un producto en el menú');
-            }
-        }
+    newForm.querySelectorAll('input, select, textarea').forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else if (el.type !== 'hidden') el.value = '';
+      if (el.name?.includes('menu_productos-'))
+        el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${count}-`);
+      if (el.id?.includes('menu_productos-'))
+        el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${count}-`);
     });
 
-    // Inicializar contador
-    updateProductoCount();
+    // Asegurar botón quitar (no delete checkbox)
+    const deleteLabel = newForm.querySelector('label[for*="DELETE"]');
+    if (deleteLabel) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-quitar delete-empty-form';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Quitar';
+      deleteLabel.replaceWith(btn);
+    }
+
+    container.appendChild(newForm);
+    totalForms.value = count + 1;
+    updateCount();
+
+    // Scroll suave al nuevo form
+    newForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    newForm.style.animation = 'none';
+    newForm.offsetHeight;
+    newForm.style.transition = 'all 0.3s ease';
+    newForm.style.opacity = '0';
+    newForm.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+      newForm.style.opacity = '1';
+      newForm.style.transform = 'translateY(0)';
+    }, 10);
+  });
+
+  // Eliminar producto
+  document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('delete-empty-form') || e.target.closest('.delete-empty-form')) {
+      const row = e.target.closest('.formset-row');
+      const visible = container.querySelectorAll('.formset-row:not([style*="display: none"])').length;
+      if (visible <= 1) {
+        alert('Debe mantener al menos un producto en el menú.');
+        return;
+      }
+      row.style.transition = 'all 0.25s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        row.remove();
+        totalForms.value = parseInt(totalForms.value) - 1;
+        // Reindexar
+        container.querySelectorAll('.formset-row').forEach((f, i) => {
+          f.setAttribute('data-form-index', i);
+          f.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name?.includes('menu_productos-'))
+              el.name = el.name.replace(/menu_productos-\d+-/, `menu_productos-${i}-`);
+            if (el.id?.includes('menu_productos-'))
+              el.id = el.id.replace(/menu_productos-\d+-/, `menu_productos-${i}-`);
+          });
+        });
+        updateCount();
+      }, 250);
+    }
+  });
+
+  updateCount();
+  actualizarPrecio();
 });
 </script>
 {% endblock %}
