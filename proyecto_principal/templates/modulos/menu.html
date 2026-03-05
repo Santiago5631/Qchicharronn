@@ -1,327 +1,293 @@
-{% extends "dashboard/layout.html" %}
+{% extends 'dashboard/layout.html' %}
 {% load static %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/menu/menu.css' %}">
+
+{% block title %}Gestión de Menús - Q'Chicharron{% endblock %}
+
+{% block css_plugins %}
+<style>
+  /* ---- STATS ---- */
+  .stat-card {
+    border-radius: 14px; padding: 18px 20px;
+    color: #fff; border: none;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .stat-card h3  { font-size: 28px; font-weight: 800; margin: 0; }
+  .stat-card p   { font-size: 13px; margin: 0; opacity: 0.85; }
+  .stat-card i   { font-size: 2.4rem; opacity: 0.3; }
+  .stat-grad-1   { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .stat-grad-2   { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .stat-grad-3   { background: linear-gradient(135deg, #fa709a, #fee140); }
+  .stat-grad-4   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+
+  /* ---- FILTROS ---- */
+  .filtro-bar {
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .filtro-bar .fw-bold { font-size: 13px; color: #6b7280; white-space: nowrap; }
+  .filter-btn {
+    padding: 5px 16px; border-radius: 20px; font-size: 12px;
+    font-weight: 600; border: 2px solid #e5e7eb;
+    background: #f9fafb; color: #6b7280;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: #667eea; border-color: #667eea; color: #fff;
+  }
+
+  /* ---- CARDS MENÚ ---- */
+  .menu-card {
+    border: 1px solid #e5e7eb; border-radius: 14px;
+    overflow: hidden; transition: all 0.25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .menu-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+
+  /* Imagen compacta */
+  .menu-img-wrap {
+    position: relative; height: 140px; overflow: hidden;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .menu-img-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .menu-img-placeholder {
+    font-size: 2.5rem; opacity: 0.25; color: #9ca3af;
+  }
+  .menu-badge {
+    position: absolute; top: 10px; left: 10px;
+    font-size: 10px; font-weight: 700; padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .discount-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: #ef4444; color: #fff;
+    font-size: 11px; font-weight: 800;
+    padding: 3px 8px; border-radius: 10px;
+  }
+
+  .menu-card .card-body  { padding: 14px 16px; }
+  .menu-card .card-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+  .menu-cat  { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+  .menu-desc { font-size: 12px; color: #9ca3af; margin-bottom: 8px; line-height: 1.4; }
+
+  .productos-list { font-size: 12px; color: #4b5563; margin-bottom: 8px; }
+  .productos-list ul { margin: 4px 0 0; padding-left: 16px; }
+  .productos-list li { margin-bottom: 2px; }
+
+  .precio-original { font-size: 12px; color: #9ca3af; text-decoration: line-through; margin-right: 6px; }
+  .precio-final    { font-size: 18px; font-weight: 800; color: #059669; }
+
+  .menu-card .card-footer { padding: 10px 16px; background: #f9fafb; border-top: 1px solid #f3f4f6; }
+  .menu-card .card-footer .btn { font-size: 13px; }
+
+  /* Animación entrada */
+  .menu-item { opacity: 0; transform: translateY(16px); transition: all 0.3s ease; }
+</style>
 {% endblock %}
 
 {% block content %}
+<div class="container-fluid py-3">
 
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2><i class="bi bi-menu-button-wide me-2"></i>Gestión de Menús</h2>
-                <div>
-                    <a href="{% url 'apl:menu:pedido_create' %}" class="btn btn-success me-2" title="Crear Pedido">
-                        <i class="bi bi-cart-plus me-1"></i>Nuevo Pedido
-                    </a>
-                    <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-info me-2" title="Ver Pedidos">
-                        <i class="bi bi-list-check me-1"></i>Ver Pedidos
-                    </a>
-                    <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary" title="Crear Menus">
-                        <i class="bi bi-plus-circle me-1"></i>Nuevo Menú
-                    </a>
-                </div>
-            </div>
-        </div>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="mb-0"><i class="bi bi-menu-button-wide me-2"></i>Gestión de Menús</h2>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'apl:menu:pedido_create' %}" class="btn btn-success">
+        <i class="bi bi-cart-plus me-1"></i>Nuevo Pedido
+      </a>
+      <a href="{% url 'apl:menu:pedido_list' %}" class="btn btn-info">
+        <i class="bi bi-list-check me-1"></i>Ver Pedidos
+      </a>
+      <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Nuevo Menú
+      </a>
     </div>
+  </div>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-grad-1">
+        <div>
+          <h3>{{ menus.count }}</h3>
+          <p>Total Menús</p>
         </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card stats-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ menus.count }}</h3>
-                        <p class="mb-0">Total Menús</p>
-                    </div>
-                    <i class="bi bi-menu-button-wide" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stats-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ menus|length|add:"-1" }}</h3>
-                        <p class="mb-0">Disponibles</p>
-                    </div>
-                    <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">5</h3>
-                        <p class="mb-0">Categorías</p>
-                    </div>
-                    <i class="bi bi-grid" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ menus.0.menu_productos.count|default:0 }}</h3>
-                        <p class="mb-0">Productos</p>
-                    </div>
-                    <i class="bi bi-box-seam" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                </div>
-            </div>
-        </div>
-
+        <i class="bi bi-menu-button-wide"></i>
+      </div>
     </div>
-
-    <div class="card mb-4">
-    <div class="card-body">
-        <div class="d-flex flex-wrap align-items-center">
-            <span class="me-3 fw-bold">
-                <i class="bi bi-funnel me-1"></i>Filtrar por categoría:
-            </span>
-
-            <!-- Botón "Todos" -->
-            <button class="btn btn-outline-primary filter-btn active" data-filter="all" title="Todos">
-                Todos
-            </button>
-
-            <!-- Categorías dinámicas -->
-            {% for categoria in categorias %}
-            <button class="btn btn-outline-primary filter-btn"
-                    data-filter="{{ categoria.value }}" title="Categorias">
-                {{ categoria.display }}
-            </button>
-            {% empty %}
-            <span class="text-muted small">
-                No hay categorías disponibles
-            </span>
-            {% endfor %}
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-grad-2">
+        <div>
+          <h3>{{ menus_disponibles }}</h3>
+          <p>Disponibles</p>
         </div>
+        <i class="bi bi-check-circle"></i>
+      </div>
     </div>
-</div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-grad-3">
+        <div>
+          <h3>{{ total_categorias }}</h3>
+          <p>Categorías</p>
+        </div>
+        <i class="bi bi-grid"></i>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-grad-4">
+        <div>
+          <h3>{{ total_productos }}</h3>
+          <p>Productos</p>
+        </div>
+        <i class="bi bi-box-seam"></i>
+      </div>
+    </div>
+  </div>
 
-    <div class="row" id="menus-grid">
+  <!-- Filtros -->
+  <div class="filtro-bar">
+    <span class="fw-bold"><i class="bi bi-funnel me-1"></i>Filtrar por categoría:</span>
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    {% for categoria in categorias %}
+    <button class="filter-btn" data-filter="{{ categoria.value }}">{{ categoria.display }}</button>
+    {% endfor %}
+  </div>
 
-        {% for menu in menus %}
-        <div class="col-md-6 col-lg-4 col-xl-3 mb-4 menu-item" data-categoria="{{ menu.categoria_menu }}">
-            <div class="card menu-card h-100">
+  <!-- Grid Menús -->
+  <div class="row g-3" id="menus-grid">
+    {% for menu in menus %}
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 menu-item" data-categoria="{{ menu.categoria_menu }}">
+      <div class="card menu-card h-100">
 
-                <div class="position-relative">
-                    {% if menu.imagen %}
-                        <img src="{{ menu.imagen.url }}" class="menu-image" alt="{{ menu.nombre }}">
-                    {% else %}
-                        <div class="menu-image d-flex align-items-center justify-content-center text-white">
-                            <i class="bi bi-image" style="font-size: 3rem; opacity: 0.5;"></i>
-                        </div>
-                    {% endif %}
+        <!-- Imagen -->
+        <div class="menu-img-wrap">
+          {% if menu.imagen %}
+          <img src="{{ menu.imagen.url }}" alt="{{ menu.nombre }}">
+          {% else %}
+          <i class="bi bi-image menu-img-placeholder"></i>
+          {% endif %}
 
-                    <span class="badge menu-badge {% if menu.disponible and menu.puede_servirse %}bg-success{% else %}bg-danger{% endif %}">
-                        {% if menu.disponible and menu.puede_servirse %}
-                            <i class="bi bi-check-circle"></i> Disponible
-                        {% else %}
-                            <i class="bi bi-x-circle"></i> No disponible
-                        {% endif %}
-                    </span>
+          <span class="badge menu-badge {% if menu.disponible and menu.puede_servirse %}bg-success{% else %}bg-danger{% endif %}">
+            {% if menu.disponible and menu.puede_servirse %}
+            <i class="bi bi-check-circle me-1"></i>Disponible
+            {% else %}
+            <i class="bi bi-x-circle me-1"></i>No disponible
+            {% endif %}
+          </span>
 
-                    {% if menu.descuento > 0 %}
-                    <span class="discount-badge">-{{ menu.descuento|floatformat:0 }}%</span>
-                    {% endif %}
-                </div>
-
-                <div class="card-body">
-                    <h5 class="card-title mb-2">{{ menu.nombre }}</h5>
-                    <p class="text-muted small mb-2">
-                        <i class="bi bi-tag me-1"></i>
-                        {{ menu.get_categoria_menu_display }}
-                    </p>
-
-                    {% if menu.descripcion %}
-                    <p class="card-text small text-muted">
-                        {{ menu.descripcion|truncatewords:10 }}
-                    </p>
-                    {% endif %}
-
-                    {% if menu.menu_productos.exists %}
-                    <div class="productos-list mb-2">
-                        <strong><i class="bi bi-box-seam me-1"></i>Incluye:</strong>
-                        <ul class="mb-0 ps-3">
-                            {% for mp in menu.menu_productos.all|slice:":3" %}
-                            <li>{{ mp.producto.nombre }} ({{ mp.cantidad }})</li>
-                            {% endfor %}
-                            {% if menu.menu_productos.count > 3 %}
-                            <li class="text-primary">+ {{ menu.menu_productos.count|add:"-3" }} más...</li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                    {% endif %}
-
-                    <div class="mt-3">
-                        {% if menu.descuento > 0 %}
-                        <span class="precio-original">${{ menu.precio_base|floatformat:2 }}</span>
-                        {% endif %}
-                        <div class="precio-final">${{ menu.get_precio_final|floatformat:2 }}</div>
-                    </div>
-                </div>
-
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-flex gap-2">
-
-                        <a href="{% url 'apl:menu:menu_detail' menu.pk %}" class="btn btn-sm btn-info flex-fill" title="Ver detalle">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a href="{% url 'apl:menu:menu_update' menu.pk %}" class="btn btn-sm btn-warning flex-fill" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <!-- template.html -->
-<!-- template.html -->
-<a href="#" class="btn btn-sm btn-danger btn-delete flex-fill"
-   data-url="{% url 'apl:menu:menu_delete' menu.pk %}"
-   data-name="{{ menu.nombre }}" title="Eliminar">
-   <i class="bi bi-trash"></i>
-</a>
-
-
-
-
-
-
-
-                    </div>
-                </div>
-
-            </div>
+          {% if menu.descuento > 0 %}
+          <span class="discount-badge">-{{ menu.descuento|floatformat:0 }}%</span>
+          {% endif %}
         </div>
 
-        {% empty %}
-        <div class="col-12 text-center py-5">
-            <i class="bi bi-inbox" style="font-size: 5rem; opacity: 0.2;"></i>
-            <h4 class="mt-3 text-muted">No hay menús registrados</h4>
-            <p class="text-muted">Comienza creando tu primer menú</p>
-            <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary mt-3">
-                <i class="bi bi-plus-circle me-1"></i>Crear Primer Menú
+        <!-- Body -->
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ menu.nombre }}</h5>
+
+          <p class="menu-cat">
+            <i class="bi bi-tag me-1"></i>
+            {% if menu.categoria_menu %}{{ menu.categoria_menu }}{% else %}Sin categoría{% endif %}
+          </p>
+
+          {% if menu.descripcion %}
+          <p class="menu-desc">{{ menu.descripcion|truncatewords:10 }}</p>
+          {% endif %}
+
+          {% if menu.menu_productos.exists %}
+          <div class="productos-list">
+            <strong><i class="bi bi-box-seam me-1"></i>Incluye:</strong>
+            <ul>
+              {% for mp in menu.menu_productos.all|slice:":3" %}
+              <li>{{ mp.producto.nombre }} ({{ mp.cantidad }})</li>
+              {% endfor %}
+              {% if menu.menu_productos.count > 3 %}
+              <li class="text-primary">+{{ menu.menu_productos.count|add:"-3" }} más...</li>
+              {% endif %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div class="mt-auto pt-2">
+            {% if menu.descuento > 0 %}
+            <span class="precio-original">${{ menu.precio_base|floatformat:2 }}</span>
+            {% endif %}
+            <div class="precio-final">${{ menu.get_precio_final|floatformat:2 }}</div>
+          </div>
+        </div>
+
+        <!-- Footer acciones -->
+        <div class="card-footer">
+          <div class="d-flex gap-2">
+            <a href="{% url 'apl:menu:menu_detail' menu.pk %}" class="btn btn-sm btn-info flex-fill" title="Ver detalle">
+              <i class="bi bi-eye"></i>
             </a>
+            <a href="{% url 'apl:menu:menu_update' menu.pk %}" class="btn btn-sm btn-warning flex-fill" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a href="#" class="btn btn-sm btn-danger btn-delete flex-fill"
+               data-url="{% url 'apl:menu:menu_delete' menu.pk %}"
+               data-name="{{ menu.nombre }}" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </a>
+          </div>
         </div>
-        {% endfor %}
+
+      </div>
     </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+      <i class="bi bi-inbox" style="font-size:5rem;opacity:0.2;"></i>
+      <h4 class="mt-3 text-muted">No hay menús registrados</h4>
+      <p class="text-muted">Comienza creando tu primer menú</p>
+      <a href="{% url 'apl:menu:menu_create' %}" class="btn btn-primary mt-3">
+        <i class="bi bi-plus-circle me-1"></i>Crear Primer Menú
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
 </div>
+{% endblock %}
 
-
-<form id="delete-form" method="POST" style="display:none;">
-    {% csrf_token %}
-</form>
-
-
-<!-- ✔ SWEETALERT2 DIRECTO AQUÍ -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+{% block js_custom %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Selecciona todos los botones de eliminar
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function(e){
-            e.preventDefault(); // evita el comportamiento por defecto
-
-            const url = this.dataset.url;
-            const name = this.dataset.name || 'este elemento';
-
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: `Se eliminará: "${name}"`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true,
-                focusCancel: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Crear form dinámico para POST
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = url;
-
-                    // CSRF token
-                    const csrfToken = '{{ csrf_token }}';
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'csrfmiddlewaretoken';
-                    input.value = csrfToken;
-                    form.appendChild(input);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        });
+// Filtros
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const filter = this.dataset.filter;
+    document.querySelectorAll('.menu-item').forEach(item => {
+      const match = filter === 'all' || item.dataset.categoria === filter;
+      item.style.transition = 'all 0.3s ease';
+      if (match) {
+        item.style.display = '';
+        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'translateY(0)'; }, 10);
+      } else {
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.9)';
+        setTimeout(() => { item.style.display = 'none'; }, 300);
+      }
     });
+  });
+});
+
+// Animación entrada
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.menu-item').forEach((item, i) => {
+    setTimeout(() => {
+      item.style.opacity = '1';
+      item.style.transform = 'translateY(0)';
+    }, i * 60);
+  });
 });
 </script>
-
-
-
-
-<!-- ✔ TUS SCRIPTS DE ANIMACIÓN (NO SE TOCAN) -->
-<script>
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-
-            const filter = this.dataset.filter;
-            const items = document.querySelectorAll('.menu-item');
-
-            items.forEach(item => {
-                if (filter === 'all' || item.dataset.categoria === filter) {
-                    item.style.display = 'block';
-                    setTimeout(() => {
-                        item.style.opacity = '1';
-                        item.style.transform = 'scale(1)';
-                    }, 10);
-                } else {
-                    item.style.opacity = '0';
-                    item.style.transform = 'scale(0.8)';
-                    setTimeout(() => {
-                        item.style.display = 'none';
-                    }, 300);
-                }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const items = document.querySelectorAll('.menu-item');
-        items.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                item.style.transition = 'all 0.3s ease';
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0)';
-            }, index * 50);
-        });
-    });
-    function eliminarMenu(menuId, menuNombre) {
-        if (confirm(`¿Está seguro de eliminar el menú "${menuNombre}"?\n\nEsta acción no se puede deshacer.`)) {
-            const form = document.getElementById('deleteForm');
-            form.action = `/apl/menu/eliminar/${menuId}/`;
-            form.submit();
-        }
-    }
-</script>
-
 {% endblock %}
