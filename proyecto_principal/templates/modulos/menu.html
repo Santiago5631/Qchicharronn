@@ -20,12 +20,11 @@
   .stat-grad-3   { background: linear-gradient(135deg, #fa709a, #fee140); }
   .stat-grad-4   { background: linear-gradient(135deg, #f093fb, #f5576c); }
 
-  /* ---- FILTROS ---- */
+  /* ---- FILTROS CATEGORÍA ---- */
   .filtro-bar {
     background: #fff; border: 1px solid #e5e7eb;
     border-radius: 12px; padding: 14px 20px;
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-    margin-bottom: 20px;
   }
   .filtro-bar .fw-bold { font-size: 13px; color: #6b7280; white-space: nowrap; }
   .filter-btn {
@@ -38,6 +37,16 @@
     background: #667eea; border-color: #667eea; color: #fff;
   }
 
+  /* ---- FILTRO BARRA DE BÚSQUEDA ---- */
+  .search-bar {
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 12px 20px;
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .search-bar .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .search-bar label       { font-size: 12px; font-weight: 700; color: #6b7280; margin: 0; }
+
   /* ---- CARDS MENÚ ---- */
   .menu-card {
     border: 1px solid #e5e7eb; border-radius: 14px;
@@ -48,47 +57,33 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   }
-
-  /* Imagen compacta */
   .menu-img-wrap {
     position: relative; height: 140px; overflow: hidden;
     background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
     display: flex; align-items: center; justify-content: center;
   }
-  .menu-img-wrap img {
-    width: 100%; height: 100%; object-fit: cover;
-  }
-  .menu-img-placeholder {
-    font-size: 2.5rem; opacity: 0.25; color: #9ca3af;
-  }
+  .menu-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .menu-img-placeholder { font-size: 2.5rem; opacity: 0.25; color: #9ca3af; }
   .menu-badge {
     position: absolute; top: 10px; left: 10px;
-    font-size: 10px; font-weight: 700; padding: 4px 10px;
-    border-radius: 20px;
+    font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
   }
   .discount-badge {
     position: absolute; top: 10px; right: 10px;
     background: #ef4444; color: #fff;
-    font-size: 11px; font-weight: 800;
-    padding: 3px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 10px;
   }
-
   .menu-card .card-body  { padding: 14px 16px; }
   .menu-card .card-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
   .menu-cat  { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
   .menu-desc { font-size: 12px; color: #9ca3af; margin-bottom: 8px; line-height: 1.4; }
-
   .productos-list { font-size: 12px; color: #4b5563; margin-bottom: 8px; }
   .productos-list ul { margin: 4px 0 0; padding-left: 16px; }
   .productos-list li { margin-bottom: 2px; }
-
   .precio-original { font-size: 12px; color: #9ca3af; text-decoration: line-through; margin-right: 6px; }
   .precio-final    { font-size: 18px; font-weight: 800; color: #059669; }
-
   .menu-card .card-footer { padding: 10px 16px; background: #f9fafb; border-top: 1px solid #f3f4f6; }
   .menu-card .card-footer .btn { font-size: 13px; }
-
-  /* Animación entrada */
   .menu-item { opacity: 0; transform: translateY(16px); transition: all 0.3s ease; }
 </style>
 {% endblock %}
@@ -116,44 +111,32 @@
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
       <div class="stat-card stat-grad-1">
-        <div>
-          <h3>{{ menus.count }}</h3>
-          <p>Total Menús</p>
-        </div>
+        <div><h3>{{ menus.count }}</h3><p>Total Menús</p></div>
         <i class="bi bi-menu-button-wide"></i>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-card stat-grad-2">
-        <div>
-          <h3>{{ menus_disponibles }}</h3>
-          <p>Disponibles</p>
-        </div>
+        <div><h3>{{ menus_disponibles }}</h3><p>Disponibles</p></div>
         <i class="bi bi-check-circle"></i>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-card stat-grad-3">
-        <div>
-          <h3>{{ total_categorias }}</h3>
-          <p>Categorías</p>
-        </div>
+        <div><h3>{{ total_categorias }}</h3><p>Categorías</p></div>
         <i class="bi bi-grid"></i>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-card stat-grad-4">
-        <div>
-          <h3>{{ total_productos }}</h3>
-          <p>Productos</p>
-        </div>
+        <div><h3>{{ total_productos }}</h3><p>Productos</p></div>
         <i class="bi bi-box-seam"></i>
       </div>
     </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="filtro-bar">
+  <!-- Filtro categoría (original) -->
+  <div class="filtro-bar mb-3">
     <span class="fw-bold"><i class="bi bi-funnel me-1"></i>Filtrar por categoría:</span>
     <button class="filter-btn active" data-filter="all">Todos</button>
     {% for categoria in categorias %}
@@ -161,10 +144,46 @@
     {% endfor %}
   </div>
 
+  <!-- ++ Barra de búsqueda adicional ++ -->
+  <div class="search-bar">
+    <div class="form-group">
+      <label><i class="bi bi-search me-1"></i>Nombre</label>
+      <input type="text" id="filtro-nombre" class="form-control form-control-sm"
+             placeholder="Buscar menú..." oninput="filtrarMenus()" style="min-width:180px;">
+    </div>
+    <div class="form-group">
+      <label><i class="bi bi-currency-dollar me-1"></i>Precio máx.</label>
+      <input type="number" id="filtro-precio" class="form-control form-control-sm"
+             placeholder="Ej: 50000" oninput="filtrarMenus()" style="min-width:120px;">
+    </div>
+    <div class="form-group">
+      <label><i class="bi bi-check-circle me-1"></i>Disponibilidad</label>
+      <select id="filtro-disponible" class="form-select form-select-sm" onchange="filtrarMenus()" style="min-width:140px;">
+        <option value="">Todos</option>
+        <option value="1">Disponible</option>
+        <option value="0">No disponible</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltrosMenus()">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+    </div>
+    <div class="form-group ms-auto">
+      <label>&nbsp;</label>
+      <small class="text-muted d-block" id="contador-menus"></small>
+    </div>
+  </div>
+
   <!-- Grid Menús -->
   <div class="row g-3" id="menus-grid">
     {% for menu in menus %}
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 menu-item" data-categoria="{{ menu.categoria_menu }}">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 menu-item"
+         data-categoria="{{ menu.categoria_menu }}"
+         data-nombre="{{ menu.nombre|lower }}"
+         data-precio="{{ menu.get_precio_final }}"
+         data-disponible="{% if menu.disponible and menu.puede_servirse %}1{% else %}0{% endif %}">
       <div class="card menu-card h-100">
 
         <!-- Imagen -->
@@ -191,16 +210,13 @@
         <!-- Body -->
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">{{ menu.nombre }}</h5>
-
           <p class="menu-cat">
             <i class="bi bi-tag me-1"></i>
             {% if menu.categoria_menu %}{{ menu.categoria_menu }}{% else %}Sin categoría{% endif %}
           </p>
-
           {% if menu.descripcion %}
           <p class="menu-desc">{{ menu.descripcion|truncatewords:10 }}</p>
           {% endif %}
-
           {% if menu.menu_productos.exists %}
           <div class="productos-list">
             <strong><i class="bi bi-box-seam me-1"></i>Incluye:</strong>
@@ -214,7 +230,6 @@
             </ul>
           </div>
           {% endif %}
-
           <div class="mt-auto pt-2">
             {% if menu.descuento > 0 %}
             <span class="precio-original">${{ menu.precio_base|floatformat:2 }}</span>
@@ -254,33 +269,83 @@
     {% endfor %}
   </div>
 
+  <!-- Sin resultados -->
+  <div class="d-none text-center py-5" id="sin-resultados">
+    <i class="bi bi-search" style="font-size:4rem;opacity:0.2;"></i>
+    <h5 class="mt-3 text-muted">No se encontraron menús con ese filtro</h5>
+    <button class="btn btn-outline-secondary mt-2" onclick="limpiarFiltrosMenus()">
+      <i class="bi bi-x-circle me-1"></i>Limpiar filtros
+    </button>
+  </div>
+
 </div>
 {% endblock %}
 
 {% block js_custom %}
 <script>
-// Filtros
+/* ── Filtro original por CATEGORÍA (botones) ── */
+let filtroCategoriaActiva = 'all';
+
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', function () {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
-    const filter = this.dataset.filter;
-    document.querySelectorAll('.menu-item').forEach(item => {
-      const match = filter === 'all' || item.dataset.categoria === filter;
-      item.style.transition = 'all 0.3s ease';
-      if (match) {
-        item.style.display = '';
-        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'translateY(0)'; }, 10);
-      } else {
-        item.style.opacity = '0';
-        item.style.transform = 'scale(0.9)';
-        setTimeout(() => { item.style.display = 'none'; }, 300);
-      }
-    });
+    filtroCategoriaActiva = this.dataset.filter;
+    filtrarMenus();
   });
 });
 
-// Animación entrada
+/* ── Filtro combinado (categoría + texto + precio + disponibilidad) ── */
+function filtrarMenus() {
+  const nombre     = document.getElementById('filtro-nombre').value.toLowerCase().trim();
+  const precioMax  = parseFloat(document.getElementById('filtro-precio').value) || Infinity;
+  const disponible = document.getElementById('filtro-disponible').value;
+
+  const items = document.querySelectorAll('.menu-item');
+  let visibles = 0;
+
+  items.forEach(item => {
+    const precio = parseFloat(item.dataset.precio) || 0;
+
+    const okCategoria  = filtroCategoriaActiva === 'all' || item.dataset.categoria === filtroCategoriaActiva;
+    const okNombre     = !nombre     || item.dataset.nombre.includes(nombre);
+    const okPrecio     = precio <= precioMax;
+    const okDisponible = !disponible || item.dataset.disponible === disponible;
+
+    const visible = okCategoria && okNombre && okPrecio && okDisponible;
+    item.style.transition = 'all 0.3s ease';
+
+    if (visible) {
+      item.style.display = '';
+      setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'translateY(0)'; }, 10);
+      visibles++;
+    } else {
+      item.style.opacity = '0';
+      item.style.transform = 'scale(0.9)';
+      setTimeout(() => { item.style.display = 'none'; }, 300);
+    }
+  });
+
+  const contador = document.getElementById('contador-menus');
+  if (contador) contador.textContent = visibles === items.length
+    ? `${items.length} menú(s)`
+    : `${visibles} de ${items.length} menú(s)`;
+
+  const sinResultados = document.getElementById('sin-resultados');
+  if (sinResultados) sinResultados.classList.toggle('d-none', visibles > 0);
+}
+
+function limpiarFiltrosMenus() {
+  document.getElementById('filtro-nombre').value     = '';
+  document.getElementById('filtro-precio').value     = '';
+  document.getElementById('filtro-disponible').value = '';
+  filtroCategoriaActiva = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+  filtrarMenus();
+}
+
+/* ── Animación entrada ── */
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.menu-item').forEach((item, i) => {
     setTimeout(() => {

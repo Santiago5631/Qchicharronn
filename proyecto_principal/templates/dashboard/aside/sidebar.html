@@ -39,7 +39,7 @@
                 <li class="nav-link">
                     <a href="{% url 'apl:categoria:listar_categoria' %}">
                         <i class='bx bxs-bar-chart-alt-2 icon'></i>
-                        <span class="text nav-text">Categorias</span>
+                        <span class="text nav-text">Categorías</span>
                     </a>
                 </li>
                 <li class="nav-link">
@@ -63,7 +63,7 @@
                 <li class="nav-link">
                     <a href="{% url 'apl:nomina:nomina_list' %}">
                         <i class='bx bx-money-withdraw icon'></i>
-                        <span class="text nav-text">Nomina</span>
+                        <span class="text nav-text">Nómina</span>
                     </a>
                 </li>
                 <li class="nav-link">
@@ -121,7 +121,7 @@
                 <li class="nav-link">
                     <a href="{% url 'apl:menu:menu_list' %}">
                         <i class='bx bx-restaurant icon'></i>
-                        <span class="text nav-text">Menu</span>
+                        <span class="text nav-text">Menú</span>
                     </a>
                 </li>
                 <li class="nav-link">
@@ -134,7 +134,7 @@
                 {% if request.user|cargo_en:"administrador,cocinero" %}
                     <li class="nav-link">
                         <a href="{% url 'apl:menu:vista_cocina' area='cocina' %}">
-                            <i class='bx bx-fire icon'></i>
+                            <i class='bx bxs-fridge icon'></i>
                             <span class="text nav-text">Comandas Cocina</span>
                         </a>
                     </li>
@@ -148,20 +148,6 @@
                         </a>
                     </li>
                 {% endif %}
-            {# ── ASISTENTE IA — solo admin y mesero ── #}
-{% if request.user|cargo_en:"administrador,mesero" %}
-<li class="mb-1">
-    <a href="{% url 'apl:asistente:chat' %}" class="offcanvas-link"
-       style="background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(234,88,12,0.1)); border-radius: 10px;">
-        <i class='bx bx-bot' style="color: #f97316;"></i>
-        <span style="color: #f97316; font-weight: 700;">Asistente IA</span>
-        <span class="badge ms-auto"
-              style="background: #f97316; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px;">
-            IA
-        </span>
-    </a>
-</li>
-{% endif %}
 
             </ul>
         </div>
@@ -173,7 +159,7 @@
                     {% csrf_token %}
                     <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">
                         <i class='bx bx-log-out icon'></i>
-                        <span class="text nav-text">Cerrar Sesion</span>
+                        <span class="text nav-text">Cerrar Sesión</span>
                     </a>
                 </form>
             </li>
