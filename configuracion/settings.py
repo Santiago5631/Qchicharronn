@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     # Apps del proyecto
     'proyecto_principal.apps.ProyectoPrincipalConfig',
     'categoria.apps.CategoriaConfig',
+    'asistente.apps.AsistenteConfig',
     'compra.apps.CompraConfig',
     'informe.apps.InformeConfig',
     'marca.apps.MarcaConfig',
@@ -94,7 +95,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'configuracion.wsgi.application'
 
-
 # Database
 DATABASES = {
     'default': {
@@ -105,7 +105,8 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'ssl_disabled': True,
         }
     }
 }
@@ -188,21 +189,11 @@ MESSAGE_TAGS = {
 # ==============================================================================
 # CONFIGURACIÓN DE BACKUPS (GOOGLE DRIVE - OAuth2 con Gmail personal)
 # ==============================================================================
-
-# Ruta al JSON de OAuth2 que descargaste de Google Cloud Console
-# (tipo "Desktop app", llámalo oauth_credentials.json y ponlo en la raíz)
 GOOGLE_OAUTH_CREDS_PATH = os.path.join(BASE_DIR, 'oauth_credentials.json')
-
-# Token generado automáticamente al ejecutar generar_token.py por primera vez
 GOOGLE_DRIVE_TOKEN_PATH = os.path.join(BASE_DIR, 'token_drive.pkl')
-
-# Ruta al ejecutable de mysqldump
 MYSQLDUMP_PATH = 'mysqldump'
-
-# ID de la carpeta de tu Google Drive personal donde se guardarán los backups
 GOOGLE_DRIVE_FOLDER_ID = '1rT9T5DWhwrdEPeh8Ks9jWI1sI0qwHm97'
 BACKUP_ENCRYPTION_KEY = config('BACKUP_ENCRYPTION_KEY', default=SECRET_KEY)
-
 
 ASGI_APPLICATION = 'configuracion.asgi.application'
 
@@ -210,7 +201,9 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('redis', 6379)],  # 👈 'redis' no '127.0.0.1'
+            'hosts': [('redis', 6379)],
         },
     },
 }
+
+GROQ_API_KEY = config('GROQ_API_KEY')

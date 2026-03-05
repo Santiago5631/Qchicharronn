@@ -2,125 +2,158 @@
 {% block content %}
 
 <div class="container mt-4">
-
 <div class="card shadow mb-4">
 
-    <div class="card-header bg-gradient text-white" style="background: linear-gradient(90deg, #ff6b6b, #ffa500);">
-        <h4 class="mb-0">Consulta de Reportes</h4>
+    <div class="card-header text-white"
+         style="background: linear-gradient(90deg, #E85A1E, #C0392B);">
+        <h4 class="mb-0">
+            <i class="bi bi-bar-chart-line-fill me-2"></i>
+            Consulta de Reportes
+        </h4>
     </div>
 
     <div class="card-body">
 
-        <!-- Selección de tipo -->
+        {# ── Selector de tipo ── #}
         <div class="mb-5">
-            <label class="form-label fw-bold d-block mb-3 text-center fs-5">
-                ¿Qué deseas consultar?
-            </label>
-
+            <p class="fw-bold text-center fs-5 mb-3">¿Qué deseas consultar?</p>
             <div class="d-flex flex-wrap justify-content-center gap-4">
 
                 <button type="button"
-                        class="btn btn-outline-primary btn-lg tipo-btn shadow-sm {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}"
+                        class="btn btn-outline-primary btn-lg tipo-btn shadow-sm
+                               {% if tipo_actual == 'ventas' or not tipo_actual %}active{% endif %}"
                         data-tipo="ventas">
-
-                    <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i>
-                    Ventas
+                    <i class="bi bi-cart-check-fill fs-1 d-block mb-2"></i>Ventas
                 </button>
 
                 <button type="button"
-                        class="btn btn-outline-success btn-lg tipo-btn shadow-sm {% if tipo_actual == 'compras' %}active{% endif %}"
+                        class="btn btn-outline-success btn-lg tipo-btn shadow-sm
+                               {% if tipo_actual == 'compras' %}active{% endif %}"
                         data-tipo="compras">
-
-                    <i class="bi bi-bag-fill fs-1 d-block mb-2"></i>
-                    Compras
+                    <i class="bi bi-bag-fill fs-1 d-block mb-2"></i>Compras
                 </button>
 
                 <button type="button"
-                        class="btn btn-outline-info btn-lg tipo-btn shadow-sm {% if tipo_actual == 'pedidos' %}active{% endif %}"
+                        class="btn btn-outline-info btn-lg tipo-btn shadow-sm
+                               {% if tipo_actual == 'pedidos' %}active{% endif %}"
                         data-tipo="pedidos">
-
-                    <i class="bi bi-list-check fs-1 d-block mb-2"></i>
-                    Pedidos
+                    <i class="bi bi-list-check fs-1 d-block mb-2"></i>Pedidos
                 </button>
 
                 <button type="button"
-                        class="btn btn-outline-warning btn-lg tipo-btn shadow-sm {% if tipo_actual == 'inventario' %}active{% endif %}"
+                        class="btn btn-outline-warning btn-lg tipo-btn shadow-sm
+                               {% if tipo_actual == 'inventario' %}active{% endif %}"
                         data-tipo="inventario">
-
-                    <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i>
-                    Inventario
+                    <i class="bi bi-box-seam-fill fs-1 d-block mb-2"></i>Inventario
                 </button>
 
             </div>
         </div>
 
-
-        <!-- Filtro de fechas -->
+        {# ── Formulario de fechas ── #}
         <form method="get" class="row g-3 align-items-end mb-4" id="filtro-form">
-
-            <input type="hidden"
-                   name="tipo"
-                   id="tipo-hidden"
+            <input type="hidden" name="tipo" id="tipo-hidden"
                    value="{{ tipo_actual|default:'ventas' }}">
 
             <div class="col-md-4">
                 <label class="form-label fw-bold">Fecha de inicio</label>
-                <input type="date"
-                       name="fecha_inicio"
-                       class="form-control"
-                       value="{{ fecha_inicio|default:'' }}"
-                       required>
+                <input type="date" name="fecha_inicio" class="form-control"
+                       value="{{ fecha_inicio|default:'' }}" required>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label fw-bold">Fecha de fin</label>
-                <input type="date"
-                       name="fecha_fin"
-                       class="form-control"
-                       value="{{ fecha_fin|default:'' }}"
-                       required>
+                <input type="date" name="fecha_fin" class="form-control"
+                       value="{{ fecha_fin|default:'' }}" required>
             </div>
-
             <div class="col-md-4">
-                <button type="submit"
-                        class="btn btn-primary w-100 mt-4">
-
-                    <i class="bi bi-search"></i>
-                    Consultar
+                <button type="submit" class="btn btn-primary w-100 mt-4">
+                    <i class="bi bi-search"></i> Consultar
                 </button>
             </div>
-
         </form>
 
-        <div class="alert alert-info mt-3">
-            {{ mensaje }}
+        {# ── Mensaje de estado ── #}
+        {% if consultado %}
+            {% if sin_resultados %}
+            {# Sin resultados — mensaje amigable #}
+            <div class="text-center py-5 my-3">
+                <div style="font-size:4rem; line-height:1;">
+                    {% if tipo_actual == 'ventas' %}🛒
+                    {% elif tipo_actual == 'compras' %}🛍️
+                    {% elif tipo_actual == 'pedidos' %}📋
+                    {% else %}📦{% endif %}
+                </div>
+                <h5 class="mt-3 text-muted fw-bold">
+                    No hay {{ tipo_actual }} registradas en este período
+                </h5>
+                <p class="text-muted mb-0">
+                    No se encontraron registros entre
+                    <strong>{{ fecha_inicio }}</strong> y <strong>{{ fecha_fin }}</strong>.
+                </p>
+                <p class="text-muted">
+                    Intenta con un rango de fechas diferente o verifica que existan
+                    registros de <strong>{{ tipo_actual }}</strong> en el sistema.
+                </p>
+                <a href="{% url 'apl:informe:informe_list' %}"
+                   class="btn btn-outline-secondary btn-sm mt-2">
+                    <i class="bi bi-arrow-left"></i> Nueva consulta
+                </a>
+            </div>
+            {% else %}
+            {# Con resultados #}
+            <div class="alert alert-info d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                <span><i class="bi bi-info-circle-fill me-1"></i> {{ mensaje }}</span>
+
+                {# Botones exportar — solo si hay datos #}
+                {% if resultados %}
+                <div class="d-flex gap-2 flex-shrink-0">
+                    <a href="{% url 'apl:informe:exportar_pdf' %}?tipo={{ tipo_actual }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}"
+                       class="btn btn-sm btn-danger">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
+                    </a>
+                    <a href="{% url 'apl:informe:exportar_excel' %}?tipo={{ tipo_actual }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}"
+                       class="btn btn-sm btn-success">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+        {# Estado inicial — instrucción ── #}
+        <div class="alert alert-light border d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-up-circle-fill text-primary fs-5"></i>
+            <span>{{ mensaje }}</span>
         </div>
+        {% endif %}
 
-
-        <!-- Ventas -->
+        {# ── Tabla de VENTAS ── #}
         {% if tipo_actual == 'ventas' and resultados %}
-        <div class="table-responsive mt-4">
-
-            <h5>Ventas encontradas ({{ cantidad }})</h5>
-
-            <table class="table table-bordered table-hover datatable">
-
+        <div class="table-responsive mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Ventas encontradas
+                    <span class="badge bg-primary ms-1">{{ cantidad }}</span>
+                </h5>
+                <span class="fw-bold text-danger">
+                    Total: ${{ total|floatformat:2 }}
+                </span>
+            </div>
+            <table class="table table-bordered table-hover">
                 <thead class="table-primary">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Pedido</th>
-                    <th class="text-end">Total</th>
-                    <th>Método</th>
-                    <th>Estado</th>
-                    <th>Admin</th>
-                </tr>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>N° Pedido</th>
+                        <th class="text-end">Total</th>
+                        <th>Método</th>
+                        <th>Estado</th>
+                        <th>Administrador</th>
+                    </tr>
                 </thead>
-
                 <tbody>
                 {% for v in resultados %}
                 <tr>
-                    <td>{{ v.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ v.pedido.id }}</td>
+                    <td>{{ v.fecha_venta|date:"d/m/Y" }}</td>
+                    <td>{{ v.pedido.id|default:"—" }}</td>
                     <td class="text-end">${{ v.total|floatformat:2 }}</td>
                     <td>{{ v.get_metodo_pago_display }}</td>
                     <td>{{ v.get_estado_display }}</td>
@@ -128,31 +161,32 @@
                 </tr>
                 {% endfor %}
                 </tbody>
-
             </table>
         </div>
         {% endif %}
 
-
-        <!-- Compras -->
+        {# ── Tabla de COMPRAS ── #}
         {% if tipo_actual == 'compras' and resultados %}
-        <div class="table-responsive mt-4">
-
-            <h5>Compras encontradas ({{ cantidad }})</h5>
-
-            <table class="table table-bordered table-hover datatable">
-
+        <div class="table-responsive mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Compras encontradas
+                    <span class="badge bg-success ms-1">{{ cantidad }}</span>
+                </h5>
+                <span class="fw-bold text-danger">
+                    Total: ${{ total|floatformat:2 }}
+                </span>
+            </div>
+            <table class="table table-bordered table-hover">
                 <thead class="table-success">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Producto</th>
-                    <th class="text-end">Cantidad</th>
-                    <th class="text-end">Precio</th>
-                    <th class="text-end">Subtotal</th>
-                    <th>Proveedor</th>
-                </tr>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-end">Subtotal</th>
+                        <th>Proveedor</th>
+                    </tr>
                 </thead>
-
                 <tbody>
                 {% for c in resultados %}
                 <tr>
@@ -165,44 +199,43 @@
                 </tr>
                 {% endfor %}
                 </tbody>
-
             </table>
         </div>
         {% endif %}
 
-
-        <!-- Pedidos -->
+        {# ── Tabla de PEDIDOS ── #}
         {% if tipo_actual == 'pedidos' and resultados %}
-        <div class="table-responsive mt-4">
-
-            <h5>Pedidos encontrados ({{ cantidad }})</h5>
-
-            <table class="table table-bordered table-hover datatable">
-
+        <div class="table-responsive mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Pedidos encontrados
+                    <span class="badge bg-info text-dark ms-1">{{ cantidad }}</span>
+                </h5>
+                <span class="fw-bold text-danger">
+                    Total: ${{ total|floatformat:2 }}
+                </span>
+            </div>
+            <table class="table table-bordered table-hover">
                 <thead class="table-info">
-                <tr>
-                    <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Mesa</th>
-                    <th>Menús</th>
-                    <th class="text-end">Total</th>
-                    <th>Estado</th>
-                </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Mesa</th>
+                        <th>Ítems</th>
+                        <th class="text-end">Total</th>
+                        <th>Estado</th>
+                    </tr>
                 </thead>
-
                 <tbody>
                 {% for p in resultados %}
                 <tr>
                     <td>#{{ p.id }}</td>
                     <td>{{ p.fecha|date:"d/m/Y H:i" }}</td>
-                    <td>{{ p.mesa }}</td>
+                    <td>{{ p.mesa|default:"Para llevar" }}</td>
                     <td>
-                        <ul class="list-unstyled mb-0">
-                            {% for detalle in p.detalles_list %}
-                            <li>
-                                {{ detalle.menu }} x{{ detalle.cantidad }}
-                            </li>
-                            {% endfor %}
+                        <ul class="list-unstyled mb-0 small">
+                        {% for d in p.detalles_list %}
+                            <li>{{ d.menu }} x{{ d.cantidad }}</li>
+                        {% endfor %}
                         </ul>
                     </td>
                     <td class="text-end fw-bold">${{ p.total_calculado|floatformat:2 }}</td>
@@ -210,71 +243,49 @@
                 </tr>
                 {% endfor %}
                 </tbody>
+            </table>
+        </div>
+        {% endif %}
 
+        {# ── Tabla de INVENTARIO ── #}
+        {% if tipo_actual == 'inventario' and resultados %}
+        <div class="table-responsive mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Registros de inventario
+                    <span class="badge bg-warning text-dark ms-1">{{ cantidad }}</span>
+                </h5>
+                <span class="text-muted small">
+                    Abiertos: {{ abiertos }}  |  Cerrados: {{ cerrados }}
+                </span>
+            </div>
+            <table class="table table-bordered table-hover">
+                <thead class="table-warning">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for inv in resultados %}
+                <tr>
+                    <td>{{ inv.fecha|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if inv.estado == 'abierto' %}
+                            <span class="badge bg-success">Abierto</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Cerrado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
             </table>
         </div>
         {% endif %}
 
 
-        <!-- Informes guardados -->
-        <div class="table-responsive mt-5">
 
-            <h5>Informes guardados</h5>
-
-            <table class="table table-bordered datatable">
-
-                <thead>
-                <tr>
-                    <th>Título</th>
-                    <th>Tipo</th>
-                    <th>Rango</th>
-                    <th>Creado por</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                {% for i in informe %}
-                <tr>
-
-                    <td>{{ i.titulo }}</td>
-                    <td>{{ i.get_tipo_display }}</td>
-                    <td>{{ i.fecha_inicio }} a {{ i.fecha_fin }}</td>
-                    <td>{{ i.creado_por }}</td>
-                    <td>{{ i.fecha_creacion }}</td>
-
-                    <td>
-
-                        <a href="{% url 'apl:informe_editar' i.id %}"
-                           class="btn btn-warning btn-sm">
-
-                            <i class="bi bi-pen-fill"></i>
-                        </a>
-
-                        <button
-                                type="button"
-                                class="btn btn-danger btn-sm btn-delete"
-                                data-url="{% url 'apl:informe:eliminar_informe' i.id %}"
-                                data-name="{{ i.titulo }}">
-
-                            <i class="bi bi-trash3-fill"></i>
-
-                        </button>
-
-                    </td>
-
-                </tr>
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
+    </div>{# /card-body #}
 </div>
 </div>
 
@@ -283,34 +294,22 @@
 
 {% block js_custom %}
 <script>
-
 document.addEventListener('DOMContentLoaded', () => {
-
     const botones = document.querySelectorAll('.tipo-btn');
-    const inputTipoHidden = document.getElementById('tipo-hidden');
-    const formFiltro = document.getElementById('filtro-form');
+    const inputTipo = document.getElementById('tipo-hidden');
+    const form = document.getElementById('filtro-form');
 
-    botones.forEach(boton => {
-
-        boton.addEventListener('click', () => {
-
+    botones.forEach(btn => {
+        btn.addEventListener('click', () => {
             botones.forEach(b => b.classList.remove('active'));
-            boton.classList.add('active');
-
-            inputTipoHidden.value = boton.dataset.tipo;
+            btn.classList.add('active');
+            inputTipo.value = btn.dataset.tipo;
 
             const fi = document.querySelector('[name="fecha_inicio"]').value;
             const ff = document.querySelector('[name="fecha_fin"]').value;
-
-            if (fi && ff) {
-                formFiltro.submit();
-            }
-
+            if (fi && ff) form.submit();
         });
-
     });
-
 });
-
 </script>
 {% endblock %}

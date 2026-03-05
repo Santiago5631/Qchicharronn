@@ -1,432 +1,337 @@
-{% extends "dashboard/layout.html" %}
+{% extends 'dashboard/layout.html' %}
+{% load static %}
+
+{% block title %}Vista {{ area_display }} - Q' Chicharron{% endblock %}
+
+{% block css_plugins %}
+<style>
+  .vista-header {
+    background: linear-gradient(135deg, #7c2d12, #9a3412);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 14px;
+    border-left: 5px solid #f97316;
+  }
+  .vista-header.cocina {
+    background: linear-gradient(135deg, #0e4d5c, #0c6678);
+    border-left-color: #06b6d4;
+  }
+  .vista-header-icon { font-size: 36px; }
+  .vista-header-title { font-size: 22px; font-weight: 800; color: #fff; margin: 0; letter-spacing: 1px; }
+  .vista-header-sub   { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+  .ws-indicator { margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 14px; border-radius: 20px; }
+  .ws-dot { width: 9px; height: 9px; border-radius: 50%; background: #6b7280; transition: all 0.3s; }
+  .ws-dot.online  { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .ws-dot.offline { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+  .ws-label { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; }
+
+  .filtro-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .filtro-label { font-size: 12px; font-weight: 700; color: #6b7280; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+  .filtro-tags  { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cat-btn { padding: 6px 16px; border-radius: 20px; border: 2px solid #e5e7eb; background: #f9fafb; color: #6b7280; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .cat-btn.active-parrilla { background: #f97316; border-color: #f97316; color: #fff; }
+  .cat-btn.active-cocina   { background: #06b6d4; border-color: #06b6d4; color: #fff; }
+
+  .pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .empty-state  { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #9ca3af; }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  .pedido-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); animation: slideIn 0.3s ease; }
+  .pedido-card.parrilla { border-top: 3px solid #f97316; }
+  .pedido-card.cocina   { border-top: 3px solid #06b6d4; }
+  .pedido-card.oculto   { display: none !important; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .pedido-card.nuevo { animation: pulseNew 0.8s ease, slideIn 0.3s ease; }
+  @keyframes pulseNew { 0%{box-shadow:0 0 0 0 rgba(249,115,22,0.5);} 70%{box-shadow:0 0 0 12px transparent;} 100%{box-shadow:0 1px 4px rgba(0,0,0,0.06);} }
+
+  .pedido-head   { background: #f9fafb; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .pedido-numero { font-size: 16px; font-weight: 800; }
+  .pedido-numero.parrilla { color: #ea580c; }
+  .pedido-numero.cocina   { color: #0891b2; }
+  .pedido-mesa   { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .pedido-hora   { font-size: 11px; color: #9ca3af; background: #f3f4f6; padding: 3px 8px; border-radius: 8px; white-space: nowrap; }
+  .pedido-info   { padding: 8px 16px; font-size: 12px; color: #6b7280; display: flex; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid #f3f4f6; }
+  .pedido-info span { display: flex; align-items: center; gap: 4px; }
+  .pedido-items  { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .item-row      { display: flex; align-items: flex-start; gap: 10px; }
+  .item-qty      { min-width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .item-qty.parrilla { background: #fff7ed; color: #ea580c; border: 2px solid #fed7aa; }
+  .item-qty.cocina   { background: #ecfeff; color: #0891b2; border: 2px solid #a5f3fc; }
+  .item-nombre { font-weight: 700; font-size: 14px; color: #1f2937; line-height: 1.3; }
+  .item-cat    { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; font-weight: 600; }
+  .item-cat.parrilla { color: #ea580c; }
+  .item-cat.cocina   { color: #0891b2; }
+  .item-obs    { font-size: 11px; color: #d97706; margin-top: 3px; font-style: italic; background: #fffbeb; padding: 3px 8px; border-radius: 6px; border-left: 2px solid #f59e0b; }
+  .pedido-obs-global { padding: 8px 16px 12px; font-size: 12px; color: #d97706; font-style: italic; background: #fffbeb; border-top: 1px solid #fef3c7; }
+  .badge-pendiente  { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fde68a; }
+  .badge-preparando { background: #dbeafe !important; color: #1e40af !important; border: 1px solid #bfdbfe; }
+</style>
+{% endblock %}
 
 {% block content %}
-{% comment %}
-  GUARDAR EN: menu/templates/menu/vista_cocina.html
-{% endcomment %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vista {{ area_display }}</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    {% if area == 'parrilla' %}
-    --accent:     #f97316;
-    --accent2:    #fb923c;
-    --bg:         #1a0a00;
-    --bg2:        #2d1200;
-    --header-bg:  #7c2d12;
-    --header-border: #f97316;
-    --card-bg:    rgba(249,115,22,0.07);
-    --card-border:rgba(249,115,22,0.18);
-    --text:       #fef3c7;
-    --text-muted: rgba(254,243,199,0.5);
-    --icon:       🔥;
-    {% else %}
-    --accent:     #06b6d4;
-    --accent2:    #22d3ee;
-    --bg:         #001a20;
-    --bg2:        #002d3d;
-    --header-bg:  #0e4d5c;
-    --header-border: #06b6d4;
-    --card-bg:    rgba(6,182,212,0.07);
-    --card-border:rgba(6,182,212,0.18);
-    --text:       #e0f7fa;
-    --text-muted: rgba(224,247,250,0.5);
-    {% endif %}
-  }
+<div class="container-fluid py-3">
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 60%, var(--bg) 100%);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-  }
-
-  /* ---- HEADER ---- */
-  .header {
-    background: var(--header-bg);
-    border-bottom: 3px solid var(--header-border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .header-icon { font-size: 34px; }
-  .header-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px; font-weight: 900; letter-spacing: 1px;
-  }
-  .header-sub {
-    font-size: 11px; color: var(--accent2);
-    letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;
-  }
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .status-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #22c55e; box-shadow: 0 0 8px #22c55e;
-  }
-  .status-dot.offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-  .ws-label { font-size: 11px; color: var(--text-muted); }
-
-  /* ---- FILTRO CATEGORÍAS ---- */
-  .filtro-section {
-    padding: 14px 24px;
-    background: rgba(0,0,0,0.25);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  .filtro-label {
-    font-size: 11px; color: var(--text-muted);
-    letter-spacing: 2px; text-transform: uppercase; white-space: nowrap;
-  }
-  .filtro-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .cat-tag {
-    padding: 6px 14px; border-radius: 20px; border: none; cursor: pointer;
-    font-size: 12px; font-weight: 700; font-family: 'DM Sans', sans-serif;
-    background: rgba(255,255,255,0.07);
-    color: rgba(255,255,255,0.4);
-    transition: all 0.2s;
-  }
-  .cat-tag.active {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent);
-  }
-
-  /* ---- BOARD DE PEDIDOS ---- */
-  .pedidos-board {
-    padding: 20px 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-
-  .empty-state {
-    grid-column: 1/-1;
-    text-align: center; padding: 60px 20px;
-    color: var(--text-muted); font-size: 14px;
-  }
-  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
-
-  /* ---- TARJETA PEDIDO ---- */
-  .pedido-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 14px; overflow: hidden;
-    animation: slideIn 0.35s ease;
-  }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .pedido-card.nuevo {
-    animation: pulseNew 0.6s ease;
-  }
-  @keyframes pulseNew {
-    0%  { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); }
-    60% { box-shadow: 0 0 0 12px transparent; }
-    100%{ box-shadow: none; }
-  }
-
-  .pedido-head {
-    background: rgba(0,0,0,0.3);
-    padding: 12px 16px;
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
-  }
-  .pedido-numero {
-    font-family: 'Playfair Display', serif;
-    font-size: 17px; font-weight: 900; color: var(--accent);
-  }
-  .pedido-mesa {
-    font-size: 12px; color: var(--text-muted); margin-top: 2px;
-  }
-  .pedido-hora {
-    font-size: 11px; color: var(--text-muted);
-    background: rgba(255,255,255,0.06);
-    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
-  }
-
-  .pedido-info {
-    padding: 8px 16px;
-    font-size: 12px; color: var(--text-muted);
-    display: flex; gap: 14px; flex-wrap: wrap;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .pedido-info span { display: flex; align-items: center; gap: 4px; }
-
-  .pedido-items { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
-
-  .item-row {
-    display: flex; align-items: flex-start; gap: 10px;
-  }
-  .item-qty {
-    min-width: 32px; height: 32px; border-radius: 8px;
-    background: var(--accent); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 14px; flex-shrink: 0;
-  }
-  .item-body { flex: 1; }
-  .item-nombre { font-weight: 700; font-size: 14px; color: var(--text); line-height: 1.3; }
-  .item-cat {
-    font-size: 10px; color: var(--accent2);
-    text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
-  }
-  .item-obs {
-    font-size: 11px; color: #fbbf24;
-    margin-top: 3px; font-style: italic;
-  }
-
-  .pedido-obs-global {
-    padding: 8px 16px 12px;
-    font-size: 11px; color: #fbbf24;
-    font-style: italic;
-  }
-
-  /* Estado badge */
-  .estado-badge {
-    padding: 3px 9px; border-radius: 20px;
-    font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-    flex-shrink: 0;
-  }
-  .estado-pendiente  { background: #854d0e; color: #fef08a; }
-  .estado-preparando { background: #1e40af; color: #bfdbfe; }
-</style>
-</head>
-<body>
-
-<!-- HEADER -->
-<div class="header">
-  <div class="header-icon">{% if area == 'parrilla' %}🔥{% else %}🍲{% endif %}</div>
-  <div>
-    <div class="header-title">{{ area_display|upper }}</div>
-    <div class="header-sub">Vista de Cocina · Pedidos en vivo</div>
-  </div>
-  <div class="header-right">
-    <span class="ws-label" id="ws-label">Conectando...</span>
-    <div class="status-dot offline" id="status-dot"></div>
-  </div>
-</div>
-
-<!-- FILTRO CATEGORÍAS -->
-<div class="filtro-section">
-  <span class="filtro-label">Ver categorías:</span>
-  <div class="filtro-tags" id="filtro-tags">
-    {% for cat in todas_categorias %}
-    <button
-      class="cat-tag {% if cat.id in categorias_activas_ids %}active{% endif %}"
-      data-id="{{ cat.id }}"
-      onclick="toggleCategoria(this)"
-    >{{ cat.nombre }}</button>
-    {% endfor %}
-  </div>
-</div>
-
-<!-- BOARD DE PEDIDOS -->
-<div class="pedidos-board" id="pedidos-board">
-  {% if pedidos %}
-    {% for item in pedidos %}
-    {% with p=item.pedido its=item.items %}
-    <div class="pedido-card" id="pedido-{{ p.numero_pedido }}">
-      <div class="pedido-head">
-        <div>
-          <div class="pedido-numero">#{{ p.numero_pedido }}</div>
-          <div class="pedido-mesa">
-            {% if p.mesa %}🪑 {{ p.mesa }}{% else %}🛍 Para llevar{% endif %}
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span class="pedido-hora">{{ p.fecha_creacion|time:"H:i" }}</span>
-          <span class="estado-badge estado-{{ p.estado }}">{{ p.get_estado_display }}</span>
-        </div>
-      </div>
-      <div class="pedido-info">
-        <span>👤 {{ p.mesero.get_full_name|default:"Sin mesero" }}</span>
-        <span>🍽 {{ its|length }} item(s)</span>
-      </div>
-      <div class="pedido-items">
-        {% for it in its %}
-        <div class="item-row">
-          <div class="item-qty">{{ it.cantidad }}</div>
-          <div class="item-body">
-            <div class="item-nombre">{{ it.menu.nombre }}</div>
-            {% if it.menu.categoria_menu %}
-            <div class="item-cat">{{ it.menu.categoria_menu.nombre }}</div>
-            {% endif %}
-            {% if it.observaciones %}
-            <div class="item-obs">📝 {{ it.observaciones }}</div>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% if p.observaciones %}
-      <div class="pedido-obs-global">📋 {{ p.observaciones }}</div>
-      {% endif %}
+  <!-- HEADER -->
+  <div class="vista-header {% if area == 'cocina' %}cocina{% endif %}">
+    <div class="vista-header-icon">{% if area == 'parrilla' %}🔥{% else %}🍲{% endif %}</div>
+    <div>
+      <div class="vista-header-title">{{ area_display|upper }}</div>
+      <div class="vista-header-sub">Vista de Cocina · Pedidos en vivo</div>
     </div>
-    {% endwith %}
-    {% endfor %}
-  {% else %}
-  <div class="empty-state" id="empty-state">
-    <div class="emoji">{% if area == 'parrilla' %}🔥{% else %}🍲{% endif %}</div>
-    <div>Sin pedidos activos en este momento</div>
+    <div class="ws-indicator">
+      <div class="ws-dot offline" id="ws-dot"></div>
+      <span class="ws-label" id="ws-label">Conectando...</span>
+    </div>
   </div>
-  {% endif %}
+
+  <!-- CATEGORÍAS VISIBLES -->
+  <div class="filtro-card">
+    <span class="filtro-label"><i class="bi bi-eye me-1"></i> Mostrar categorías:</span>
+    <div class="filtro-tags" id="filtro-tags">
+      {% for cat in todas_categorias %}
+      <button class="cat-btn {% if cat.id in categorias_activas_ids %}active-{{ area }}{% endif %}"
+        data-id="{{ cat.id }}" onclick="toggleCategoria(this)">{{ cat.nombre }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- FILTROS DE BÚSQUEDA -->
+  <div class="filtro-card">
+    <span class="filtro-label"><i class="bi bi-funnel me-1"></i> Filtrar:</span>
+    <div class="d-flex flex-wrap gap-2 flex-grow-1 align-items-center">
+
+      <div class="input-group" style="max-width:190px;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-receipt text-muted" style="font-size:13px;"></i></span>
+        <input type="text" id="filtro-numero" class="form-control border-start-0"
+          placeholder="# Pedido" oninput="filtrarCards()" style="font-size:13px;">
+      </div>
+
+      <div class="input-group" style="max-width:160px;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-grid text-muted" style="font-size:13px;"></i></span>
+        <input type="text" id="filtro-mesa" class="form-control border-start-0"
+          placeholder="Mesa" oninput="filtrarCards()" style="font-size:13px;">
+      </div>
+
+      <div class="input-group" style="max-width:210px;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-tag text-muted" style="font-size:13px;"></i></span>
+        <select id="filtro-categoria" class="form-select border-start-0" onchange="filtrarCards()" style="font-size:13px;">
+          <option value="">Todas las categorías</option>
+          {% for cat in todas_categorias %}{% if cat.id in categorias_activas_ids %}
+          <option value="{{ cat.nombre|lower }}">{{ cat.nombre }}</option>
+          {% endif %}{% endfor %}
+        </select>
+      </div>
+
+      <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()" style="font-size:12px;">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+
+      <span class="ms-auto text-muted" style="font-size:12px;" id="contador-pedidos"></span>
+    </div>
+  </div>
+
+  <!-- BOARD PEDIDOS -->
+  <div class="pedidos-grid" id="pedidos-board">
+    {% if pedidos %}
+      {% for item in pedidos %}{% with p=item.pedido its=item.items %}
+      <div class="pedido-card {{ area }}"
+        id="pedido-{{ p.numero_pedido }}"
+        data-numero="{{ p.numero_pedido|lower }}"
+        data-mesa="{% if p.mesa %}{{ p.mesa|lower }}{% else %}para llevar{% endif %}"
+        data-categorias="{% for it in its %}{% if it.menu.categoria_menu %}{{ it.menu.categoria_menu.nombre|lower }} {% endif %}{% endfor %}"
+      >
+        <div class="pedido-head">
+          <div>
+            <div class="pedido-numero {{ area }}"><i class="bi bi-receipt me-1"></i>#{{ p.numero_pedido }}</div>
+            <div class="pedido-mesa">
+              {% if p.mesa %}<i class="bi bi-grid me-1"></i>{{ p.mesa }}
+              {% else %}<i class="bi bi-bag me-1"></i>Para llevar{% endif %}
+            </div>
+          </div>
+          <div class="d-flex flex-column align-items-end gap-1">
+            <span class="pedido-hora"><i class="bi bi-clock me-1"></i>{{ p.fecha_creacion|time:"H:i" }}</span>
+            <span class="badge badge-{{ p.estado }} rounded-pill px-2 py-1" style="font-size:10px;font-weight:700;">
+              {{ p.get_estado_display }}
+            </span>
+          </div>
+        </div>
+        <div class="pedido-info">
+          <span><i class="bi bi-person me-1"></i>{{ p.mesero.get_full_name|default:"Sin mesero" }}</span>
+          <span><i class="bi bi-list-ul me-1"></i>{{ its|length }} item(s)</span>
+        </div>
+        <div class="pedido-items">
+          {% for it in its %}
+          <div class="item-row">
+            <div class="item-qty {{ area }}">{{ it.cantidad }}</div>
+            <div class="item-body">
+              <div class="item-nombre">{{ it.menu.nombre }}</div>
+              {% if it.menu.categoria_menu %}<div class="item-cat {{ area }}">{{ it.menu.categoria_menu.nombre }}</div>{% endif %}
+              {% if it.observaciones %}<div class="item-obs"><i class="bi bi-pencil me-1"></i>{{ it.observaciones }}</div>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if p.observaciones %}
+        <div class="pedido-obs-global"><i class="bi bi-chat-left-text me-1"></i>{{ p.observaciones }}</div>
+        {% endif %}
+      </div>
+      {% endwith %}{% endfor %}
+    {% else %}
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">{% if area == 'parrilla' %}🔥{% else %}🍲{% endif %}</div>
+      <p class="text-muted">Sin pedidos activos en este momento</p>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
+{% endblock %}
 
+{% block js_custom %}
 <script>
-const AREA = "{{ area }}";
+const AREA   = "{{ area }}";
 const WS_URL = `ws://${window.location.host}/ws/vista/${AREA}/`;
-
 let categoriasActivas = new Set({{ categorias_activas_ids|safe }});
 let socket;
-let reconnectTimer;
 
 function conectar() {
   socket = new WebSocket(WS_URL);
-
   socket.onopen = () => {
-    document.getElementById('status-dot').classList.remove('offline');
+    document.getElementById('ws-dot').className = 'ws-dot online';
     document.getElementById('ws-label').textContent = 'En vivo';
   };
-
   socket.onclose = () => {
-    document.getElementById('status-dot').classList.add('offline');
+    document.getElementById('ws-dot').className = 'ws-dot offline';
     document.getElementById('ws-label').textContent = 'Reconectando...';
-    reconnectTimer = setTimeout(conectar, 3000);
+    setTimeout(conectar, 3000);
   };
-
   socket.onmessage = (e) => {
     const data = JSON.parse(e.data);
-
-    if (data.type === 'config_inicial') {
-      // Sync categorías activas desde DB
-      categoriasActivas = new Set(data.categorias_activas.map(c => c.id));
-    }
-
-    if (data.type === 'pedido_update') {
-      manejarPedido(data.pedido, data.accion);
-    }
+    if (data.type === 'config_inicial') categoriasActivas = new Set(data.categorias_activas.map(c => c.id));
+    if (data.type === 'pedido_update')  manejarPedido(data.pedido, data.accion);
   };
 }
 
 function manejarPedido(pedido, accion) {
-  // Filtrar items del pedido que tengan categoría activa
-  const itemsFiltrados = pedido.items.filter(
-    i => i.categoria_id && categoriasActivas.has(i.categoria_id)
-  );
+  const filtrados = pedido.items.filter(i => i.categoria_id && categoriasActivas.has(i.categoria_id));
+  if (!filtrados.length) return;
 
-  if (itemsFiltrados.length === 0) return; // No aplica para esta vista
-
-  if (['entregado', 'cancelado'].includes(pedido.estado)) {
-    // Remover tarjeta si el pedido ya no está activo
+  if (['entregado','cancelado'].includes(pedido.estado)) {
     const card = document.getElementById(`pedido-${pedido.numero_pedido}`);
     if (card) card.remove();
-    checkEmpty();
-    return;
+    checkEmpty(); return;
   }
 
   const existente = document.getElementById(`pedido-${pedido.numero_pedido}`);
+  const nueva = crearCard(pedido, filtrados);
   if (existente) {
-    // Actualizar tarjeta existente
-    existente.replaceWith(crearCard(pedido, itemsFiltrados));
+    existente.replaceWith(nueva);
   } else {
-    // Agregar nueva tarjeta
-    const empty = document.getElementById('empty-state');
-    if (empty) empty.remove();
+    document.getElementById('empty-state')?.remove();
     const board = document.getElementById('pedidos-board');
-    const card = crearCard(pedido, itemsFiltrados);
-    card.classList.add('nuevo');
-    board.insertBefore(card, board.firstChild);
-    // Sonido de notificación
-    try { new Audio('/static/sounds/beep.mp3').play(); } catch(e){}
+    nueva.classList.add('nuevo');
+    board.insertBefore(nueva, board.firstChild);
   }
+  filtrarCards();
+  actualizarContador();
 }
 
 function crearCard(pedido, items) {
+  const mesa  = pedido.mesa === 'Para llevar' ? 'para llevar' : (pedido.mesa||'').toLowerCase();
+  const cats  = items.map(i => (i.categoria||'').toLowerCase()).join(' ');
+  const badge = pedido.estado === 'pendiente' ? 'badge-pendiente' : 'badge-preparando';
+  const label = pedido.estado === 'pendiente' ? 'Pendiente' : 'En Preparación';
+
   const div = document.createElement('div');
-  div.className = 'pedido-card';
+  div.className = `pedido-card ${AREA}`;
   div.id = `pedido-${pedido.numero_pedido}`;
-
-  const estadoBadge = pedido.estado === 'pendiente'
-    ? '<span class="estado-badge estado-pendiente">Pendiente</span>'
-    : '<span class="estado-badge estado-preparando">Preparando</span>';
-
-  const itemsHTML = items.map(i => `
-    <div class="item-row">
-      <div class="item-qty">${i.cantidad}</div>
-      <div class="item-body">
-        <div class="item-nombre">${i.nombre}</div>
-        ${i.categoria ? `<div class="item-cat">${i.categoria}</div>` : ''}
-        ${i.observaciones ? `<div class="item-obs">📝 ${i.observaciones}</div>` : ''}
-      </div>
-    </div>
-  `).join('');
+  div.dataset.numero     = pedido.numero_pedido.toLowerCase();
+  div.dataset.mesa       = mesa;
+  div.dataset.categorias = cats;
 
   div.innerHTML = `
     <div class="pedido-head">
       <div>
-        <div class="pedido-numero">#${pedido.numero_pedido}</div>
-        <div class="pedido-mesa">${pedido.mesa === 'Para llevar' ? '🛍 Para llevar' : '🪑 ' + pedido.mesa}</div>
+        <div class="pedido-numero ${AREA}"><i class="bi bi-receipt me-1"></i>#${pedido.numero_pedido}</div>
+        <div class="pedido-mesa">${pedido.mesa==='Para llevar'?'<i class="bi bi-bag me-1"></i>Para llevar':`<i class="bi bi-grid me-1"></i>${pedido.mesa}`}</div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="pedido-hora">${pedido.hora}</span>
-        ${estadoBadge}
+      <div class="d-flex flex-column align-items-end gap-1">
+        <span class="pedido-hora"><i class="bi bi-clock me-1"></i>${pedido.hora}</span>
+        <span class="badge ${badge} rounded-pill px-2 py-1" style="font-size:10px;font-weight:700;">${label}</span>
       </div>
     </div>
     <div class="pedido-info">
-      <span>👤 ${pedido.mesero}</span>
-      <span>🍽 ${items.length} item(s)</span>
+      <span><i class="bi bi-person me-1"></i>${pedido.mesero}</span>
+      <span><i class="bi bi-list-ul me-1"></i>${items.length} item(s)</span>
     </div>
-    <div class="pedido-items">${itemsHTML}</div>
-    ${pedido.observaciones ? `<div class="pedido-obs-global">📋 ${pedido.observaciones}</div>` : ''}
+    <div class="pedido-items">
+      ${items.map(i=>`
+        <div class="item-row">
+          <div class="item-qty ${AREA}">${i.cantidad}</div>
+          <div class="item-body">
+            <div class="item-nombre">${i.nombre}</div>
+            ${i.categoria?`<div class="item-cat ${AREA}">${i.categoria}</div>`:''}
+            ${i.observaciones?`<div class="item-obs"><i class="bi bi-pencil me-1"></i>${i.observaciones}</div>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+    ${pedido.observaciones?`<div class="pedido-obs-global"><i class="bi bi-chat-left-text me-1"></i>${pedido.observaciones}</div>`:''}
   `;
   return div;
+}
+
+function filtrarCards() {
+  const numero    = document.getElementById('filtro-numero').value.toLowerCase().trim();
+  const mesa      = document.getElementById('filtro-mesa').value.toLowerCase().trim();
+  const categoria = document.getElementById('filtro-categoria').value.toLowerCase().trim();
+  let v = 0;
+  document.querySelectorAll('.pedido-card').forEach(card => {
+    const ok = (!numero || card.dataset.numero.includes(numero))
+            && (!mesa   || card.dataset.mesa.includes(mesa))
+            && (!categoria || card.dataset.categorias.includes(categoria));
+    card.classList.toggle('oculto', !ok);
+    if (ok) v++;
+  });
+  actualizarContador(v);
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtro-numero').value    = '';
+  document.getElementById('filtro-mesa').value      = '';
+  document.getElementById('filtro-categoria').value = '';
+  filtrarCards();
+}
+
+function actualizarContador(v) {
+  const total = document.querySelectorAll('.pedido-card').length;
+  const vis   = v !== undefined ? v : total;
+  const el    = document.getElementById('contador-pedidos');
+  if (el) el.textContent = vis === total ? `${total} pedido(s)` : `${vis} de ${total} pedido(s)`;
 }
 
 function toggleCategoria(btn) {
   const id = parseInt(btn.dataset.id);
   if (categoriasActivas.has(id)) {
-    if (categoriasActivas.size === 1) return; // Mínimo 1 activa
+    if (categoriasActivas.size === 1) return;
     categoriasActivas.delete(id);
-    btn.classList.remove('active');
+    btn.classList.remove(`active-${AREA}`);
   } else {
     categoriasActivas.add(id);
-    btn.classList.add('active');
+    btn.classList.add(`active-${AREA}`);
   }
-  // Guardar en DB via WebSocket
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      action: 'actualizar_categorias',
-      categoria_ids: [...categoriasActivas],
-    }));
+  if (socket?.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ action: 'actualizar_categorias', categoria_ids: [...categoriasActivas] }));
   }
 }
 
 function checkEmpty() {
   const board = document.getElementById('pedidos-board');
-  if (board.querySelectorAll('.pedido-card').length === 0) {
-    const div = document.createElement('div');
-    div.id = 'empty-state';
-    div.className = 'empty-state';
-    div.innerHTML = `
-      <div class="emoji">${AREA === 'parrilla' ? '🔥' : '🍲'}</div>
-      <div>Sin pedidos activos en este momento</div>
-    `;
-    board.appendChild(div);
+  if (!board.querySelectorAll('.pedido-card').length) {
+    board.innerHTML = `<div class="empty-state" id="empty-state"><div class="empty-icon">${AREA==='parrilla'?'🔥':'🍲'}</div><p class="text-muted">Sin pedidos activos en este momento</p></div>`;
   }
+  actualizarContador();
 }
 
-// Iniciar conexión
 conectar();
+actualizarContador();
 </script>
-</body>
-</html>
 {% endblock %}

@@ -3,92 +3,401 @@
 
 {% block content %}
 
+<style>
+  :root {
+    --gold: #d4af37;
+    --gold-dim: rgba(212,175,55,0.15);
+    --gold-border: rgba(212,175,55,0.2);
+    --red: #c0392b;
+    --red-glow: rgba(192,57,43,0.35);
+    --dark: #0a0a0a;
+    --dark-warm: #0d0b07;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+  @keyframes flicker {
+    0%,100% { opacity:1; } 50% { opacity:0.85; }
+  }
+
+  .hero-title {
+    animation: fadeUp 1s ease both;
+    animation-delay: 0.2s;
+  }
+  .hero-sub {
+    animation: fadeUp 1s ease both;
+    animation-delay: 0.5s;
+  }
+  .hero-cta {
+    animation: fadeUp 1s ease both;
+    animation-delay: 0.8s;
+  }
+
+  .gold-shimmer {
+    background: linear-gradient(90deg, var(--gold) 0%, #f5e07a 40%, var(--gold) 60%, #b8961f 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: sans-serif;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .divider-gold {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 14px auto 0;
+  }
+
+  .menu-card {
+    background: linear-gradient(160deg, #141414 0%, #1a1300 100%);
+    border: 1px solid var(--gold-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .menu-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 30px rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.45);
+  }
+  .menu-card img {
+    transition: transform 0.5s ease;
+  }
+  .menu-card:hover img {
+    transform: scale(1.06);
+  }
+
+  .nosotros-stat {
+    border: 1px solid var(--gold-border);
+    border-radius: 14px;
+    background: rgba(212,175,55,0.05);
+    padding: 20px 24px;
+    text-align: center;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nosotros-stat:hover {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.4);
+  }
+</style>
+
 <!-- ====================== -->
-<!-- HERO / INICIO -->
+<!-- HERO / INICIO          -->
 <!-- ====================== -->
 <section id="inicio"
-         class="relative h-screen flex flex-col justify-center items-center text-center bg-cover bg-center"
+         class="relative h-screen flex flex-col justify-center items-center text-center bg-cover bg-center scroll-mt-20"
          style="background-image: url('{% static "imagenes/hero-cerdo.jpg" %}');">
-  <div class="absolute inset-0 bg-black bg-opacity-60"></div>
 
-  <div class="relative z-10 px-6">
-    <h1 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">
-        El auténtico sabor del cerdo colombiano
+  <!-- Overlay degradado dramático -->
+  <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 50%, rgba(10,8,2,0.92) 100%);"></div>
+
+  <!-- Textura de grano sutil -->
+  <div style="position:absolute;inset:0;opacity:0.04;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>');"></div>
+
+  <div class="relative z-10 px-6 max-w-3xl mx-auto">
+
+    <!-- Badge superior -->
+    <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);background:rgba(212,175,55,0.08);border-radius:100px;padding:6px 18px;margin-bottom:28px;" class="hero-title">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--gold);animation:flicker 2s infinite;display:inline-block;"></span>
+      <span style="color:var(--gold);font-size:0.75rem;letter-spacing:0.25em;text-transform:uppercase;font-family:sans-serif;">Boyacá · Colombia</span>
+    </div>
+
+    <h1 class="hero-title gold-shimmer"
+        style="font-size:clamp(2.4rem, 6vw, 4.2rem);font-weight:800;line-height:1.15;margin-bottom:20px;font-family:'Playwrite DE SAS', serif;">
+      El auténtico sabor<br>del cerdo colombiano
     </h1>
 
-    <p class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
-      Carnes al vapor y a la caja china con el toque artesanal que solo Q'chicharrón sabe dar.
+    <p class="hero-sub" style="font-size:1.1rem;color:#d1d5db;max-width:540px;margin:0 auto 36px;line-height:1.8;font-family:sans-serif;">
+      Carnes al vapor y a la caja china con el toque artesanal que solo
+      <span style="color:var(--gold);font-weight:600;">Q'chicharrón</span> sabe dar.
     </p>
+
+    <div class="hero-cta" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+      <a href="#menu"
+         style="background:linear-gradient(135deg,#c0392b,#96281b);color:white;font-weight:600;padding:14px 32px;border-radius:12px;text-decoration:none;font-size:0.95rem;box-shadow:0 8px 28px var(--red-glow);transition:all 0.3s;letter-spacing:0.03em;font-family:sans-serif;"
+         onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 36px rgba(192,57,43,0.55)'"
+         onmouseout="this.style.transform='';this.style.boxShadow='0 8px 28px var(--red-glow)'">
+        Ver Menú
+      </a>
+      <a href="#ubicacion"
+         style="border:1px solid var(--gold-border);color:var(--gold);font-weight:500;padding:14px 32px;border-radius:12px;text-decoration:none;font-size:0.95rem;background:rgba(212,175,55,0.07);transition:all 0.3s;letter-spacing:0.03em;font-family:sans-serif;"
+         onmouseover="this.style.background='rgba(212,175,55,0.14)';this.style.borderColor='rgba(212,175,55,0.5)'"
+         onmouseout="this.style.background='rgba(212,175,55,0.07)';this.style.borderColor='var(--gold-border)'">
+        Cómo Llegar
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Scroll indicator -->
+  <div style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0.5;">
+    <span style="font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:#9ca3af;font-family:sans-serif;">Scroll</span>
+    <div style="width:1px;height:40px;background:linear-gradient(to bottom,rgba(212,175,55,0.8),transparent);"></div>
   </div>
 </section>
 
-<!-- ====================== -->
-<!-- NOSOTROS -->
-<!-- ====================== -->
-<section id="nosotros" class="py-20 bg-black text-center scroll-mt-20">
-  <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Nuestra Pasión</h2>
-  <div class="max-w-4xl mx-auto px-6">
-    <p class="text-lg text-gray-300 mb-6">
-      En <span class="text-red-400 font-semibold">Q'chicharrón</span> nos mueve el fuego, la tradición y el sabor auténtico.
-      Combinamos técnicas ancestrales con un toque moderno para ofrecerte el mejor chicharrón al estilo colombiano.
-    </p>
-    <p class="text-lg text-gray-300">
-      Cada preparación es un homenaje al sabor local, utilizando ingredientes frescos y procesos artesanales.
-      ¡Porque el sabor verdadero empieza con pasión por lo que hacemos!
-    </p>
-  </div>
-</section>
 
 <!-- ====================== -->
-<!-- MENÚ -->
+<!-- NOSOTROS               -->
 <!-- ====================== -->
-<section id="menu" class="py-20 bg-gray-900 text-white scroll-mt-20">
-  <div class="max-w-6xl mx-auto px-6 text-center">
-    <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Nuestro Menú</h2>
-    <div class="grid md:grid-cols-3 gap-8">
-      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
-        <img src="{% static 'imagenes/chicharron.jpg' %}" alt="Chicharrón" class="w-full h-56 object-cover">
-        <div class="p-5">
-          <h3 class="text-2xl font-semibold mb-2">Chicharrón Tradicional</h3>
-          <p class="text-gray-400">Crujiente, jugoso y lleno de sabor. Preparado con amor al estilo Q'chicharrón.</p>
-        </div>
-      </div>
+<section id="nosotros" class="py-24 scroll-mt-20" style="background:var(--dark-warm);position:relative;overflow:hidden;">
 
-      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
-        <img src="{% static 'imagenes/caja-china.jpg' %}" alt="Caja China" class="w-full h-56 object-cover">
-        <div class="p-5">
-          <h3 class="text-2xl font-semibold mb-2">Caja China Artesanal</h3>
-          <p class="text-gray-400">Cocción lenta al fuego para un sabor ahumado y textura perfecta.</p>
-        </div>
-      </div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,175,55,0.05) 0%, transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-border),transparent);"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-border),transparent);"></div>
 
-      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition">
-        <img src="{% static 'imagenes/carne-barril.jpg' %}" alt="Carne al Vapor" class="w-full h-56 object-cover">
-        <div class="p-5">
-          <h3 class="text-2xl font-semibold mb-2">Carne al barril</h3>
-          <p class="text-gray-400">Delicadamente cocida al vapor para conservar su jugosidad y sabor natural.</p>
-        </div>
+  <div class="max-w-5xl mx-auto px-6" style="position:relative;">
+
+    <div class="text-center" style="margin-bottom:56px;">
+      <span class="section-label">Quiénes Somos</span>
+      <h2 style="font-size:clamp(2rem,5vw,3.4rem);font-weight:800;font-family:'Playwrite DE SAS',serif;color:var(--gold);">
+        Nuestra Pasión
+      </h2>
+      <div class="divider-gold"></div>
+    </div>
+
+    <!-- Texto principal con decoración lateral -->
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:32px;margin-bottom:52px;align-items:start;">
+      <div style="width:3px;background:linear-gradient(to bottom,var(--gold),transparent);border-radius:4px;min-height:120px;flex-shrink:0;margin-top:4px;"></div>
+      <div>
+        <p style="font-size:1.15rem;color:#e5e5e5;line-height:1.9;margin-bottom:20px;font-family:sans-serif;">
+          En <span style="color:#f87171;font-weight:700;">Q'chicharrón</span> nos mueve el fuego, la tradición y el sabor auténtico.
+          Combinamos técnicas ancestrales con un toque moderno para ofrecerte el mejor chicharrón al estilo colombiano.
+        </p>
+        <p style="font-size:1.05rem;color:#9ca3af;line-height:1.9;font-family:sans-serif;">
+          Cada preparación es un homenaje al sabor local, utilizando ingredientes frescos y procesos artesanales.
+          ¡Porque el sabor verdadero empieza con pasión por lo que hacemos!
+        </p>
       </div>
     </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
+      <div class="nosotros-stat">
+        <div style="font-size:2rem;font-weight:800;color:var(--gold);font-family:'Playwrite DE SAS',serif;">+10</div>
+        <div style="font-size:0.82rem;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;font-family:sans-serif;">Años de experiencia</div>
+      </div>
+      <div class="nosotros-stat">
+        <div style="font-size:2rem;font-weight:800;color:var(--gold);font-family:'Playwrite DE SAS',serif;">100%</div>
+        <div style="font-size:0.82rem;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;font-family:sans-serif;">Ingredientes frescos</div>
+      </div>
+      <div class="nosotros-stat">
+        <div style="font-size:2rem;font-weight:800;color:var(--gold);font-family:'Playwrite DE SAS',serif;">🔥</div>
+        <div style="font-size:0.82rem;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;font-family:sans-serif;">Cocina artesanal</div>
+      </div>
+      <div class="nosotros-stat">
+        <div style="font-size:2rem;font-weight:800;color:var(--gold);font-family:'Playwrite DE SAS',serif;">★ 4.9</div>
+        <div style="font-size:0.82rem;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;font-family:sans-serif;">Calificación clientes</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
+
 <!-- ====================== -->
-<!-- RESERVAS -->
+<!-- MENÚ                   -->
 <!-- ====================== -->
-<section id="reservas" class="py-20 bg-black text-center scroll-mt-20">
-  <h2 class="text-5xl font-bold text-center mb-4" style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">Reserva tu Mesa</h2>
-  <div class="max-w-md mx-auto px-6">
-    <form class="space-y-4">
-      <input type="text" placeholder="Nombre" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-      <input type="email" placeholder="Correo Electrónico" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-      <input type="number" placeholder="Número de personas" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-      <input type="date" class="w-full p-3 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-      <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-md transition">
-        Reservar
-      </button>
-    </form>
+<section id="menu" class="py-24 scroll-mt-20" style="background:#0a0a0a;position:relative;overflow:hidden;">
+
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 0%, rgba(192,57,43,0.06) 0%, transparent 60%);pointer-events:none;"></div>
+
+  <div class="max-w-6xl mx-auto px-6" style="position:relative;">
+
+    <div class="text-center" style="margin-bottom:56px;">
+      <span class="section-label">Lo que servimos</span>
+      <h2 style="font-size:clamp(2rem,5vw,3.4rem);font-weight:800;font-family:'Playwrite DE SAS',serif;color:var(--gold);">
+        Nuestro Menú
+      </h2>
+      <div class="divider-gold"></div>
+      <p style="color:#6b7280;margin-top:20px;max-width:480px;margin-left:auto;margin-right:auto;font-family:sans-serif;font-size:0.95rem;line-height:1.7;">
+        Preparaciones con alma colombiana, fuego lento y sazón que no se aprende — se hereda.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-7">
+
+      <!-- Card 1 -->
+      <div class="menu-card">
+        <div style="overflow:hidden;height:220px;">
+          <img src="{% static 'imagenes/chicharron.jpg' %}" alt="Chicharrón"
+               style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="padding:24px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">🐷</span>
+            <h3 style="font-size:1.2rem;font-weight:700;color:white;font-family:'Playwrite DE SAS',serif;">Chicharrón Tradicional</h3>
+          </div>
+          <p style="color:#9ca3af;font-size:0.9rem;line-height:1.7;font-family:sans-serif;">
+            Crujiente, jugoso y lleno de sabor. Preparado con amor al estilo Q'chicharrón.
+          </p>
+          <div style="margin-top:16px;display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block;"></span>
+            <span style="font-size:0.75rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;font-family:sans-serif;">Estrella de la casa</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="menu-card">
+        <div style="overflow:hidden;height:220px;">
+          <img src="{% static 'imagenes/caja-china.jpg' %}" alt="Caja China"
+               style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="padding:24px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">🔥</span>
+            <h3 style="font-size:1.2rem;font-weight:700;color:white;font-family:'Playwrite DE SAS',serif;">Caja China Artesanal</h3>
+          </div>
+          <p style="color:#9ca3af;font-size:0.9rem;line-height:1.7;font-family:sans-serif;">
+            Cocción lenta al fuego para un sabor ahumado y textura perfecta que te dejará sin palabras.
+          </p>
+          <div style="margin-top:16px;display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#f87171;display:inline-block;"></span>
+            <span style="font-size:0.75rem;color:#f87171;letter-spacing:0.1em;text-transform:uppercase;font-family:sans-serif;">El favorito</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="menu-card">
+        <div style="overflow:hidden;height:220px;">
+          <img src="{% static 'imagenes/carne-barril.jpg' %}" alt="Carne al Barril"
+               style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="padding:24px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">🫙</span>
+            <h3 style="font-size:1.2rem;font-weight:700;color:white;font-family:'Playwrite DE SAS',serif;">Carne al Barril</h3>
+          </div>
+          <p style="color:#9ca3af;font-size:0.9rem;line-height:1.7;font-family:sans-serif;">
+            Delicadamente cocida al vapor para conservar su jugosidad y sabor natural inigualable.
+          </p>
+          <div style="margin-top:16px;display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#6ee7b7;display:inline-block;"></span>
+            <span style="font-size:0.75rem;color:#6ee7b7;letter-spacing:0.1em;text-transform:uppercase;font-family:sans-serif;">Sabor suave</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </section>
+<!-- ====================== -->
+<!-- UBICACIÓN -->
+<!-- ====================== -->
+<section id="ubicacion" class="py-24 bg-black scroll-mt-20" style="position: relative; overflow: hidden;">
 
+  <!-- Fondo decorativo -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 100%, rgba(212,175,55,0.07) 0%, transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);"></div>
+
+  <div class="max-w-7xl mx-auto px-6" style="position:relative;">
+
+    <!-- TÍTULO -->
+    <div class="text-center mb-16">
+      <p style="color:#d4af37;font-size:0.8rem;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:12px;font-family:sans-serif;">Encuéntranos</p>
+      <h2 class="text-5xl font-bold mb-4"
+          style="color: #d4af37; font-family: 'Playwrite DE SAS', serif;">
+        Nuestra Ubicación
+      </h2>
+      <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:16px auto 20px;"></div>
+      <p class="text-gray-400 max-w-2xl mx-auto">
+        Visítanos y disfruta de una experiencia gastronómica única en el corazón de la ciudad.
+      </p>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div class="grid md:grid-cols-2 gap-0 items-stretch" style="border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,0.2);box-shadow:0 25px 80px rgba(0,0,0,0.6);">
+
+      <!-- MAPA NORMAL (no Street View) -->
+      <div style="position:relative;min-height:520px;">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d991.3!2d-72.92660025675116!3d5.730431832101639!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwNDMnNDkuNiJOIDcywrA1NSczNS42Ilc!5e0!3m2!1ses!2sco!4v1700000000000!5m2!1ses!2sco"
+          style="width:100%;height:100%;min-height:520px;border:0;display:block;filter:grayscale(30%) contrast(1.1);"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+        <!-- Overlay sutil en esquina -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,rgba(0,0,0,0.3),transparent);pointer-events:none;"></div>
+      </div>
+
+      <!-- INFORMACIÓN -->
+      <div style="background:linear-gradient(135deg,#0d0d0d 0%,#1a1400 100%);padding:48px 40px;display:flex;flex-direction:column;justify-content:center;gap:0;">
+
+        <!-- Dirección -->
+        <div style="padding:24px 0;border-bottom:1px solid rgba(212,175,55,0.15);">
+          <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">📍</div>
+            <div>
+              <h3 style="color:#d4af37;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;font-family:sans-serif;">Dirección</h3>
+              <p style="color:#e5e5e5;font-size:1rem;line-height:1.6;">Calle 123 #45-67<br><span style="color:#9ca3af;">Ciudad, Colombia</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teléfono -->
+        <div style="padding:24px 0;border-bottom:1px solid rgba(212,175,55,0.15);">
+          <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">📞</div>
+            <div>
+              <h3 style="color:#d4af37;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;font-family:sans-serif;">Teléfono</h3>
+              <p style="color:#e5e5e5;font-size:1rem;">+57 317 894 9182</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horarios -->
+        <div style="padding:24px 0;border-bottom:1px solid rgba(212,175,55,0.15);">
+          <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">🕒</div>
+            <div>
+              <h3 style="color:#d4af37;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;font-family:sans-serif;">Horarios</h3>
+              <div style="color:#e5e5e5;font-size:0.95rem;line-height:1.8;">
+                <div style="display:flex;justify-content:space-between;gap:24px;">
+                  <span style="color:#9ca3af;">Sab - Dom</span>
+                  <span>11:30 AM – 04:30 PM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón -->
+        <div style="padding-top:28px;">
+          <a href="https://maps.app.goo.gl/3wEaGLe5Lhq7ZcBq8"
+             target="_blank"
+             style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#c0392b,#96281b);color:white;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:0.95rem;transition:all 0.3s;box-shadow:0 8px 24px rgba(192,57,43,0.35);letter-spacing:0.03em;"
+             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(192,57,43,0.5)'"
+             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 24px rgba(192,57,43,0.35)'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+            Cómo llegar
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
 {% endblock %}

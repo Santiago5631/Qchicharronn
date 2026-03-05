@@ -100,12 +100,14 @@
         </div>
     </div>
 
-    <!-- Tabla de nóminas -->
+    <!-- Tabla de nóminas — solo si se hizo una búsqueda -->
+    {% if request.GET.fecha_inicio or request.GET.empleado or request.GET.estado %}
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Lista de Nóminas</h6>
         </div>
         <div class="card-body">
+            {% if nominas %}
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                     <thead>
@@ -157,10 +159,6 @@
                                 </button>
                             </td>
                         </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="10" class="text-center">No hay nóminas registradas</td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -175,11 +173,9 @@
                         <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Anterior</a>
                     </li>
                     {% endif %}
-
                     <li class="page-item active">
                         <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
                     </li>
-
                     {% if page_obj.has_next %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Siguiente</a>
@@ -188,8 +184,31 @@
                 </ul>
             </nav>
             {% endif %}
+
+            {% else %}
+            <!-- Sin resultados tras la búsqueda -->
+            <div class="text-center py-5">
+                <div style="font-size:3.5rem;">💼</div>
+                <h5 class="mt-3 text-muted fw-bold">No se encontraron nóminas</h5>
+                <p class="text-muted">No hay nóminas registradas con los filtros seleccionados.<br>
+                Intenta con otro rango de fechas, empleado o estado.</p>
+            </div>
+            {% endif %}
+
         </div>
     </div>
+    {% else %}
+    <!-- Estado inicial — instrucción -->
+    <div class="card shadow mb-4">
+        <div class="card-body text-center py-5">
+            <div style="font-size:3.5rem;">🔍</div>
+            <h5 class="mt-3 text-muted fw-bold">Usa los filtros para buscar nóminas</h5>
+            <p class="text-muted">Selecciona un rango de fechas, empleado o estado y haz clic en
+                <strong>buscar</strong> para ver los resultados.</p>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -207,12 +226,9 @@ function eliminarNomina(pk) {
     }).then((result) => {
         if (result.isConfirmed) {
             const url = "{% url 'apl:nomina:eliminar_nomina' 0 %}".replace("0", pk);
-
             fetch(url, {
                 method: "DELETE",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}"
-                }
+                headers: { "X-CSRFToken": "{{ csrf_token }}" }
             })
             .then(res => res.json())
             .then(data => {
