@@ -1,0 +1,451 @@
+{% load static %}
+{% load permisos_tags %}
+
+{% if request.user|cargo_en:"administrador,mesero" %}
+<div id="chatbot-widget">
+<style>
+  /* ── Botón flotante ── */
+  .chatbot-btn {
+    position: fixed;
+    bottom: 80px; /* encima del botón de Sienna que está a 20px */
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    box-shadow: 0 5px 15px rgba(249,115,22,0.4), 0 2px 4px rgba(234,88,12,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 499999; /* justo debajo del Sienna */
+    transition: transform 0.2s;
+    border: none;
+  }
+  .chatbot-btn:hover { transform: scale(1.05); }
+  .chatbot-btn svg   { width: 26px; height: 26px; fill: #fff; }
+
+  /* Punto de notificación */
+  .chatbot-btn-dot {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid #fff;
+  }
+
+  /* ── Panel del chat ── */
+  .chatbot-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 80px;  /* a la izquierda del botón: 50px botón + 10px gap + 20px margen base */
+    width: 460px;
+    height: 640px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+    display: none;
+    flex-direction: column;
+    z-index: 499998;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  .chatbot-panel.open { display: flex; }
+
+  /* ── Header ── */
+  .cw-header {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .cw-header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .cw-header-title { font-size: 14px; font-weight: 700; color: #fff; margin: 0; line-height: 1.2; }
+  .cw-header-sub   { font-size: 11px; color: rgba(255,255,255,0.5); margin: 0; }
+  .cw-header-actions { margin-left: auto; display: flex; gap: 4px; }
+  .cw-header-btn {
+    background: rgba(255,255,255,0.1);
+    border: none; border-radius: 8px;
+    color: #fff; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; transition: background 0.2s;
+  }
+  .cw-header-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ── Mensajes ── */
+  .cw-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f8fafc;
+  }
+  .cw-msg-row { display: flex; gap: 8px; align-items: flex-end; }
+  .cw-msg-row.user { flex-direction: row-reverse; }
+
+  .cw-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .cw-avatar.bot  { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
+  .cw-avatar.user { background: #1e293b; color: #fff; }
+
+  .cw-bubble {
+    max-width: 80%;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    word-break: break-word;
+  }
+  .cw-bubble.bot {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .cw-bubble.user {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .cw-bubble p { margin: 0 0 6px; }
+  .cw-bubble p:last-child { margin: 0; }
+  .cw-bubble ul, .cw-bubble ol { margin: 6px 0; padding-left: 18px; }
+  .cw-bubble li { margin-bottom: 3px; }
+  .cw-bubble.bot strong { color: #f97316; }
+
+  .cw-time {
+    font-size: 9px; color: #9ca3af;
+    margin-top: 3px;
+  }
+  .cw-msg-row.user .cw-time { text-align: right; }
+
+  /* ── Typing ── */
+  .cw-typing { display: none; }
+  .cw-typing.visible { display: flex; }
+  .cw-typing-dots {
+    display: flex; gap: 4px; align-items: center;
+    background: #fff; border: 1px solid #e5e7eb;
+    padding: 10px 14px; border-radius: 14px;
+    border-bottom-left-radius: 4px;
+  }
+  .cw-typing-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #f97316; animation: cw-bounce 1.2s infinite;
+  }
+  .cw-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .cw-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes cw-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30%           { transform: translateY(-5px); }
+  }
+
+  /* ── Sugerencias ── */
+  .cw-sugerencias {
+    padding: 8px 12px;
+    background: #fff;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .cw-sug-btn {
+    font-size: 10px; padding: 4px 10px;
+    border: 1px solid #e5e7eb; border-radius: 20px;
+    background: #f9fafb; color: #374151;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    font-family: inherit;
+  }
+  .cw-sug-btn:hover { background: #f97316; color: #fff; border-color: #f97316; }
+
+  /* ── Input ── */
+  .cw-input-area {
+    padding: 10px 12px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .cw-input {
+    flex: 1;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    resize: none;
+    max-height: 100px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    line-height: 1.4;
+  }
+  .cw-input:focus { border-color: #f97316; }
+  .cw-send-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: none; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: all 0.2s; font-size: 14px;
+  }
+  .cw-send-btn:hover    { transform: scale(1.05); }
+  .cw-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Estado vacío ── */
+  .cw-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #9ca3af; text-align: center; padding: 24px;
+  }
+  .cw-empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .cw-empty h6   { color: #374151; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+  .cw-empty p    { font-size: 12px; max-width: 260px; margin: 0; }
+
+  /* ── Responsive ── */
+  @media (max-width: 560px) {
+    .chatbot-panel { width: calc(100vw - 100px); right: 80px; bottom: 20px; }
+  }
+</style>
+
+<!-- Botón flotante -->
+<button class="chatbot-btn" id="cw-toggle-btn" title="Asistente IA Q'Chicharron" aria-label="Abrir asistente IA">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+    <circle cx="8.5" cy="10.5" r="1.5"/><circle cx="12" cy="10.5" r="1.5"/><circle cx="15.5" cy="10.5" r="1.5"/>
+  </svg>
+  <span class="chatbot-btn-dot" id="cw-dot"></span>
+</button>
+
+<!-- Panel del chat -->
+<div class="chatbot-panel" id="cw-panel">
+
+  <!-- Header -->
+  <div class="cw-header">
+    <div class="cw-header-icon">🤖</div>
+    <div>
+      <p class="cw-header-title">Asistente Q'Chicharron</p>
+      <p class="cw-header-sub">IA · Groq LLaMA 3</p>
+    </div>
+    <div class="cw-header-actions">
+      <button class="cw-header-btn" id="cw-new-btn" title="Nueva conversación">
+        <i class="bi bi-plus-circle"></i>
+      </button>
+      <button class="cw-header-btn" id="cw-close-btn" title="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="cw-messages" id="cw-messages">
+    <div class="cw-empty" id="cw-empty">
+      <div class="cw-empty-icon">🍽️</div>
+      <h6>¿En qué te puedo ayudar?</h6>
+      <p>Consulta stock, pedidos activos, ventas del día y más.</p>
+    </div>
+
+    <!-- Typing indicator -->
+    <div class="cw-msg-row cw-typing" id="cw-typing">
+      <div class="cw-avatar bot">🤖</div>
+      <div class="cw-typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sugerencias -->
+  <div class="cw-sugerencias" id="cw-sugerencias">
+    <button class="cw-sug-btn" onclick="cwUsarSugerencia(this)">📦 Productos por agotarse</button>
+    <button class="cw-sug-btn" onclick="cwUsarSugerencia(this)">📋 Pedidos activos</button>
+    <button class="cw-sug-btn" onclick="cwUsarSugerencia(this)">💰 Ventas de hoy</button>
+    <button class="cw-sug-btn" onclick="cwUsarSugerencia(this)">🥤 Stock de gaseosas</button>
+  </div>
+
+  <!-- Input -->
+  <div class="cw-input-area">
+    <textarea id="cw-input" class="cw-input"
+              placeholder="Escribe tu pregunta... (Enter para enviar)"
+              rows="1"></textarea>
+    <button class="cw-send-btn" id="cw-send-btn" title="Enviar">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+  const URL_ENVIAR = "{% url 'apl:asistente:enviar' %}";
+  const URL_NUEVA  = "{% url 'apl:asistente:nueva' %}";
+  const INICIAL    = "{{ request.user.get_short_name|first|upper }}";
+
+  const panel      = document.getElementById('cw-panel');
+  const toggleBtn  = document.getElementById('cw-toggle-btn');
+  const closeBtn   = document.getElementById('cw-close-btn');
+  const newBtn     = document.getElementById('cw-new-btn');
+  const messages   = document.getElementById('cw-messages');
+  const typing     = document.getElementById('cw-typing');
+  const sugerencias= document.getElementById('cw-sugerencias');
+  const input      = document.getElementById('cw-input');
+  const sendBtn    = document.getElementById('cw-send-btn');
+  const dot        = document.getElementById('cw-dot');
+
+  /* ── Abrir / cerrar ── */
+  toggleBtn.addEventListener('click', function () {
+    const isOpen = panel.classList.toggle('open');
+    dot.style.display = isOpen ? 'none' : '';
+    if (isOpen) input.focus();
+  });
+  closeBtn.addEventListener('click', function () {
+    panel.classList.remove('open');
+  });
+
+  /* ── Cerrar al hacer click fuera ── */
+  document.addEventListener('click', function (e) {
+    if (!panel.contains(e.target) && !toggleBtn.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
+
+  /* ── Auto-resize textarea ── */
+  input.addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
+
+  /* ── Enter para enviar ── */
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      cwEnviar();
+    }
+  });
+
+  sendBtn.addEventListener('click', cwEnviar);
+
+  /* ── Helpers ── */
+  function scrollAbajo() {
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function mostrarTyping() {
+    typing.classList.add('visible');
+    scrollAbajo();
+  }
+
+  function ocultarTyping() {
+    typing.classList.remove('visible');
+  }
+
+  function agregarMensaje(rol, texto) {
+    const empty = document.getElementById('cw-empty');
+    if (empty) empty.remove();
+
+    const ahora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    const html  = texto
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    const div = document.createElement('div');
+    div.className = `cw-msg-row${rol === 'user' ? ' user' : ''}`;
+    div.innerHTML = `
+      <div class="cw-avatar ${rol === 'user' ? 'user' : 'bot'}">
+        ${rol === 'user' ? INICIAL : '🤖'}
+      </div>
+      <div>
+        <div class="cw-bubble ${rol === 'user' ? 'user' : 'bot'}">${html}</div>
+        <div class="cw-time">${ahora}</div>
+      </div>`;
+
+    messages.insertBefore(div, typing);
+    scrollAbajo();
+  }
+
+  /* ── Enviar mensaje ── */
+  async function cwEnviar() {
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    sendBtn.disabled = true;
+    input.value = '';
+    input.style.height = 'auto';
+
+    if (sugerencias) sugerencias.style.display = 'none';
+
+    agregarMensaje('user', texto);
+    mostrarTyping();
+
+    try {
+      const res  = await fetch(URL_ENVIAR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ mensaje: texto })
+      });
+      const data = await res.json();
+      ocultarTyping();
+      agregarMensaje('assistant', data.error ? `⚠️ Error: ${data.error}` : data.respuesta);
+    } catch {
+      ocultarTyping();
+      agregarMensaje('assistant', '⚠️ No se pudo conectar con el asistente.');
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+      /* Notificar si el panel está cerrado */
+      if (!panel.classList.contains('open')) {
+        dot.style.display = '';
+      }
+    }
+  }
+
+  /* ── Sugerencias ── */
+  window.cwUsarSugerencia = function (btn) {
+    input.value = btn.textContent.replace(/^[^\s]+\s/, '').trim();
+    input.focus();
+    cwEnviar();
+  };
+
+  /* ── Nueva conversación ── */
+  newBtn.addEventListener('click', async function () {
+    if (!confirm('¿Iniciar una nueva conversación? Se perderá el historial actual.')) return;
+    await fetch(URL_NUEVA, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF }
+    });
+    /* Limpiar mensajes visualmente sin recargar la página */
+    messages.innerHTML = `
+      <div class="cw-empty" id="cw-empty">
+        <div class="cw-empty-icon">🍽️</div>
+        <h6>¿En qué te puedo ayudar?</h6>
+        <p>Consulta stock, pedidos activos, ventas del día y más.</p>
+      </div>
+      <div class="cw-msg-row cw-typing" id="cw-typing">
+        <div class="cw-avatar bot">🤖</div>
+        <div class="cw-typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>`;
+    if (sugerencias) sugerencias.style.display = '';
+  });
+
+})();
+</script>
+</div>
+{% endif %}

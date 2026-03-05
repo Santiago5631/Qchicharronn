@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     const defaultOptions = {
-        buttonColor: '#0ec4d5',
+        buttonColor: '#FF5722',
         buttonIconColor: '#ffffff',
-        highlightColor: '#0ec4d5',
+        highlightColor: '#FF5722',
         menuBackgroundColor: '#ffffff',
         menuTextColor: '#333333',
         customLabels: {}
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-menu-btn:hover { transform: scale(1.05); }
         .asw-menu { display: none; top: 20px; border-radius: 8px; box-shadow: -1px 0 20px -14px #000; opacity: 1; overflow: hidden; background: ${options.menuBackgroundColor}; width: 500px; line-height: 1; font-size: 14px; height: calc(100vh - 40px - 75px); letter-spacing: .015em; color: ${options.menuTextColor}; }
         .asw-btn, .asw-footer a { font-size: 14px !important; }
-        .asw-menu-header { display: flex; align-items: center; justify-content: space-between; background: #0ec4d5; color: #fff; padding-left: 12px; font-weight: 600; }
+        .asw-menu-header { display: flex; align-items: center; justify-content: space-between; background: #ff5722; color: #fff; padding-left: 12px; font-weight: 600; }
         .asw-menu-header > div { display: flex; }
         .asw-menu-header div[role=button] { padding: 12px; cursor: pointer; }
         .asw-menu-header div[role=button]:hover, .asw-minus:hover, .asw-plus:hover { opacity: .8; }
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-btn .material-icons { margin-bottom: 16px; }
         .asw-btn:hover { border-color: ${options.highlightColor}; }
         .asw-btn.asw-selected { background: ${options.highlightColor}; color: #fff; border-color: ${options.highlightColor}; }
-        .asw-footer { position: absolute; bottom: 0; left: 0; right: 0; background: #0ec4d5; padding: 16px; text-align: center; color: #fff; }
+        .asw-footer { position: absolute; bottom: 0; left: 0; right: 0; background: #ff5722; padding: 16px; text-align: center; color: #fff; }
         .asw-footer a { text-decoration: underline; color: #fff; background: 0 0 !important; }
         .asw-menu-content { overflow: scroll; max-height: calc(100% - 80px); }
         .asw-card { margin: 0 15px 30px; }
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .asw-adjust-font { background: #ecf3ff; padding: 20px 25px; margin-bottom: 16px; }
         .asw-adjust-font .label { display: flex; align-items: center; }
         .asw-adjust-font > div { display: flex; justify-content: space-between; margin-top: 20px; align-items: center; font-size: 16px; font-weight: 700; }
-        .asw-adjust-font div[role=button] { background: #0ec4d5; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
+        .asw-adjust-font div[role=button] { background: #ff5722; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
         .asw-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: none; }
         @media only screen and (max-width: 560px) {
             .asw-menu { width: calc(100vw - 20px); left: 10px; }

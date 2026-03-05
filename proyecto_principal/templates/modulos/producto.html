@@ -9,15 +9,64 @@
     {% csrf_token %}
 </form>
 
+<!-- ++ Barra de búsqueda JS nativo ++ -->
+<div class="card shadow mb-3">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-search me-1"></i>Nombre</label>
+        <input type="text" id="filtro-nombre" class="form-control form-control-sm"
+               placeholder="Buscar producto..." oninput="filtrarProductos()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-tag me-1"></i>Categoría</label>
+        <input type="text" id="filtro-categoria" class="form-control form-control-sm"
+               placeholder="Ej: Bebidas" oninput="filtrarProductos()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-building me-1"></i>Proveedor</label>
+        <input type="text" id="filtro-proveedor" class="form-control form-control-sm"
+               placeholder="Nombre proveedor" oninput="filtrarProductos()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-boxes me-1"></i>Stock mín.</label>
+        <input type="number" id="filtro-stock" class="form-control form-control-sm"
+               placeholder="Ej: 10" min="0" oninput="filtrarProductos()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-wrench me-1"></i>Tipo de uso</label>
+        <input type="text" id="filtro-tipo" class="form-control form-control-sm"
+               placeholder="Ej: Cocina" oninput="filtrarProductos()">
+      </div>
+
+      <div class="col-12 col-md-1">
+        <label class="form-label small mb-1">&nbsp;</label>
+        <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltrosProductos()">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+
+    </div>
+    <div class="mt-2">
+      <small class="text-muted" id="contador-productos"></small>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla original con DataTable -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
     </div>
 
     <div class="card-body">
-
         <div class="table-responsive">
-            <table class="table table-bordered datatable" width="100%" cellspacing="0">
+            <table class="table table-bordered datatable" id="tablaProductos" width="100%" cellspacing="0">
 
                 <thead class="text-center">
                     <tr>
@@ -40,10 +89,14 @@
                     </tr>
                 </thead>
 
-                <tbody>
-
+                <tbody id="productos-tbody">
                     {% for p in productos %}
-                    <tr>
+                    <tr class="producto-row"
+                        data-nombre="{{ p.nombre|lower }}"
+                        data-categoria="{{ p.categoria|lower }}"
+                        data-proveedor="{{ p.proveedor|lower }}"
+                        data-stock="{{ p.stock }}"
+                        data-tipo="{{ p.tipo_uso|lower }}">
 
                         <td class="text-center">{{ p.id }}</td>
                         <td>{{ p.nombre }}</td>
@@ -56,45 +109,73 @@
                         <td>{{ p.tipo_uso }}</td>
 
                         <td class="text-center">
-
                             <a href="{% url 'apl:producto:editar_producto' p.id %}">
-                                <button type="button"
-                                        class="btn btn-warning btn-sm mb-1"
-                                        title="Editar">
+                                <button type="button" class="btn btn-warning btn-sm mb-1" title="Editar">
                                     <i class="bi bi-pen-fill"></i>
                                 </button>
                             </a>
-
-                            <button
-                                type="button"
-                                class="btn btn-danger btn-sm mb-1 btn-delete"
-                                data-url="{% url 'apl:producto:eliminar_producto' p.id %}"
-                                data-name="{{ p.nombre }}"
-                                title="Eliminar">
-
+                            <button type="button"
+                                    class="btn btn-danger btn-sm mb-1 btn-delete"
+                                    data-url="{% url 'apl:producto:eliminar_producto' p.id %}"
+                                    data-name="{{ p.nombre }}"
+                                    title="Eliminar">
                                 <i class="bi bi-trash3-fill"></i>
-
                             </button>
-
                         </td>
-
                     </tr>
                     {% empty %}
-
                     <tr>
-                        <td colspan="10" class="text-center">
-                            No hay productos registrados.
-                        </td>
+                        <td colspan="10" class="text-center">No hay productos registrados.</td>
                     </tr>
-
                     {% endfor %}
-
                 </tbody>
 
             </table>
         </div>
-
     </div>
 </div>
+
+<script>
+/* ── Filtro JS nativo ──
+   Actúa sobre las filas directamente. El DataTable sigue
+   funcionando normalmente para paginación y búsqueda global. */
+function filtrarProductos() {
+  const nombre    = document.getElementById('filtro-nombre').value.toLowerCase().trim();
+  const categoria = document.getElementById('filtro-categoria').value.toLowerCase().trim();
+  const proveedor = document.getElementById('filtro-proveedor').value.toLowerCase().trim();
+  const stockMin  = parseInt(document.getElementById('filtro-stock').value) || 0;
+  const tipo      = document.getElementById('filtro-tipo').value.toLowerCase().trim();
+
+  const rows = document.querySelectorAll('.producto-row');
+  let visibles = 0;
+
+  rows.forEach(row => {
+    const stock = parseInt(row.dataset.stock) || 0;
+    const ok = (!nombre    || row.dataset.nombre.includes(nombre))
+            && (!categoria || row.dataset.categoria.includes(categoria))
+            && (!proveedor || row.dataset.proveedor.includes(proveedor))
+            && (stock >= stockMin)
+            && (!tipo      || row.dataset.tipo.includes(tipo));
+    row.style.display = ok ? '' : 'none';
+    if (ok) visibles++;
+  });
+
+  const contador = document.getElementById('contador-productos');
+  if (contador) contador.textContent = visibles === rows.length
+    ? `${rows.length} producto(s)`
+    : `${visibles} de ${rows.length} producto(s)`;
+}
+
+function limpiarFiltrosProductos() {
+  document.getElementById('filtro-nombre').value    = '';
+  document.getElementById('filtro-categoria').value = '';
+  document.getElementById('filtro-proveedor').value = '';
+  document.getElementById('filtro-stock').value     = '';
+  document.getElementById('filtro-tipo').value      = '';
+  filtrarProductos();
+}
+
+document.addEventListener('DOMContentLoaded', filtrarProductos);
+</script>
 
 {% endblock %}

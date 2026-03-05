@@ -2,16 +2,51 @@
 
 {% block content %}
 
-<div class="card shadow mb-4">
+<!-- ++ Barra de búsqueda JS nativo ++ -->
+<div class="card shadow mb-3">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
 
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-grid me-1"></i>Número de Mesa</label>
+        <input type="text" id="filtro-numero" class="form-control form-control-sm"
+               placeholder="Ej: 3 o Terraza" oninput="filtrarMesas()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-map me-1"></i>Ubicación</label>
+        <input type="text" id="filtro-ubicacion" class="form-control form-control-sm"
+               placeholder="Ej: Interior, Patio..." oninput="filtrarMesas()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-people me-1"></i>Capacidad mínima</label>
+        <input type="number" id="filtro-capacidad" class="form-control form-control-sm"
+               placeholder="Ej: 4" min="1" oninput="filtrarMesas()">
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1">&nbsp;</label>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="limpiarFiltrosMesas()">
+            <i class="bi bi-x-circle me-1"></i>Limpiar
+          </button>
+          <small class="text-muted my-auto" id="contador-mesas"></small>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Tabla original con DataTable -->
+<div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
     </div>
 
     <div class="card-body">
-
         <div class="table-responsive">
-
             <table class="table table-bordered datatable" width="100%" cellspacing="0">
 
                 <thead class="text-center">
@@ -22,11 +57,8 @@
                         <th>Ubicación</th>
                         <th style="width:140px;">
                             <a href="{% url 'apl:mesa:crear_mesa' %}">
-                                <button type="button"
-                                        class="btn btn-success btn-sm"
-                                        title="Crear Mesa">
-                                    <i class="bi bi-plus-circle-fill"></i>
-                                    Nueva Mesa
+                                <button type="button" class="btn btn-success btn-sm" title="Crear Mesa">
+                                    <i class="bi bi-plus-circle-fill"></i> Nueva Mesa
                                 </button>
                             </a>
                         </th>
@@ -34,9 +66,11 @@
                 </thead>
 
                 <tbody>
-
                     {% for m in mesa %}
-                    <tr>
+                    <tr class="mesa-row"
+                        data-numero="{{ m.numero|lower }}"
+                        data-ubicacion="{{ m.ubicacion|lower }}"
+                        data-capacidad="{{ m.capacidad }}">
 
                         <td>{{ m.id }}</td>
                         <td>{{ m.numero }}</td>
@@ -44,42 +78,63 @@
                         <td>{{ m.ubicacion }}</td>
 
                         <td class="text-center">
-
                             <a href="{% url 'apl:mesa:editar_mesa' m.id %}"
-                               class="btn btn-warning btn-sm"
-                               title="Editar Mesa">
+                               class="btn btn-warning btn-sm" title="Editar Mesa">
                                 <i class="bi bi-pen-fill"></i>
                             </a>
-
                             <button type="button"
                                     class="btn btn-danger btn-sm btn-delete"
                                     data-url="{% url 'apl:mesa:eliminar_mesa' m.id %}"
                                     data-name="la mesa {{ m.numero }}"
                                     title="Eliminar">
-
                                 <i class="bi bi-trash3-fill"></i>
-
                             </button>
-
                         </td>
-
                     </tr>
-
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">
-                            No hay mesas registradas.
-                        </td>
+                        <td colspan="5" class="text-center">No hay mesas registradas.</td>
                     </tr>
                     {% endfor %}
-
                 </tbody>
 
             </table>
-
         </div>
-
     </div>
 </div>
+
+<script>
+function filtrarMesas() {
+  const numero    = document.getElementById('filtro-numero').value.toLowerCase().trim();
+  const ubicacion = document.getElementById('filtro-ubicacion').value.toLowerCase().trim();
+  const capMin    = parseInt(document.getElementById('filtro-capacidad').value) || 0;
+
+  const rows = document.querySelectorAll('.mesa-row');
+  let visibles = 0;
+
+  rows.forEach(row => {
+    const capacidad = parseInt(row.dataset.capacidad) || 0;
+    const ok = (!numero    || row.dataset.numero.includes(numero))
+            && (!ubicacion || row.dataset.ubicacion.includes(ubicacion))
+            && (capacidad >= capMin);
+    row.style.display = ok ? '' : 'none';
+    if (ok) visibles++;
+  });
+
+  const contador = document.getElementById('contador-mesas');
+  if (contador) contador.textContent = visibles === rows.length
+    ? `${rows.length} mesa(s)`
+    : `${visibles} de ${rows.length} mesa(s)`;
+}
+
+function limpiarFiltrosMesas() {
+  document.getElementById('filtro-numero').value    = '';
+  document.getElementById('filtro-ubicacion').value = '';
+  document.getElementById('filtro-capacidad').value = '';
+  filtrarMesas();
+}
+
+document.addEventListener('DOMContentLoaded', filtrarMesas);
+</script>
 
 {% endblock %}
