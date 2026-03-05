@@ -190,3 +190,205 @@ def exportar_compras_pdf(request):
     filename = f"compras_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+@rol_requerido(*SOLO_ADMIN)
+def exportar_compras_pdf(request):
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Table,
+        TableStyle,
+        Paragraph,
+        Spacer,
+        HRFlowable,
+    )
+    from reportlab.lib.units import mm
+    import io
+    from django.utils import timezone
+
+    buffer = io.BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=22*mm,
+        leftMargin=22*mm,
+        topMargin=32*mm,
+        bottomMargin=24*mm
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Estilos personalizados
+    title_style = ParagraphStyle(
+        name='ElegantTitle',
+        fontSize=20,
+        textColor=colors.HexColor('#1a3c6d'),
+        alignment=1,  # center
+        spaceAfter=8,
+        leading=24,
+    )
+
+    subtitle_style = ParagraphStyle(
+        name='Subtitle',
+        fontSize=10.5,
+        textColor=colors.HexColor('#5a7184'),
+        alignment=1,
+        spaceAfter=28,
+    )
+
+    header_cell_style = ParagraphStyle(
+        name='HeaderCell',
+        fontSize=10,
+        fontName='Helvetica-Bold',
+        textColor=colors.white,
+        alignment=1,  # center
+        leading=12,
+    )
+
+    normal_cell_style = ParagraphStyle(
+        name='NormalCell',
+        fontSize=9.5,
+        leading=11.5,
+        alignment=0,  # left por defecto
+    )
+
+    price_cell_style = ParagraphStyle(
+        name='PriceCell',
+        parent=normal_cell_style,
+        alignment=2,  # right
+    )
+
+    total_style = ParagraphStyle(
+        name='TotalStyle',
+        fontSize=11,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#1a3c6d'),
+        alignment=2,  # right
+    )
+
+    # Título principal
+    elements.append(Paragraph("LISTADO DE COMPRAS", title_style))
+
+    # Línea decorativa dorada debajo del título
+    elements.append(Spacer(1, 6))
+    elements.append(HRFlowable(
+        width="60%",
+        thickness=1.2,
+        lineCap='round',
+        color=colors.HexColor('#d4af37'),  # dorado elegante
+        spaceBefore=4,
+        spaceAfter=18,
+        hAlign='CENTER'
+    ))
+
+    # Fecha de generación
+    fecha = timezone.now().strftime("%d/%m/%Y %H:%M")
+    elements.append(Paragraph(f"Generado el {fecha}", subtitle_style))
+
+    elements.append(Spacer(1, 18))
+
+    # ── Tabla ────────────────────────────────────────────────────────────────
+    data = [[
+        Paragraph("ID", header_cell_style),
+        Paragraph("Producto", header_cell_style),
+        Paragraph("Fecha", header_cell_style),
+        Paragraph("Precio", header_cell_style),
+        Paragraph("Proveedor", header_cell_style),
+        Paragraph("Cantidad", header_cell_style),
+        Paragraph("Unidad", header_cell_style),
+    ]]
+
+    compras = Compra.objects.select_related('producto').order_by('-fecha')
+    total_precio = 0.0
+
+    for compra in compras:
+        precio = float(compra.precio or 0)
+        total_precio += precio
+
+        unidad_txt = str(compra.unidad) if compra.unidad else ""
+        if len(unidad_txt) > 55:
+            unidad_txt = unidad_txt[:52] + "..."
+
+        data.append([
+            Paragraph(str(compra.id_factura or "—"), normal_cell_style),
+            Paragraph(str(compra.producto.nombre if compra.producto else "—"), normal_cell_style),
+            Paragraph(compra.fecha.strftime("%d/%m/%Y") if compra.fecha else "—", normal_cell_style),
+            Paragraph(f"S/ {precio:,.2f}", price_cell_style),
+            Paragraph(str(compra.proveedor) if compra.proveedor else "—", normal_cell_style),
+            Paragraph(f"{compra.cantidad or 0:g}", normal_cell_style),
+            Paragraph(unidad_txt, normal_cell_style),
+        ])
+
+    # Fila total
+    data.append([
+        Paragraph("TOTAL GENERAL", total_style),
+        Paragraph("", normal_cell_style),
+        Paragraph("", normal_cell_style),
+        Paragraph("", normal_cell_style),
+        Paragraph("", normal_cell_style),
+        Paragraph("", normal_cell_style),
+        Paragraph(f"S/ {total_precio:,.2f}", total_style),
+    ])
+
+    # Anchos de columnas (ajustados para que quepa bien en A4)
+    col_widths = [48, 138, 68, 78, 105, 58, 98]
+
+    table = Table(data, colWidths=col_widths, repeatRows=1)
+
+    table.setStyle(TableStyle([
+        # Encabezado
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+        ('TEXTCOLOR',  (0, 0), (-1, 0), colors.white),
+        ('ALIGN',      (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN',     (0, 0), (-1, 0), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING',    (0, 0), (-1, 0), 10),
+
+        # Bordes redondeados simulados (solo visual)
+        ('BOX',        (0, 0), (-1, -1), 0.8, colors.HexColor('#0d6efd')),
+        ('GRID',       (0, 1), (-1, -1), 0.4, colors.HexColor('#d0e0ff')),
+
+        # Alineaciones por columna
+        ('ALIGN',      (0, 1), (0, -1), 'CENTER'),   # ID
+        ('ALIGN',      (2, 1), (2, -1), 'CENTER'),   # Fecha
+        ('ALIGN',      (3, 1), (3, -1), 'RIGHT'),    # Precio
+        ('ALIGN',      (5, 1), (5, -1), 'CENTER'),   # Cantidad
+        ('ALIGN',      (6, 1), (6, -2), 'LEFT'),     # Unidad
+
+        # Fondo filas alternas muy sutil
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f8fbff')]),
+
+        # Total
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e7f1ff')),
+        ('SPAN',       (0, -1), (5, -1)),  # TOTAL GENERAL ocupa hasta Cantidad
+        ('ALIGN',      (6, -1), (6, -1), 'RIGHT'),
+        ('FONTSIZE',   (0, -1), (-1, -1), 10.8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 12),
+        ('TOPPADDING',    (0, -1), (-1, -1), 12),
+    ]))
+
+    elements.append(table)
+
+    # Pie de página
+    elements.append(Spacer(1, 36))
+    elements.append(Paragraph(
+        "Reporte generado por el sistema de compras",
+        ParagraphStyle(
+            name='Footer',
+            fontSize=8.5,
+            textColor=colors.HexColor('#6c757d'),
+            alignment=1,
+        )
+    ))
+
+    doc.build(elements)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    filename = f"listado_compras_{timezone.now().strftime('%Y%m%d_%H%M')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
