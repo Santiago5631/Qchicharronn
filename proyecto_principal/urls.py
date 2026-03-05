@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 
 app_name = 'apl'
 urlpatterns = [
-    path('dashboard/', login_required(views.dashboard), name='dashboard'),
+
     path('dashboard/', views.dashboard, name='dashboard'),
     # _________________________ Modulos de Usuario __________________________
     path('usuarios/', include(("usuario.urls", 'usuario'), namespace='usuario')),

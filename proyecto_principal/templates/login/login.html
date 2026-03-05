@@ -14,6 +14,7 @@
     <link href="{% static 'lib/css/custom.css' %}" rel="stylesheet">
     <link rel="icon" href="{% static 'imagenes/favicon.png' %}">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gradient-primary">
@@ -72,7 +73,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <div class="g-recaptcha" data-sitekey="6LdY9wssAAAAAGxHWaPN1ghggkzyEjzOI_7TCan6"></div>
+                                            <div class="g-recaptcha" data-sitekey="{{ recaptcha_public_key }}"></div>
                                         </div>
 
                                         <button type="submit" class="btn btn-primary btn-user btn-block">
@@ -102,30 +103,37 @@
     <script src="{% static 'lib/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
     <script src="{% static 'lib/js/sb-admin-2.min.js' %}"></script>
 
-<script>
-document.querySelector('form.user').addEventListener('submit', function(e) {
-    if (grecaptcha.getResponse() === "") {
-        e.preventDefault();
-        Swal.fire({
-            icon: 'warning',
-            title: '¡Falta el reCAPTCHA!',
-            text: 'Por favor confirma que no eres un robot antes de registrarte.',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#d33'
+    <script>
+        // Función central de validación del reCAPTCHA
+        function validarCaptcha() {
+            if (grecaptcha.getResponse() === "") {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Falta el reCAPTCHA!',
+                    text: 'Por favor confirma que no eres un robot antes de iniciar sesión.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4e73df'
+                });
+                return false;
+            }
+            return true;
+        }
+
+        // Captura tanto el click en el botón como el Enter desde cualquier input
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            if (!validarCaptcha()) {
+                e.preventDefault();
+                return false;
+            }
         });
-        return false;
-    }
-});
-</script>
 
-<script>
-
-        // Mostrar errores con SweetAlert
+        // Mostrar errores de credenciales con SweetAlert (solo si no hay messages de Django)
         {% if form.errors and not messages %}
             Swal.fire({
-                title: 'Error',
+                title: 'Credenciales incorrectas',
                 text: 'Usuario o contraseña incorrectos.',
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#4e73df'
             });
         {% endif %}
     </script>

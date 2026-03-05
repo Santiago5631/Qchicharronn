@@ -7,6 +7,7 @@
     </div>
 
     <div class="row">
+        <!-- COLUMNA IZQUIERDA: GENERAR BACKUP -->
         <div class="col-lg-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -17,17 +18,16 @@
                     <p>Al hacer clic en el botón, el sistema realizará las siguientes acciones:</p>
                     <ul>
                         <li>Exportar la base de datos actual (MySQL).</li>
-                        <li>Comprimir el archivo con <strong>Gzip</strong>.</li>
-                        <li>Encriptar con algoritmo <strong>AES-256 (OpenSSL)</strong>.</li>
-                        <li>Subir el archivo protegido a Google Drive.</li>
+                        <li>Comprimir el archivo en formato <strong>.zip</strong>.</li>
+                        <li>Subir automáticamente el archivo a Google Drive.</li>
                     </ul>
 
                     <div class="alert alert-info border-left-info" role="alert">
-                        <strong>Nota:</strong> Este proceso garantiza que tus datos viajen cifrados y seguros a la nube.
+                        <strong>Nota:</strong> Este proceso puede tardar dependiendo del tamaño de tus datos y la velocidad de internet.
                     </div>
 
                     {% if autenticado %}
-                        <div class="alert alert-success border-left-success d-flex align-items-center gap-2" role="alert">
+                        <div class="alert alert-success border-left-success d-flex align-items-center" role="alert">
                             <i class="bi bi-check-circle-fill me-2"></i>
                             <span>Cuenta de Google vinculada correctamente.</span>
                         </div>
@@ -41,6 +41,7 @@
                                 <span class="text">Iniciar Copia de Seguridad ahora</span>
                             </button>
                         </form>
+
                     {% else %}
                         <div class="alert alert-warning border-left-warning d-flex align-items-center" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -58,14 +59,16 @@
             </div>
         </div>
 
+        <!-- COLUMNA DERECHA: RESTAURAR -->
         <div class="col-lg-6">
             <div class="card shadow mb-4 border-left-warning">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-warning">Restaurar Base de Datos</h6>
-                    <i class="bi bi-shield-lock-fill text-warning" style="font-size: 1.5rem;"></i>
+                    <i class="bi bi-arrow-counterclockwise text-warning" style="font-size: 1.5rem;"></i>
                 </div>
                 <div class="card-body">
-                    <p>Utiliza esta opción para cargar un respaldo previo al sistema:</p>
+                    <p>Utiliza esta opción para restaurar un respaldo previo:</p>
+
                     <div class="alert alert-danger" role="alert">
                         <i class="bi bi-exclamation-octagon-fill me-2"></i>
                         <strong>Atención:</strong> Restaurar un backup <strong>sobrescribirá</strong> toda la información actual de la base de datos.
@@ -74,9 +77,9 @@
                     <form id="formRestaurar" method="post" action="{% url 'apl:backups:restaurar_backup' %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Archivo de respaldo (.enc)</label>
-                            <input type="file" name="archivo_backup" id="inputBackup" class="form-control" accept=".enc" required>
-                            <small class="text-muted">Selecciona el archivo encriptado descargado de Drive.</small>
+                            <label class="form-label font-weight-bold">Archivo de respaldo (.zip)</label>
+                            <input type="file" name="archivo_backup" id="inputBackup" class="form-control" accept=".zip" required>
+                            <small class="text-muted">Selecciona el archivo .zip descargado desde la tabla de backups.</small>
                         </div>
                         <button type="button" id="btnRestaurar" class="btn btn-warning btn-icon-split w-100">
                             <span class="icon text-white-50">
@@ -87,21 +90,79 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card shadow mb-4 border-left-success">
+    <!-- TABLA DE BACKUPS DEL DÍA -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Copias de Seguridad de Hoy
+                    </h6>
+                    <span class="badge bg-primary">{{ backups_hoy.count }} backup{{ backups_hoy.count|pluralize }}</span>
+                </div>
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Seguridad de Grado Bancario
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">AES-256 activado</div>
-                            <p class="mt-2 mb-0 small text-muted">Tus backups se encriptan localmente antes de ser enviados a Google Drive.</p>
+                    {% if backups_hoy %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th><i class="bi bi-file-zip me-1"></i> Archivo</th>
+                                        <th><i class="bi bi-clock me-1"></i> Hora</th>
+                                        <th><i class="bi bi-hdd me-1"></i> Tamaño</th>
+                                        <th><i class="bi bi-check2-circle me-1"></i> Estado</th>
+                                        <th class="text-center"><i class="bi bi-download me-1"></i> Descargar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for backup in backups_hoy %}
+                                    <tr>
+                                        <td>
+                                            <span class="text-monospace small">{{ backup.nombre_archivo }}</span>
+                                        </td>
+                                        <td>
+                                            {{ backup.fecha_creacion|date:"H:i:s" }}
+                                        </td>
+                                        <td>
+                                            {{ backup.tamanio_legible }}
+                                        </td>
+                                        <td>
+                                            {% if backup.exitoso %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Exitoso
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>Fallido
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if backup.exitoso and backup.drive_file_id %}
+                                                <a href="{% url 'apl:backups:descargar_backup' backup.id %}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Descargar para restaurar">
+                                                    <i class="bi bi-download"></i> Descargar
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted small">No disponible</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-lock-fill text-gray-300" style="font-size: 2.5rem;"></i>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 2.5rem;"></i>
+                            <p class="mt-2 mb-0">No se han generado copias de seguridad hoy.</p>
+                            <small>Haz clic en "Iniciar Copia de Seguridad" para crear una.</small>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -113,12 +174,31 @@
 {% if not autenticado %}
 document.getElementById("btnVincular").addEventListener("click", function () {
     Swal.fire({
-        title: 'Vincular Google Drive',
-        text: "Serás redirigido para autorizar la subida de archivos.",
+        title: 'Vincular cuenta de Google',
+        html: `
+            <div class="text-start">
+                <p>Para guardar las copias de seguridad en la nube, necesitamos que autorices el acceso a tu Google Drive.</p>
+                <hr>
+                <p><strong>¿Qué va a pasar?</strong></p>
+                <ul class="text-start">
+                    <li>Serás redirigido a la página oficial de Google.</li>
+                    <li>Deberás iniciar sesión con tu cuenta de Google.</li>
+                    <li>Google te pedirá que autorices el acceso para subir archivos a Drive.</li>
+                    <li>Una vez aceptes, regresarás automáticamente a esta página.</li>
+                </ul>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-shield-lock-fill me-1"></i>
+                    <strong>Privacidad:</strong> Solo se solicitará permiso para subir archivos.
+                </div>
+            </div>
+        `,
         icon: 'info',
         showCancelButton: true,
         confirmButtonColor: '#4e73df',
-        confirmButtonText: 'Continuar'
+        cancelButtonColor: '#858796',
+        confirmButtonText: 'Entendido, continuar',
+        cancelButtonText: 'Cancelar',
+        width: '600px',
     }).then((result) => {
         if (result.isConfirmed) window.location.href = "{% url 'apl:backups:google_auth' %}";
     });
@@ -130,16 +210,29 @@ document.getElementById("btnVincular").addEventListener("click", function () {
 document.getElementById("btnGenerar").addEventListener("click", function () {
     Swal.fire({
         title: '¿Iniciar respaldo?',
-        text: "Se generará un dump encriptado y se subirá a Drive.",
+        html: `
+            <div class="text-start">
+                <p>Se ejecutarán los siguientes pasos:</p>
+                <ul>
+                    <li>Exportar la base de datos MySQL.</li>
+                    <li>Comprimir en formato ZIP.</li>
+                    <li>Subir a Google Drive.</li>
+                </ul>
+                <p class="text-muted small mb-0">Este proceso puede tardar unos segundos.</p>
+            </div>
+        `,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#4e73df',
-        confirmButtonText: 'Sí, comenzar'
+        cancelButtonColor: '#858796',
+        confirmButtonText: 'Sí, comenzar',
+        cancelButtonText: 'Cancelar',
+        width: '500px',
     }).then((result) => {
         if (result.isConfirmed) {
             Swal.fire({
                 title: 'Procesando...',
-                html: 'Encriptando y subiendo a la nube...',
+                html: 'Generando y subiendo el backup a Google Drive...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -153,23 +246,31 @@ document.getElementById("btnGenerar").addEventListener("click", function () {
 document.getElementById("btnRestaurar").addEventListener("click", function () {
     const fileInput = document.getElementById("inputBackup");
     if (!fileInput.files.length) {
-        Swal.fire('Error', 'Por favor selecciona un archivo .enc primero.', 'error');
+        Swal.fire('Archivo requerido', 'Por favor selecciona un archivo .zip primero.', 'warning');
         return;
     }
 
     Swal.fire({
         title: '¿Confirmar restauración?',
-        html: `<p class="text-danger"><strong>¡ADVERTENCIA!</strong> Esta acción reemplazará todos los datos actuales por los del respaldo.</p>`,
+        html: `
+            <div class="text-start">
+                <p class="text-danger"><strong>⚠️ ADVERTENCIA:</strong> Esta acción reemplazará <strong>todos los datos actuales</strong> por los del respaldo.</p>
+                <p>Archivo: <strong>${fileInput.files[0].name}</strong></p>
+                <p class="mb-0 text-muted small">Asegúrate de que este es el backup correcto antes de continuar.</p>
+            </div>
+        `,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e74a3b',
+        cancelButtonColor: '#858796',
         confirmButtonText: 'Sí, restaurar todo',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        width: '500px',
     }).then((result) => {
         if (result.isConfirmed) {
             Swal.fire({
-                title: 'Restaurando Base de Datos',
-                html: 'Desencriptando e inyectando datos... No cierres la ventana.',
+                title: 'Restaurando...',
+                html: 'Inyectando datos en la base de datos. No cierres la ventana.',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
