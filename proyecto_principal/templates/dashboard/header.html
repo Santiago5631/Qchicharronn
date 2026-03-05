@@ -36,6 +36,15 @@
                 <span class="small" id="navbar-mode-text" style="color: var(--text-color);">Modo Oscuro</span>
             </div>
 
+            <!-- Botón Manual de Usuario (desktop) -->
+            <a href="{% static 'documentos/Manual_Usuario_QChicharron.pdf' %}"
+               target="_blank"
+               class="btn btn-sm rounded-pill px-3"
+               style="background: var(--primary-color-light); color: var(--text-color); font-size: 0.8rem;"
+               title="Ver Manual de Usuario">
+                <i class='bx bx-file me-1'></i> Manual
+            </a>
+
             <!-- Botón perfil -->
             <a href="{% url 'apl:usuario:perfil' %}"
                class="btn btn-sm rounded-pill px-3"
@@ -216,6 +225,13 @@
         <!-- Mi perfil -->
         <a href="{% url 'apl:usuario:perfil' %}" class="offcanvas-link mb-2">
             <i class='bx bxs-user-circle'></i><span>Mi Perfil</span>
+        </a>
+
+        <!-- Manual de Usuario (móvil) -->
+        <a href="{% static 'documentos/Manual_Usuario_QChicharron.pdf' %}"
+           target="_blank"
+           class="offcanvas-link mb-2">
+            <i class='bx bx-file'></i><span>Manual de Usuario</span>
         </a>
 
         <!-- Modo oscuro -->
