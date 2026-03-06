@@ -1,7 +1,9 @@
 {% extends "dashboard/layout.html" %}
 {% block content %}
 
-<!-- ++ Barra de búsqueda JS nativo ++ -->
+<!-- ══════════════════════════════════════════════ -->
+<!-- BARRA DE FILTROS                               -->
+<!-- ══════════════════════════════════════════════ -->
 <div class="card shadow mb-3">
   <div class="card-body py-3">
     <div class="row g-2 align-items-end">
@@ -53,7 +55,9 @@
   </div>
 </div>
 
-<!-- Tabla original con DataTable -->
+<!-- ══════════════════════════════════════════════ -->
+<!-- TABLA DE USUARIOS                              -->
+<!-- ══════════════════════════════════════════════ -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
@@ -110,6 +114,7 @@
                                 <i class="bi bi-key-fill text-white"></i>
                             </button>
 
+                            <!-- El layout.html intercepta este botón con SweetAlert2 global -->
                             <button type="button"
                                     class="btn btn-danger btn-sm mb-1 btn-delete"
                                     data-url="{% url 'apl:usuario:eliminar_usuario' u.id %}"
@@ -132,12 +137,16 @@
 
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
-<!-- MODAL — Confirmar reseteo de contraseña -->
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Confirmar reseteo de contraseña        -->
+<!-- ══════════════════════════════════════════════ -->
 <div class="modal fade" id="modalConfirmReset" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title"><i class="bi bi-key-fill me-2"></i> Resetear Contraseña</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-key-fill me-2"></i> Resetear Contraseña
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-4">
@@ -161,12 +170,16 @@
     </div>
 </div>
 
-<!-- MODAL — Contraseña restablecida con éxito -->
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Contraseña restablecida con éxito      -->
+<!-- ══════════════════════════════════════════════ -->
 <div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i> Contraseña Restablecida</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle-fill me-2"></i> Contraseña Restablecida
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-4">
@@ -175,13 +188,15 @@
                 </p>
                 <div class="d-flex align-items-center justify-content-center gap-2 my-3">
                     <span id="modal-password"
-                          class="fs-4 fw-bold font-monospace bg-light border rounded px-4 py-2 text-dark"></span>
+                          class="fs-4 fw-bold font-monospace bg-light border rounded px-4 py-2 text-dark">
+                    </span>
                     <button class="btn btn-outline-secondary btn-sm" id="btn-copiar" title="Copiar contraseña">
                         <i class="bi bi-clipboard"></i>
                     </button>
                 </div>
                 <p class="text-muted small mb-0">
-                    <i class="bi bi-info-circle me-1"></i>Dicta esta contraseña al usuario para que pueda ingresar.
+                    <i class="bi bi-info-circle me-1"></i>
+                    Dicta esta contraseña al usuario para que pueda ingresar.
                 </p>
             </div>
             <div class="modal-footer justify-content-center border-0 pb-4">
@@ -193,12 +208,16 @@
     </div>
 </div>
 
-<!-- MODAL — Error -->
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL — Error                                  -->
+<!-- ══════════════════════════════════════════════ -->
 <div class="modal fade" id="modalError" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-x-circle-fill me-2"></i> Error</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-x-circle-fill me-2"></i> Error
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-4">
@@ -215,13 +234,15 @@
 </div>
 
 <script>
-/* ── Filtro JS nativo ── */
+/* ══════════════════════════════════════════════
+   FILTROS JS NATIVO
+══════════════════════════════════════════════ */
 function filtrarUsuarios() {
-  const nombre  = document.getElementById('filtro-nombre').value.toLowerCase().trim();
-  const cedula  = document.getElementById('filtro-cedula').value.toLowerCase().trim();
-  const cargo   = document.getElementById('filtro-cargo').value.toLowerCase().trim();
-  const email   = document.getElementById('filtro-email').value.toLowerCase().trim();
-  const estado  = document.getElementById('filtro-estado').value.toLowerCase().trim();
+  const nombre = document.getElementById('filtro-nombre').value.toLowerCase().trim();
+  const cedula = document.getElementById('filtro-cedula').value.toLowerCase().trim();
+  const cargo  = document.getElementById('filtro-cargo').value.toLowerCase().trim();
+  const email  = document.getElementById('filtro-email').value.toLowerCase().trim();
+  const estado = document.getElementById('filtro-estado').value.toLowerCase().trim();
 
   const rows = document.querySelectorAll('.usuario-row');
   let visibles = 0;
@@ -243,30 +264,35 @@ function filtrarUsuarios() {
 }
 
 function limpiarFiltrosUsuarios() {
-  document.getElementById('filtro-nombre').value  = '';
-  document.getElementById('filtro-cedula').value  = '';
-  document.getElementById('filtro-cargo').value   = '';
-  document.getElementById('filtro-email').value   = '';
-  document.getElementById('filtro-estado').value  = '';
+  document.getElementById('filtro-nombre').value = '';
+  document.getElementById('filtro-cedula').value = '';
+  document.getElementById('filtro-cargo').value  = '';
+  document.getElementById('filtro-email').value  = '';
+  document.getElementById('filtro-estado').value = '';
   filtrarUsuarios();
 }
 
-/* ── Modales originales (sin cambios) ── */
+/* ══════════════════════════════════════════════
+   MODALES — Solo reset de contraseña
+   (El eliminar lo maneja SweetAlert2 del layout)
+══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function () {
     const modalConfirmReset  = new bootstrap.Modal(document.getElementById('modalConfirmReset'));
-    const modalConfirmDelete = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
     const modalResetPassword = new bootstrap.Modal(document.getElementById('modalResetPassword'));
     const modalError         = new bootstrap.Modal(document.getElementById('modalError'));
 
-    let resetUrl = null, resetBtn = null;
-    let deleteUrl = null, deleteBtn = null;
+    let resetUrl = null;
+    let resetBtn = null;
 
     function mostrarError(msg) {
         document.getElementById('modal-error-msg').textContent = msg;
         modalError.show();
     }
 
+    // ── Capturar clicks ──
     document.addEventListener('click', function (e) {
+
+        // Botón resetear contraseña → abrir confirmación
         const btnReset = e.target.closest('.btn-reset-password');
         if (btnReset) {
             resetUrl = btnReset.getAttribute('data-url');
@@ -274,13 +300,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('confirm-reset-nombre').textContent = btnReset.getAttribute('data-name');
             modalConfirmReset.show();
         }
-        const btnDelete = e.target.closest('.btn-delete');
-        if (btnDelete) {
-            deleteUrl = btnDelete.getAttribute('data-url');
-            deleteBtn = btnDelete;
-            document.getElementById('confirm-delete-nombre').textContent = btnDelete.getAttribute('data-name');
-            modalConfirmDelete.show();
-        }
+
+        // Copiar contraseña al portapapeles
         if (e.target.closest('#btn-copiar')) {
             const pwd = document.getElementById('modal-password').textContent.trim();
             navigator.clipboard.writeText(pwd).then(() => {
@@ -291,17 +312,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // ── Confirmar reset → ejecutar petición ──
     document.getElementById('btn-confirmar-reset').addEventListener('click', function () {
         if (!resetUrl || !resetBtn) return;
+
         const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const icon = resetBtn.querySelector('i');
         const originalClass = icon.className;
+
         modalConfirmReset.hide();
         icon.className = 'spinner-border spinner-border-sm text-white';
         resetBtn.disabled = true;
+
         fetch(resetUrl, {
             method: 'POST',
-            headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+            headers: {
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         .then(r => r.json())
         .then(data => {
@@ -317,38 +345,12 @@ document.addEventListener('DOMContentLoaded', function () {
         .finally(() => {
             icon.className = originalClass;
             resetBtn.disabled = false;
-            resetUrl = null; resetBtn = null;
+            resetUrl = null;
+            resetBtn = null;
         });
     });
 
-    document.getElementById('btn-confirmar-delete').addEventListener('click', function () {
-        if (!deleteUrl || !deleteBtn) return;
-        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const icon = deleteBtn.querySelector('i');
-        const originalClass = icon.className;
-        modalConfirmDelete.hide();
-        icon.className = 'spinner-border spinner-border-sm text-white';
-        deleteBtn.disabled = true;
-        fetch(deleteUrl, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                deleteBtn.closest('tr').remove();
-            } else {
-                mostrarError(data.error || 'No se pudo eliminar el usuario.');
-            }
-        })
-        .catch(() => mostrarError('Error de conexión al servidor.'))
-        .finally(() => {
-            icon.className = originalClass;
-            deleteBtn.disabled = false;
-            deleteUrl = null; deleteBtn = null;
-        });
-    });
-
+    // Inicializar contador al cargar
     filtrarUsuarios();
 });
 </script>

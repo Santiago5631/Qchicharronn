@@ -1,12 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
-# usuario/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView
 from django.views import View
 from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import update_session_auth_hash
 from django.core.mail import send_mail
 from django.conf import settings
@@ -92,7 +89,6 @@ Te recomendamos cambiar tu contraseña después de ingresar.
 # ACTUALIZAR USUARIO — Solo administradores
 # ══════════════════════════════════════════════
 class UsuarioUpdateView(RolRequeridoMixin, UpdateView):
-    """Solo administradores pueden editar usuarios."""
     roles_permitidos = SOLO_ADMIN
     model = Usuario
     template_name = 'forms/formulario_actualizacion.html'
@@ -105,6 +101,8 @@ class UsuarioUpdateView(RolRequeridoMixin, UpdateView):
 
 # ══════════════════════════════════════════════
 # ELIMINAR USUARIO — Solo administradores
+# Responde con {"status": "ok"} para ser compatible
+# con el SweetAlert2 global definido en layout.html
 # ══════════════════════════════════════════════
 class UsuarioDeleteView(RolRequeridoMixin, View):
     roles_permitidos = SOLO_ADMIN
@@ -115,10 +113,10 @@ class UsuarioDeleteView(RolRequeridoMixin, View):
             try:
                 usuario = get_object_or_404(Usuario, pk=pk)
                 usuario.delete()
-                return JsonResponse({'success': True})
+                return JsonResponse({'status': 'ok'})
             except Exception as e:
-                return JsonResponse({'success': False, 'error': str(e)})
-        return JsonResponse({'success': False}, status=400)
+                return JsonResponse({'status': 'error', 'message': str(e)})
+        return JsonResponse({'status': 'error'}, status=400)
 
 
 # ══════════════════════════════════════════════
@@ -162,10 +160,8 @@ Te recomendamos cambiar tu contraseña después de ingresar.
 
 # ══════════════════════════════════════════════
 # PERFIL PROPIO — Cualquier usuario autenticado
-# Cada usuario puede ver y editar su propio perfil
 # ══════════════════════════════════════════════
 class PerfilView(LoginRequiredMixin, View):
-    """Vista del perfil propio del usuario."""
     template_name = 'usuario/perfil.html'
     login_url = '/login/'
 
@@ -183,13 +179,8 @@ class PerfilView(LoginRequiredMixin, View):
     def post(self, request):
         accion = request.POST.get('accion')
 
-        # ── Actualizar datos del perfil ──
         if accion == 'actualizar_perfil':
-            form_perfil = PerfilForm(
-                request.POST,
-                request.FILES,
-                instance=request.user
-            )
+            form_perfil   = PerfilForm(request.POST, request.FILES, instance=request.user)
             form_password = CambiarPasswordForm(user=request.user)
 
             if form_perfil.is_valid():
@@ -199,17 +190,12 @@ class PerfilView(LoginRequiredMixin, View):
             else:
                 messages.error(request, 'Por favor corrige los errores.')
 
-        # ── Cambiar contraseña ──
         elif accion == 'cambiar_password':
             form_perfil   = PerfilForm(instance=request.user)
-            form_password = CambiarPasswordForm(
-                user=request.user,
-                data=request.POST
-            )
+            form_password = CambiarPasswordForm(user=request.user, data=request.POST)
 
             if form_password.is_valid():
                 user = form_password.save()
-                # Mantener la sesión activa después del cambio
                 update_session_auth_hash(request, user)
                 messages.success(request, 'Contraseña cambiada correctamente.')
                 return redirect('apl:usuario:perfil')
@@ -238,20 +224,18 @@ class CustomPasswordResetView(PasswordResetView):
 
 
 # ══════════════════════════════════════════════
-# ACCIÓN DE EMERGENCIA: Resetear clave desde la lista
+# RESETEAR CONTRASEÑA DESDE EL PANEL ADMIN
 # ══════════════════════════════════════════════
-# Asegúrate de que el nombre sea exactamente este:
 class Administradorresetpasword(RolRequeridoMixin, View):
     roles_permitidos = SOLO_ADMIN
 
     def post(self, request, pk):
         usuario = get_object_or_404(Usuario, pk=pk)
-        password_temporal = generar_password()  # Tu función que ya tienes
+        password_temporal = generar_password()
         usuario.set_password(password_temporal)
         usuario.save()
 
         try:
-            # Enviar el correo usando tu configuración de Gmail
             send_mail(
                 subject="Cambio de contraseña - Q'Chicharrón",
                 message=f"Hola {usuario.nombre},\n\nUn administrador ha generado una nueva contraseña para tu cuenta.\n\nContraseña: {password_temporal}\n\nIngresa aquí: http://127.0.0.1:8000/login/",
@@ -259,15 +243,13 @@ class Administradorresetpasword(RolRequeridoMixin, View):
                 recipient_list=[usuario.email],
                 fail_silently=False,
             )
-
-            # Devolvemos el JSON que el JavaScript está esperando
             return JsonResponse({
                 'success': True,
                 'message': f'Contraseña de {usuario.nombre} actualizada correctamente.',
                 'password_visible': password_temporal
             })
         except Exception as e:
-            # Si falla el correo (por internet o SMTP), igual devolvemos la clave al admin
+            # Si falla el correo, igual devolvemos la clave al admin
             return JsonResponse({
                 'success': True,
                 'message': 'Contraseña cambiada, pero hubo un problema enviando el correo.',
