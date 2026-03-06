@@ -593,11 +593,11 @@
           <div class="form-group">
             <label>Valor recibido ($)</label>
             <input type="number" id="valor_recibido" name="valor_recibido"
-                   min="0" step="100" placeholder="0"
+                   min="0" step="1" placeholder="0"
                    style="font-size:1rem; font-weight:600;">
           </div>
           <div class="form-group" style="pointer-events:none">
-            <label>Vuelto ($)</label>
+            <label>Cambio ($)</label>
             <input type="number" id="vuelto_display" readonly tabindex="-1"
                    placeholder="—"
                    style="font-size:1rem; font-weight:700; color:var(--success); background:var(--bg);">
@@ -605,7 +605,7 @@
         </div>
 
         <div class="vuelto-box" id="vuelto-box" style="display:none">
-          <span class="vuelto-label">Vuelto a entregar</span>
+          <span class="vuelto-label">Cambio a entregar</span>
           <span class="vuelto-amount" id="vuelto-resultado">$ —</span>
         </div>
       </div>
@@ -632,57 +632,57 @@
   </form>
 
   <script>
-    (function() {
-      const totalVenta = parseFloat("{{ venta.total }}".replace(/[^0-9.]/g, '')) || 0;
-      const metodoPago  = document.getElementById('metodo_pago');
-      const vueltoSec   = document.getElementById('vuelto-section');
-      const valorInput  = document.getElementById('valor_recibido');
-      const vueltoDisp  = document.getElementById('vuelto_display');
-      const vueltoBx    = document.getElementById('vuelto-box');
-      const vueltoRes   = document.getElementById('vuelto-resultado');
+(function() {
+  const totalVenta = parseFloat("{{ venta.total|stringformat:'f' }}") || 0;
+  const metodoPago = document.getElementById('metodo_pago');
+  const vueltoSec  = document.getElementById('vuelto-section');
+  const valorInput = document.getElementById('valor_recibido');
+  const vueltoDisp = document.getElementById('vuelto_display');
+  const vueltoBx   = document.getElementById('vuelto-box');
+  const vueltoRes  = document.getElementById('vuelto-resultado');
 
-      function formatPesos(n) {
-        return '$ ' + Math.abs(n).toLocaleString('es-CO');
+  function formatPesos(n) {
+    return '$ ' + Math.round(Math.abs(n)).toLocaleString('es-CO');
+  }
+
+  function calcularVuelto() {
+    const recibido = parseFloat(valorInput.value) || 0;
+    const vuelto   = recibido - totalVenta;
+
+    if (recibido > 0) {
+      vueltoBx.style.display = 'flex';
+      vueltoDisp.value = Math.round(vuelto);
+
+      if (vuelto >= 0) {
+        vueltoRes.textContent  = formatPesos(vuelto);
+        vueltoRes.className    = 'vuelto-amount';
+        vueltoDisp.style.color = 'var(--success)';
+      } else {
+        vueltoRes.textContent  = '−' + formatPesos(vuelto) + ' (falta)';
+        vueltoRes.className    = 'vuelto-amount negativo';
+        vueltoDisp.style.color = 'var(--danger)';
       }
+    } else {
+      vueltoBx.style.display = 'none';
+      vueltoDisp.value = '';
+    }
+  }
 
-      function calcularVuelto() {
-        const recibido = parseFloat(valorInput.value) || 0;
-        const vuelto   = recibido - totalVenta;
+  metodoPago.addEventListener('change', function() {
+    if (this.value === 'efectivo') {
+      vueltoSec.style.display = 'block';
+      calcularVuelto();
+    } else {
+      vueltoSec.style.display = 'none';
+      vueltoBx.style.display  = 'none';
+      valorInput.value = '';
+      vueltoDisp.value = '';
+    }
+  });
 
-        if (recibido > 0) {
-          vueltoBx.style.display = 'flex';
-          vueltoDisp.value = vuelto.toFixed(0);
-
-          if (vuelto >= 0) {
-            vueltoRes.textContent   = formatPesos(vuelto);
-            vueltoRes.className     = 'vuelto-amount';
-            vueltoDisp.style.color  = 'var(--success)';
-          } else {
-            vueltoRes.textContent   = '−' + formatPesos(vuelto) + ' (falta)';
-            vueltoRes.className     = 'vuelto-amount negativo';
-            vueltoDisp.style.color  = 'var(--danger)';
-          }
-        } else {
-          vueltoBx.style.display = 'none';
-          vueltoDisp.value = '';
-        }
-      }
-
-      metodoPago.addEventListener('change', function() {
-        if (this.value === 'efectivo') {
-          vueltoSec.style.display = 'block';
-          calcularVuelto();
-        } else {
-          vueltoSec.style.display = 'none';
-          vueltoBx.style.display  = 'none';
-          valorInput.value = '';
-          vueltoDisp.value = '';
-        }
-      });
-
-      valorInput.addEventListener('input', calcularVuelto);
-    })();
-  </script>
+  valorInput.addEventListener('input', calcularVuelto);
+})();
+</script>
 
   {% elif venta.estado == 'pagado' %}
 
