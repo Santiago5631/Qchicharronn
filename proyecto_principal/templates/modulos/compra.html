@@ -2,8 +2,56 @@
 {% load static %}
 {% block content %}
 
+<!-- Barra de filtros JS nativo -->
+<div class="card shadow mb-3">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-hash me-1"></i>ID Factura</label>
+        <input type="text" id="filtro-id" class="form-control form-control-sm"
+               placeholder="Ej: 001" oninput="filtrarCompras()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-box-seam me-1"></i>Producto</label>
+        <input type="text" id="filtro-producto" class="form-control form-control-sm"
+               placeholder="Nombre del producto" oninput="filtrarCompras()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-calendar me-1"></i>Fecha</label>
+        <input type="text" id="filtro-fecha" class="form-control form-control-sm"
+               placeholder="Ej: 2024-03" oninput="filtrarCompras()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-truck me-1"></i>Proveedor</label>
+        <input type="text" id="filtro-proveedor" class="form-control form-control-sm"
+               placeholder="Nombre del proveedor" oninput="filtrarCompras()">
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-bold mb-1"><i class="bi bi-rulers me-1"></i>Unidad</label>
+        <input type="text" id="filtro-unidad" class="form-control form-control-sm"
+               placeholder="Ej: kg, unidad" oninput="filtrarCompras()">
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small mb-1">&nbsp;</label>
+        <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltrosCompras()">
+          <i class="bi bi-x-circle me-1"></i> Limpiar
+        </button>
+      </div>
+
+    </div>
+    <div class="mt-2">
+      <small class="text-muted" id="contador-compras"></small>
+    </div>
+  </div>
+</div>
+
 <div class="card shadow mb-4">
-    <!-- Header con título y botones -->
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
         <div class="d-flex gap-2 align-items-center">
@@ -23,8 +71,7 @@
         </div>
     </div>
 
-    <!-- Body con la tabla (sin card-body adicional si no lo necesitas) -->
-    <div class="card-body p-0">  <!-- p-0 para eliminar padding si quieres que quede totalmente pegado -->
+    <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-bordered mb-0" id="dataTable" width="100%" cellspacing="0">
                 <thead>
@@ -41,7 +88,12 @@
                 </thead>
                 <tbody>
                     {% for c in compras %}
-                    <tr>
+                    <tr class="compra-row"
+                        data-id="{{ c.id_factura|lower }}"
+                        data-producto="{{ c.producto.nombre|lower }}"
+                        data-fecha="{{ c.fecha|date:'Y-m-d' }}"
+                        data-proveedor="{{ c.proveedor|lower }}"
+                        data-unidad="{{ c.unidad|lower }}">
                         <td>{{ c.id_factura }}</td>
                         <td>{{ c.producto.nombre }}</td>
                         <td>{{ c.fecha }}</td>
@@ -68,5 +120,48 @@
         </div>
     </div>
 </div>
+
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<script>
+function filtrarCompras() {
+  const id        = document.getElementById('filtro-id').value.toLowerCase().trim();
+  const producto  = document.getElementById('filtro-producto').value.toLowerCase().trim();
+  const fecha     = document.getElementById('filtro-fecha').value.toLowerCase().trim();
+  const proveedor = document.getElementById('filtro-proveedor').value.toLowerCase().trim();
+  const unidad    = document.getElementById('filtro-unidad').value.toLowerCase().trim();
+
+  const rows = document.querySelectorAll('.compra-row');
+  let visibles = 0;
+
+  rows.forEach(row => {
+    const ok = (!id        || row.dataset.id.includes(id))
+            && (!producto  || row.dataset.producto.includes(producto))
+            && (!fecha     || row.dataset.fecha.includes(fecha))
+            && (!proveedor || row.dataset.proveedor.includes(proveedor))
+            && (!unidad    || row.dataset.unidad.includes(unidad));
+    row.style.display = ok ? '' : 'none';
+    if (ok) visibles++;
+  });
+
+  const contador = document.getElementById('contador-compras');
+  if (contador) contador.textContent = visibles === rows.length
+    ? `${rows.length} compra(s)`
+    : `${visibles} de ${rows.length} compra(s)`;
+}
+
+function limpiarFiltrosCompras() {
+  document.getElementById('filtro-id').value        = '';
+  document.getElementById('filtro-producto').value  = '';
+  document.getElementById('filtro-fecha').value     = '';
+  document.getElementById('filtro-proveedor').value = '';
+  document.getElementById('filtro-unidad').value    = '';
+  filtrarCompras();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  filtrarCompras();
+});
+</script>
 
 {% endblock %}

@@ -1,8 +1,3 @@
-/* =====================================================
-   darkmode.css
-   Correcciones completas del modo oscuro para Bootstrap
-   ===================================================== */
-
 /* ── Variables oscuras ── */
 body.dark {
     --body-color:          #18191A;
@@ -544,3 +539,87 @@ body.dark .select2-container--default .select2-results__option[aria-selected=tru
     color: #FF5722 !important;
 }
 
+/* ══════════════════════════════════════
+   CHATBOT WIDGET — Dark Mode
+   Pega este bloque al FINAL de darkmode.css
+══════════════════════════════════════ */
+
+/* Panel principal */
+body.dark .chatbot-panel {
+    background: #242526 !important;
+    border-color: #3A3B3C !important;
+}
+
+/* Área de mensajes */
+body.dark .cw-messages {
+    background: #18191A !important;
+}
+
+/* Burbuja del bot */
+body.dark .cw-bubble.bot {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+    color: #CCC !important;
+}
+
+body.dark .cw-bubble.bot strong {
+    color: #f97316 !important;
+}
+
+/* Timestamps */
+body.dark .cw-time {
+    color: #666 !important;
+}
+
+/* Typing dots */
+body.dark .cw-typing-dots {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+}
+
+/* Sugerencias */
+body.dark .cw-sugerencias {
+    background: #242526 !important;
+    border-top-color: #3A3B3C !important;
+}
+
+body.dark .cw-sug-btn {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+    color: #CCC !important;
+}
+
+body.dark .cw-sug-btn:hover {
+    background: #f97316 !important;
+    color: #fff !important;
+    border-color: #f97316 !important;
+}
+
+/* Input area */
+body.dark .cw-input-area {
+    background: #242526 !important;
+    border-top-color: #3A3B3C !important;
+}
+
+body.dark .cw-input {
+    background: #2f3031 !important;
+    border-color: #3A3B3C !important;
+    color: #CCC !important;
+}
+
+body.dark .cw-input:focus {
+    border-color: #f97316 !important;
+}
+
+body.dark .cw-input::placeholder {
+    color: #666 !important;
+}
+
+/* Estado vacío */
+body.dark .cw-empty h6 {
+    color: #CCC !important;
+}
+
+body.dark .cw-empty p {
+    color: #888 !important;
+}
