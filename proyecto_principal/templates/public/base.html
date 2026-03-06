@@ -28,24 +28,47 @@
 </head>
 
 <body class="bg-black text-white font-[Poppins]">
-  <!-- Navbar -->
-  <header class="fixed top-0 left-0 w-full bg-black bg-opacity-90 z-50 shadow-md">
-    <nav class="container mx-auto flex justify-between items-center py-4 px-6">
-      <h1 href="#" class="text-2xl font-bold" style="color: #d4af37; font-family: 'Playfair Display', serif;">Q'chicharrón</h1>
+<!-- Navbar -->
+<header class="fixed top-0 left-0 w-full bg-black bg-opacity-90 z-50 shadow-md">
+  <nav class="container mx-auto flex justify-between items-center py-4 px-6">
 
-      <ul class="flex space-x-6 text-sm md:text-base">
-        <li><a href="#inicio" class="hover:text-red-400 transition">Inicio</a></li>
-        <li><a href="#nosotros" class="hover:text-red-400 transition">Nosotros</a></li>
-        <li><a href="#menu" class="hover:text-red-400 transition">Menú</a></li>
-        <li><a href="#ubicacion" class="hover:text-red-400 transition">Ubicacion</a></li>
-      </ul>
+    <!-- Logo -->
+    <h1 class="text-2xl font-bold" style="color: #d4af37; font-family: 'Playfair Display', serif;">Q'chicharrón</h1>
 
-      <a href="{% url 'login:login' %}"
-         class="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
-        Iniciar Sesion
-      </a>
-    </nav>
-  </header>
+    <!-- Links desktop -->
+    <ul class="hidden md:flex space-x-6 text-sm md:text-base">
+      <li><a href="#inicio" class="hover:text-red-400 transition">Inicio</a></li>
+      <li><a href="#nosotros" class="hover:text-red-400 transition">Nosotros</a></li>
+      <li><a href="#menu" class="hover:text-red-400 transition">Menú</a></li>
+      <li><a href="#ubicacion" class="hover:text-red-400 transition">Ubicacion</a></li>
+    </ul>
+
+    <!-- Botón sesión desktop -->
+    <a href="{% url 'login:login' %}"
+       class="hidden md:inline-block bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
+      Iniciar Sesión
+    </a>
+
+    <!-- Botón hamburguesa (solo móvil) -->
+    <button id="menu-toggle" class="md:hidden flex flex-col justify-center items-center gap-1.5 w-8 h-8 focus:outline-none">
+      <span class="block w-6 h-0.5 bg-white transition-all duration-300" id="bar1"></span>
+      <span class="block w-6 h-0.5 bg-white transition-all duration-300" id="bar2"></span>
+      <span class="block w-6 h-0.5 bg-white transition-all duration-300" id="bar3"></span>
+    </button>
+  </nav>
+
+  <!-- Menú móvil desplegable -->
+  <div id="mobile-menu" class="md:hidden hidden flex-col items-center gap-4 bg-black bg-opacity-95 py-6 px-6 border-t border-[#2a2a2a]">
+    <a href="#inicio" class="hover:text-red-400 transition text-sm w-full text-center py-2 border-b border-[#2a2a2a]">Inicio</a>
+    <a href="#nosotros" class="hover:text-red-400 transition text-sm w-full text-center py-2 border-b border-[#2a2a2a]">Nosotros</a>
+    <a href="#menu" class="hover:text-red-400 transition text-sm w-full text-center py-2 border-b border-[#2a2a2a]">Menú</a>
+    <a href="#ubicacion" class="hover:text-red-400 transition text-sm w-full text-center py-2 border-b border-[#2a2a2a]">Ubicacion</a>
+    <a href="{% url 'login:login' %}"
+       class="mt-2 bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition text-sm">
+      Iniciar Sesión
+    </a>
+  </div>
+</header>
 
   <main class="pt-20">
     {% block content %}{% endblock %}
@@ -75,7 +98,7 @@
         <ul class="space-y-2 text-sm">
           <li>Servicio al cliente: <span class="text-white">+57 322 827 2185</span></li>
             <li>
-            <a href="qchicharron9@gmail.com" class="hover:text-red-400 transition">qchicharron9@gmail.com</a>
+            <a href="#" class="hover:text-red-400 transition">qchicharron9@gmail.com</a>
           </li>
           <li><a href="#ubicacion" class="hover:text-red-400 transition">¿Cómo llegar?</a></li>
         </ul>
@@ -118,5 +141,42 @@
 
   </div>
 </footer>
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const bar1 = document.getElementById('bar1');
+  const bar2 = document.getElementById('bar2');
+  const bar3 = document.getElementById('bar3');
+
+  toggle.addEventListener('click', () => {
+    const isOpen = !mobileMenu.classList.contains('hidden');
+
+    if (isOpen) {
+      mobileMenu.classList.add('hidden');
+      mobileMenu.classList.remove('flex');
+      bar1.style.transform = '';
+      bar2.style.opacity = '1';
+      bar3.style.transform = '';
+    } else {
+      mobileMenu.classList.remove('hidden');
+      mobileMenu.classList.add('flex');
+      // Animación X
+      bar1.style.transform = 'translateY(8px) rotate(45deg)';
+      bar2.style.opacity = '0';
+      bar3.style.transform = 'translateY(-8px) rotate(-45deg)';
+    }
+  });
+
+  // Cerrar menú al hacer click en un link
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.add('hidden');
+      mobileMenu.classList.remove('flex');
+      bar1.style.transform = '';
+      bar2.style.opacity = '1';
+      bar3.style.transform = '';
+    });
+  });
+</script>
 </body>
 </html>

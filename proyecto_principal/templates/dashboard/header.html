@@ -202,7 +202,7 @@
             {% if request.user|cargo_en:"administrador,cocinero" %}
             <li class="mb-1">
                 <a href="{% url 'apl:menu:vista_cocina' area='cocina' %}" class="offcanvas-link">
-                    <i class='bx bx-fire'></i><span>Comandas Cocina</span>
+                    <i class='bx bxs-fridge icon'></i><span>Comandas Cocina</span>
                 </a>
             </li>
             {% endif %}
