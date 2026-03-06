@@ -22,37 +22,39 @@
 
   body { font-family: 'DM Sans', sans-serif; }
 
-  /* ── PAGE HEADER ── */
-  .menu-form-header {
-    background: linear-gradient(135deg, var(--charcoal) 0%, var(--smoke) 60%, #3a1d0a 100%);
-    border-radius: 20px;
-    padding: 28px 32px;
-    margin-bottom: 28px;
-    position: relative;
-    overflow: hidden;
-  }
-  .menu-form-header::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 200px; height: 200px;
-    background: radial-gradient(circle, var(--fire-glow) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  .menu-form-header h2 {
+  /* ── PAGE HEADER ── *//* ── PAGE HEADER — modo claro ── */
+.menu-form-header {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 60%, #fed7aa 100%);
+  border: 1.5px solid #fed7aa;
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.menu-form-header h2 {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
-    color: #fff;
+    color: #9a3412;
     font-size: 1.6rem;
     margin: 0;
     position: relative;
   }
   .menu-form-header p {
-    color: rgba(255,255,255,0.5);
+    color: #c2410c;
     margin: 4px 0 0;
     font-size: 13px;
     position: relative;
   }
+
+/* ── PAGE HEADER — modo oscuro ── */
+body.dark .menu-form-header {
+  background: linear-gradient(135deg, #0f0e0d 0%, #1c1917 60%, #2a1200 100%) !important;
+  border-color: rgba(249,115,22,0.2) !important;
+}
+body.dark .menu-form-header h2 { color: #fff !important; }
+body.dark .menu-form-header p  { color: rgba(255,255,255,0.5) !important; }
+
   .header-icon {
     width: 52px; height: 52px;
     background: linear-gradient(135deg, var(--fire), var(--fire-dark));
