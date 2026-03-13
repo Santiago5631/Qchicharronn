@@ -3,6 +3,7 @@ from django.utils import timezone
 from producto.models import Producto
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 
 
 class TipoInventario(models.TextChoices):
@@ -31,9 +32,31 @@ class InventarioDiario(models.Model):
         verbose_name = 'Inventario Diario'
         verbose_name_plural = 'Inventarios Diarios'
         ordering = ['-fecha']
+        # ── CAMBIO 1: restricción a nivel de base de datos ──
+        # Solo puede existir UN inventario por fecha
+        constraints = [
+            models.UniqueConstraint(
+                fields=['fecha'],
+                name='unique_inventario_por_fecha'
+            )
+        ]
 
     def __str__(self):
         return f"Inventario {self.fecha.strftime('%d/%m/%Y')} - {self.get_estado_display()}"
+
+    # ── CAMBIO 2: validación a nivel de modelo ──
+    def clean(self):
+        """Valida que no exista ya un inventario para esta fecha."""
+        if self.pk is None:  # solo al crear, no al editar
+            if InventarioDiario.objects.filter(fecha=self.fecha).exists():
+                raise ValidationError(
+                    f'Ya existe un inventario para el {self.fecha.strftime("%d/%m/%Y")}. '
+                    f'Solo se permite un inventario por día.'
+                )
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def cerrar_inventario(self):
         """Cierra el inventario del día"""
@@ -62,14 +85,12 @@ class MovimientoInventario(models.Model):
         related_name='movimientos_inventario'
     )
 
-    # Tipo de control (heredado del producto)
     tipo_control = models.CharField(
         max_length=10,
         choices=TipoInventario.choices,
         default=TipoInventario.UNIDAD
     )
 
-    # Inventario inicial del día
     inventario_inicial = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -77,7 +98,6 @@ class MovimientoInventario(models.Model):
         help_text="Stock al inicio del día"
     )
 
-    # Para productos por UNIDAD: descuento automático
     consumo_automatico = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -85,7 +105,6 @@ class MovimientoInventario(models.Model):
         help_text="Consumo registrado automáticamente por ventas"
     )
 
-    # Inventario físico al cierre (lo que realmente queda)
     inventario_final = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -95,7 +114,6 @@ class MovimientoInventario(models.Model):
         help_text="Stock real al final del día (conteo físico)"
     )
 
-    # Ajustes manuales
     ajuste_manual = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -124,53 +142,39 @@ class MovimientoInventario(models.Model):
 
     @property
     def consumo_calculado(self):
-        """Calcula el consumo real basado en inventario inicial y final"""
         if self.inventario_final is not None:
             return self.inventario_inicial - self.inventario_final
         return Decimal('0.00')
 
     @property
     def diferencia(self):
-        """
-        Diferencia entre consumo automático y consumo real
-        Positivo = Se consumió más de lo registrado (pérdida)
-        Negativo = Se consumió menos (sobra o error)
-        """
         if self.tipo_control == TipoInventario.UNIDAD:
             if self.inventario_final is not None:
-                consumo_real = self.consumo_calculado
-                return consumo_real - self.consumo_automatico
+                return self.consumo_calculado - self.consumo_automatico
         return Decimal('0.00')
 
     @property
     def inventario_teorico(self):
-        """Inventario que debería quedar según ventas registradas"""
         return self.inventario_inicial - self.consumo_automatico
 
     def registrar_consumo_venta(self, cantidad):
         """
-        Registra el consumo automático cuando se hace una venta
-        Solo para productos por UNIDAD
+        Registra el consumo automático cuando se hace una venta.
+        Solo para productos por UNIDAD.
         """
         if self.tipo_control == TipoInventario.UNIDAD:
             self.consumo_automatico += Decimal(str(cantidad))
             self.save()
 
     def registrar_cierre(self, inventario_final_fisico, motivo_ajuste=None):
-        """
-        Registra el inventario físico al cierre del día
-        """
         if self.inventario_diario.estado == 'cerrado':
             raise ValueError("No se puede modificar un inventario cerrado")
 
         self.inventario_final = Decimal(str(inventario_final_fisico))
 
-        # Calcular ajuste automático
         if self.tipo_control == TipoInventario.PESO:
-            # Para productos por peso, el consumo es la diferencia
             self.ajuste_manual = Decimal('0.00')
         else:
-            # Para productos por unidad, el ajuste es la diferencia
             diferencia = self.diferencia
             if diferencia != 0:
                 self.ajuste_manual = diferencia
@@ -179,7 +183,6 @@ class MovimientoInventario(models.Model):
 
         self.save()
 
-        # Actualizar stock del producto
         self.producto.stock = self.inventario_final
         self.producto.save()
 
@@ -203,12 +206,7 @@ class HistorialStock(models.Model):
     cantidad = models.DecimalField(max_digits=10, decimal_places=2)
     stock_anterior = models.DecimalField(max_digits=10, decimal_places=2)
     stock_nuevo = models.DecimalField(max_digits=10, decimal_places=2)
-    referencia = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        help_text="Número de pedido, ajuste, etc."
-    )
+    referencia = models.CharField(max_length=200, blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
     fecha = models.DateTimeField(auto_now_add=True)
     usuario = models.CharField(max_length=100, blank=True, null=True)
