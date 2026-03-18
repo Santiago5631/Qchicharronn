@@ -18,8 +18,9 @@
                     <p>Al hacer clic en el botón, el sistema realizará las siguientes acciones:</p>
                     <ul>
                         <li>Exportar la base de datos actual (MySQL).</li>
-                        <li>Comprimir el archivo en formato <strong>.zip</strong>.</li>
-                        <li>Subir automáticamente el archivo a Google Drive.</li>
+                        <li>Comprimir y <strong>encriptar</strong> con AES-256-GCM.</li>
+                        <li>Generar un archivo <strong>.qchicharron</strong> protegido.</li>
+                        <li>Subir automáticamente a Google Drive.</li>
                     </ul>
 
                     <div class="alert alert-info border-left-info" role="alert">
@@ -77,9 +78,12 @@
                     <form id="formRestaurar" method="post" action="{% url 'apl:backups:restaurar_backup' %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Archivo de respaldo (.zip)</label>
-                            <input type="file" name="archivo_backup" id="inputBackup" class="form-control" accept=".zip" required>
-                            <small class="text-muted">Selecciona el archivo .zip descargado desde la tabla de backups.</small>
+                            <label class="form-label font-weight-bold">Archivo de respaldo (.qchicharron)</label>
+                            <input type="file" name="archivo_backup" id="inputBackup" class="form-control" accept=".qchicharron" required>
+                            <small class="text-muted">
+                                <i class="bi bi-shield-lock me-1"></i>
+                                Solo se aceptan archivos <strong>.qchicharron</strong> generados por este sistema.
+                            </small>
                         </div>
                         <button type="button" id="btnRestaurar" class="btn btn-warning btn-icon-split w-100">
                             <span class="icon text-white-50">
@@ -88,6 +92,23 @@
                             <span class="text">Subir y Restaurar Datos</span>
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4 border-left-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Seguridad de Grado Bancario
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">AES-256-GCM activado</div>
+                            <p class="mt-2 mb-0 small text-muted">Tus backups se encriptan localmente antes de enviarse a Google Drive. Solo este sistema puede abrirlos.</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-lock-fill text-gray-300" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,7 +131,7 @@
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th><i class="bi bi-file-zip me-1"></i> Archivo</th>
+                                        <th><i class="bi bi-file-earmark-lock me-1"></i> Archivo</th>
                                         <th><i class="bi bi-clock me-1"></i> Hora</th>
                                         <th><i class="bi bi-hdd me-1"></i> Tamaño</th>
                                         <th><i class="bi bi-check2-circle me-1"></i> Estado</th>
@@ -121,14 +142,10 @@
                                     {% for backup in backups_hoy %}
                                     <tr>
                                         <td>
-                                            <span class="text-monospace small">{{ backup.nombre_archivo }}</span>
+                                            <span class="small text-monospace">{{ backup.nombre_archivo }}</span>
                                         </td>
-                                        <td>
-                                            {{ backup.fecha_creacion|date:"H:i:s" }}
-                                        </td>
-                                        <td>
-                                            {{ backup.tamanio_legible }}
-                                        </td>
+                                        <td>{{ backup.fecha_creacion|date:"H:i:s" }}</td>
+                                        <td>{{ backup.tamanio_legible }}</td>
                                         <td>
                                             {% if backup.exitoso %}
                                                 <span class="badge bg-success">
@@ -144,8 +161,8 @@
                                             {% if backup.exitoso and backup.drive_file_id %}
                                                 <a href="{% url 'apl:backups:descargar_backup' backup.id %}"
                                                    class="btn btn-sm btn-outline-primary"
-                                                   title="Descargar para restaurar">
-                                                    <i class="bi bi-download"></i> Descargar
+                                                   title="Descargar .qchicharron para restaurar">
+                                                    <i class="bi bi-download me-1"></i> Descargar
                                                 </a>
                                             {% else %}
                                                 <span class="text-muted small">No disponible</span>
@@ -215,7 +232,8 @@ document.getElementById("btnGenerar").addEventListener("click", function () {
                 <p>Se ejecutarán los siguientes pasos:</p>
                 <ul>
                     <li>Exportar la base de datos MySQL.</li>
-                    <li>Comprimir en formato ZIP.</li>
+                    <li>Comprimir y encriptar con AES-256-GCM.</li>
+                    <li>Generar archivo <strong>.qchicharron</strong>.</li>
                     <li>Subir a Google Drive.</li>
                 </ul>
                 <p class="text-muted small mb-0">Este proceso puede tardar unos segundos.</p>
@@ -232,7 +250,7 @@ document.getElementById("btnGenerar").addEventListener("click", function () {
         if (result.isConfirmed) {
             Swal.fire({
                 title: 'Procesando...',
-                html: 'Generando y subiendo el backup a Google Drive...',
+                html: 'Encriptando y subiendo a Google Drive...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -246,7 +264,17 @@ document.getElementById("btnGenerar").addEventListener("click", function () {
 document.getElementById("btnRestaurar").addEventListener("click", function () {
     const fileInput = document.getElementById("inputBackup");
     if (!fileInput.files.length) {
-        Swal.fire('Archivo requerido', 'Por favor selecciona un archivo .zip primero.', 'warning');
+        Swal.fire('Archivo requerido', 'Por favor selecciona un archivo .qchicharron primero.', 'warning');
+        return;
+    }
+
+    const fileName = fileInput.files[0].name;
+    if (!fileName.endsWith('.qchicharron')) {
+        Swal.fire(
+            'Archivo no válido',
+            'Solo se aceptan archivos .qchicharron generados por este sistema.',
+            'error'
+        );
         return;
     }
 
@@ -255,7 +283,7 @@ document.getElementById("btnRestaurar").addEventListener("click", function () {
         html: `
             <div class="text-start">
                 <p class="text-danger"><strong>⚠️ ADVERTENCIA:</strong> Esta acción reemplazará <strong>todos los datos actuales</strong> por los del respaldo.</p>
-                <p>Archivo: <strong>${fileInput.files[0].name}</strong></p>
+                <p>Archivo: <strong>${fileName}</strong></p>
                 <p class="mb-0 text-muted small">Asegúrate de que este es el backup correcto antes de continuar.</p>
             </div>
         `,
@@ -270,7 +298,7 @@ document.getElementById("btnRestaurar").addEventListener("click", function () {
         if (result.isConfirmed) {
             Swal.fire({
                 title: 'Restaurando...',
-                html: 'Inyectando datos en la base de datos. No cierres la ventana.',
+                html: 'Desencriptando e inyectando datos. No cierres la ventana.',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
