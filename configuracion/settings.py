@@ -211,3 +211,7 @@ CHANNEL_LAYERS = {
 }
 
 GROQ_API_KEY = config('GROQ_API_KEY')
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://qchicharron.artisandev.site",
+]
