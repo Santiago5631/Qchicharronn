@@ -20,9 +20,7 @@ secrets/
 media/
 staticfiles/
 
-# Migraciones (se ignoran todas menos __init__.py)
-**/migrations/
-!**/migrations/__init__.py
+
 
 # ========================================
 #  IDEs Y EDITORES
