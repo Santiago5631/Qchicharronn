@@ -127,8 +127,12 @@ USE_L10N = True
 USE_TZ = True
 
 # Static and Media files
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "proyecto_principal"]
+STATIC_URL = '/static/'  # ⚠️ con slash al inicio
+
+STATICFILES_DIRS = [
+    BASE_DIR / "proyecto_principal" / "static"  # 🔥 AQUÍ ESTÁ LA CLAVE
+]
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = '/media/'
