@@ -20,7 +20,6 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
-import base64
 import secrets
 
 from .models import RegistroBackup
@@ -35,8 +34,15 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_PATH = settings.GOOGLE_DRIVE_TOKEN_PATH
 CREDS_PATH = settings.GOOGLE_OAUTH_CREDS_PATH
 EXTENSION = '.qchicharron'
-# Firma mágica que va al inicio del archivo para verificar autenticidad
 MAGIC_HEADER = b'QCHICHARRON_BACKUP_V1'
+
+
+def _build_callback_url(request):
+    """Construye la URL de callback forzando HTTPS en producción."""
+    url = request.build_absolute_uri(reverse('apl:backups:google_callback'))
+    if not settings.DEBUG:
+        url = url.replace('http://', 'https://')
+    return url
 
 
 def _get_credentials():
@@ -90,7 +96,6 @@ def _desencriptar(data: bytes, password: str) -> bytes:
     """
     header_len = len(MAGIC_HEADER)
 
-    # Verificar firma
     if not data.startswith(MAGIC_HEADER):
         raise ValueError(
             "El archivo no es un backup válido de Q'Chicharrón. "
@@ -165,7 +170,6 @@ def realizar_copia_seguridad(request):
             # 3. ENCRIPTAR con Python puro (AES-256-GCM)
             datos_encriptados = _encriptar(datos_zip, ENCRYPT_PASS)
 
-            # Guardar archivo .qchicharron
             with open(ruta_backup, 'wb') as f:
                 f.write(datos_encriptados)
 
@@ -318,7 +322,6 @@ def restaurar_backup(request):
             messages.success(request, "¡Base de datos restaurada correctamente!")
 
         except ValueError as e:
-            # Errores de validación del archivo (firma o clave incorrecta)
             messages.error(request, str(e))
         except Exception as e:
             messages.error(request, f"Error al restaurar: {str(e)}")
@@ -338,9 +341,10 @@ def restaurar_backup(request):
 # VISTAS OAUTH2
 # ─────────────────────────────────────────────
 def google_auth(request):
+    callback_url = _build_callback_url(request)
     flow = Flow.from_client_secrets_file(
         CREDS_PATH, scopes=SCOPES,
-        redirect_uri=request.build_absolute_uri(reverse('apl:backups:google_callback'))
+        redirect_uri=callback_url
     )
     auth_url, state = flow.authorization_url(access_type='offline', prompt='consent')
     request.session['oauth_state'] = state
@@ -348,12 +352,18 @@ def google_auth(request):
 
 
 def google_callback(request):
+    callback_url = _build_callback_url(request)
+    # También forzar HTTPS en la URL de respuesta de Google
+    authorization_response = request.build_absolute_uri()
+    if not settings.DEBUG:
+        authorization_response = authorization_response.replace('http://', 'https://')
+
     state = request.session.get('oauth_state')
     flow = Flow.from_client_secrets_file(
         CREDS_PATH, scopes=SCOPES, state=state,
-        redirect_uri=request.build_absolute_uri(reverse('apl:backups:google_callback'))
+        redirect_uri=callback_url
     )
-    flow.fetch_token(authorization_response=request.build_absolute_uri())
+    flow.fetch_token(authorization_response=authorization_response)
     with open(TOKEN_PATH, 'wb') as f:
         pickle.dump(flow.credentials, f)
     messages.success(request, "✅ Google Drive vinculado correctamente.")
