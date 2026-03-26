@@ -35,18 +35,17 @@ class CustomLoginView(LoginView):
         return context
 
     def form_valid(self, form):
-        recaptcha_token = self.request.POST.get('g-recaptcha-response')
-
-        if not recaptcha_token:
-            messages.error(self.request, 'Por favor, completa el reCAPTCHA.')
-            return self.form_invalid(form)
-
-        result = verify_recaptcha(recaptcha_token, self.request.META.get('REMOTE_ADDR'))
-
-        if not result.get('success'):
-            error_codes = result.get('error-codes', [])
-            messages.error(self.request, f'reCAPTCHA inválido. Intenta de nuevo. Códigos: {error_codes}')
-            return self.form_invalid(form)
+        # ✅ Saltar reCAPTCHA en modo DEBUG (solo para pruebas)
+        if not settings.DEBUG:
+            recaptcha_token = self.request.POST.get('g-recaptcha-response')
+            if not recaptcha_token:
+                messages.error(self.request, 'Por favor, completa el reCAPTCHA.')
+                return self.form_invalid(form)
+            result = verify_recaptcha(recaptcha_token, self.request.META.get('REMOTE_ADDR'))
+            if not result.get('success'):
+                error_codes = result.get('error-codes', [])
+                messages.error(self.request, f'reCAPTCHA inválido. Códigos: {error_codes}')
+                return self.form_invalid(form)
 
         messages.success(self.request, '¡Bienvenido!')
         return super().form_valid(form)
